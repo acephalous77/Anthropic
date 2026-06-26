@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>husband &amp; wife · 707 control surface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16131a; --panel:#1f1b25; --panel-2:#262130; --line:#352d40;
+    --ink:#e8e2ee; --muted:#8a8194; --faint:#5c5468;
+    --h:#e0a44a;      /* amber  */
+    --w:#4ec5c1;      /* teal   */
+    --live:#7ee081;   /* activity */
+    --warn:#e06a6a;
+    --r:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #221c2b 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:13px; line-height:1.45;
+    padding:18px; min-height:100vh;
+  }
+  h1,h2,.disp{font-family:"Space Grotesk", system-ui, sans-serif;}
+  a{color:var(--w)}
+
+  /* ---- top bar ---- */
+  header{
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:18px;
+  }
+  .brand{display:flex; flex-direction:column; gap:2px}
+  .brand h1{font-size:19px; font-weight:500; letter-spacing:.16em; margin:0; text-transform:lowercase}
+  .brand .sub{color:var(--faint); font-size:10.5px; letter-spacing:.28em; text-transform:uppercase}
+  .conn{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .conn label{color:var(--muted); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase}
+  select, input[type=number]{
+    background:var(--panel-2); color:var(--ink); border:1px solid var(--line);
+    border-radius:var(--r); padding:6px 8px; font-family:inherit; font-size:12px;
+  }
+  select:focus, input:focus, button:focus-visible{outline:2px solid var(--w); outline-offset:1px}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--faint); box-shadow:0 0 0 0 transparent; transition:background .15s}
+  .dot.on{background:var(--live)}
+  .dot.err{background:var(--warn)}
+  #status{color:var(--muted); font-size:11px}
+
+  /* ---- layout ---- */
+  .grid{display:grid; grid-template-columns:1fr; gap:16px}
+  @media(min-width:880px){ .grid{grid-template-columns:1.45fr 1fr} }
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 15px}
+  .panel h2{font-size:11px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+  .panel h2 .tag{color:var(--faint); text-transform:none; letter-spacing:.04em; font-family:"IBM Plex Mono",monospace; font-size:10px; margin-left:8px}
+
+  /* ---- transport ---- */
+  .transport{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  button{
+    background:var(--panel-2); color:var(--ink); border:1px solid var(--line);
+    border-radius:var(--r); padding:9px 14px; font-family:inherit; font-size:12px;
+    letter-spacing:.06em; cursor:pointer; transition:border-color .12s, background .12s, transform .04s;
+  }
+  button:hover{border-color:var(--faint)}
+  button:active{transform:translateY(1px)}
+  button.play:hover{border-color:var(--live)}
+  button.panic{margin-left:auto; border-color:#4a2b2b; color:#f0b3b3}
+  button.panic:hover{border-color:var(--warn)}
+
+  /* ---- scenes ---- */
+  .scenes{display:grid; grid-template-columns:repeat(8,1fr); gap:6px}
+  .scene{padding:11px 0; text-align:center; font-size:12px; border-radius:var(--r);
+    border:1px solid var(--line); background:var(--panel-2); cursor:pointer; color:var(--muted)}
+  .scene:hover{border-color:var(--w); color:var(--ink)}
+  .scene:active{background:var(--w); color:#08201f; border-color:var(--w)}
+
+  /* ---- tracks ---- */
+  .tracks{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:10px}
+  .strip{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 11px}
+  .strip .hd{display:flex; align-items:center; justify-content:space-between; margin-bottom:9px}
+  .strip .tn{font-family:"Space Grotesk",sans-serif; font-size:13px; letter-spacing:.04em}
+  .strip .tn b{color:var(--h)}
+  .strip select{padding:3px 5px; font-size:11px}
+  .ctl{margin:7px 0}
+  .ctl .lab{display:flex; justify-content:space-between; font-size:10px; color:var(--muted); letter-spacing:.08em; margin-bottom:3px}
+  .ctl .lab .v{color:var(--ink); font-variant-numeric:tabular-nums}
+  .ccrow{display:flex; gap:5px; align-items:center}
+  .ccrow input[type=number]{width:54px; padding:3px 5px; font-size:11px}
+  .ccrow .cap{font-size:9.5px; color:var(--faint); letter-spacing:.1em; text-transform:uppercase}
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:3px;
+    background:var(--line); outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--ink); border:2px solid var(--panel-2); }
+  input[type=range].h::-webkit-slider-thumb{background:var(--h)}
+  input[type=range].w::-webkit-slider-thumb{background:var(--w)}
+  input[type=range]::-moz-range-thumb{ width:13px; height:13px; border-radius:50%; background:var(--ink); border:2px solid var(--panel-2)}
+
+  /* ---- XY pad ---- */
+  .xywrap{display:flex; flex-direction:column; gap:10px}
+  #xy{position:relative; width:100%; aspect-ratio:1/1; border-radius:10px; border:1px solid var(--line);
+    background:
+      linear-gradient(180deg, rgba(78,197,193,.05), transparent),
+      var(--bg);
+    overflow:hidden; touch-action:none; cursor:crosshair}
+  #xy .grid-l{position:absolute; inset:0; background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:25% 25%; opacity:.35}
+  #xy .blob{position:absolute; width:120px; height:120px; margin:-60px 0 0 -60px; border-radius:50%;
+    background:radial-gradient(circle, rgba(224,164,74,.55), rgba(78,197,193,.15) 60%, transparent 72%);
+    pointer-events:none; left:50%; top:50%; filter:blur(2px)}
+  #xy .ring{position:absolute; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%;
+    border:1.5px solid var(--ink); left:50%; top:50%; pointer-events:none}
+  #xy .read{position:absolute; left:10px; bottom:8px; font-size:10px; color:var(--muted); letter-spacing:.1em}
+  .xyrow{display:flex; gap:10px; flex-wrap:wrap}
+  .xyrow .f{display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--muted); letter-spacing:.08em}
+  .xyrow .f .sw{width:9px;height:9px;border-radius:2px}
+
+  /* ---- pads ---- */
+  .pads{display:grid; grid-template-columns:repeat(12,1fr); gap:5px; margin-top:4px}
+  .pad{aspect-ratio:1/1.3; border-radius:5px; border:1px solid var(--line); background:var(--panel-2);
+    cursor:pointer; display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px;
+    font-size:9px; color:var(--faint); user-select:none}
+  .pad.acc{background:#221c2b}
+  .pad:active,.pad.down{background:var(--w); color:#08201f; border-color:var(--w)}
+  .padbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; font-size:10.5px; color:var(--muted); letter-spacing:.08em}
+
+  .note{color:var(--faint); font-size:10.5px; line-height:1.6; margin-top:14px; border-top:1px solid var(--line); padding-top:12px}
+  .note b{color:var(--muted); font-weight:500}
+  .full{grid-column:1/-1}
+  .row2{display:grid; gap:16px; margin-top:16px}
+  @media(min-width:880px){ .row2{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>husband &amp; wife</h1>
+    <span class="sub">mc-707 control surface · v1</span>
+  </div>
+  <div class="conn">
+    <span id="dot" class="dot"></span>
+    <span id="status">requesting MIDI…</span>
+    <label for="port">output</label>
+    <select id="port"><option>—</option></select>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- LEFT COLUMN -->
+  <div>
+    <div class="panel">
+      <h2>Transport <span class="tag">set the 707 to clock-slave for tempo sync</span></h2>
+      <div class="transport">
+        <button class="play" data-rt="250">▶ Start</button>
+        <button data-rt="251">⏸ Continue</button>
+        <button data-rt="252">■ Stop</button>
+        <button class="panic" id="panic">Panic · all notes off</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2>Scenes <span class="tag">Program Change · enable Control Rx on the box · ch <span id="scene-ch-lbl">1</span></span></h2>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.1em">CHANNEL</span>
+        <select id="sceneCh"></select>
+      </div>
+      <div class="scenes" id="scenes"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2>Tracks <span class="tag">FILTER·MOD·FX are fixed CCs — the two CC slots are yours to map in the box's Matrix Control</span></h2>
+      <div class="tracks" id="tracks"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div>
+    <div class="panel">
+      <h2>X-Y Blend <span class="tag">two voices, one gesture</span></h2>
+      <div class="xywrap">
+        <div id="xy">
+          <div class="grid-l"></div>
+          <div class="blob"></div>
+          <div class="ring"></div>
+          <div class="read" id="xyread">x — · y —</div>
+        </div>
+        <div class="xyrow">
+          <div class="f"><span class="sw" style="background:var(--h)"></span>X → CC <input type="number" id="xCC" min="0" max="127" value="80" style="width:52px"></div>
+          <div class="f"><span class="sw" style="background:var(--w)"></span>Y → CC <input type="number" id="yCC" min="0" max="127" value="81" style="width:52px"></div>
+          <div class="f">CH <select id="xyCh" style="padding:2px 5px"></select></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2>Pads <span class="tag">trigger drums / clips / play the engine</span></h2>
+      <div class="padbar">
+        <span>CH <select id="padCh" style="padding:2px 5px"></select></span>
+        <span>OCT <select id="padOct" style="padding:2px 5px"></select></span>
+        <span style="display:flex;align-items:center;gap:6px">VEL
+          <input type="range" id="padVel" min="1" max="127" value="100" style="width:90px"></span>
+      </div>
+      <div class="pads" id="pads"></div>
+    </div>
+  </div>
+</div>
+
+<div class="note full">
+  <b>Setup, once:</b> connect the 707 by USB → on the box, set each track's MIDI Rx channel (SHIFT + TRACK SEL) to match the channels here, and set <b>Control Rx = ON</b> in the MIDI tab so scene Program Changes land. Pick the output port above. In the box's <b>Matrix Control</b>, assign a CC to any partial parameter, then type that CC number into a track's slot here.<br>
+  <b>Honest limits of v1:</b> this is the control layer only. It sends notes, Program Change, transport, and CC — no patch editing (that needs the box itself or the B67 editor), and Scatter/mute aren't pre-wired because their MIDI mapping isn't documented; map them yourself via Matrix Control and use a CC slot. Web MIDI runs in <b>Chrome or Edge</b> (not Safari/Firefox), so open this file there.
+</div>
+
+<script>
+(() => {
+  "use strict";
+  let out = null;
+  const $ = s => document.querySelector(s);
+  const dot = $("#dot"), statusEl = $("#status");
+
+  // ---------- MIDI plumbing ----------
+  const NOTE_ON=0x90, NOTE_OFF=0x80, CC=0xB0, PC=0xC0;
+  const send = b => { try { if (out) out.send(b); flash(); } catch(e){ console.warn(e); } };
+  const cc   = (ch,n,v) => send([CC|(ch-1), n&127, v&127]);
+  const pc   = (ch,p)   => send([PC|(ch-1), p&127]);
+  const non  = (ch,n,v) => send([NOTE_ON|(ch-1), n&127, v&127]);
+  const noff = (ch,n)   => send([NOTE_OFF|(ch-1), n&127, 0]);
+  const rt   = b => send([b]);
+
+  let flashT;
+  function flash(){ dot.classList.add("on"); clearTimeout(flashT); flashT=setTimeout(()=>{ if(out) dot.classList.remove("on"); },90); }
+
+  function setStatus(txt, state){
+    statusEl.textContent = txt;
+    dot.classList.remove("on","err");
+    if(state==="err") dot.classList.add("err");
+    if(state==="ok")  dot.classList.add("on"), setTimeout(()=>dot.classList.remove("on"),400);
+  }
+
+  function refreshPorts(access){
+    const sel = $("#port"); sel.innerHTML="";
+    const outs=[...access.outputs.values()];
+    if(!outs.length){ sel.innerHTML="<option>no output ports</option>"; setStatus("no MIDI outputs found — connect the 707","err"); out=null; return; }
+    outs.forEach((o,i)=>{ const op=document.createElement("option"); op.value=o.id; op.textContent=o.name; sel.appendChild(op); });
+    // prefer a port that looks like the Roland/MC
+    const guess = outs.find(o=>/mc-?707|roland|groove|aira/i.test(o.name)) || outs[0];
+    sel.value=guess.id; out=guess; setStatus("connected · "+guess.name,"ok");
+    sel.onchange=()=>{ out=access.outputs.get(sel.value)||null; setStatus(out?("connected · "+out.name):"—", out?"ok":"err"); };
+  }
+
+  if(navigator.requestMIDIAccess){
+    navigator.requestMIDIAccess({sysex:false}).then(access=>{
+      refreshPorts(access);
+      access.onstatechange=()=>refreshPorts(access);
+    }).catch(e=>{
+      setStatus("MIDI access blocked — open the downloaded file directly in Chrome","err");
+      console.warn(e);
+    });
+  } else {
+    setStatus("this browser has no Web MIDI — use Chrome or Edge","err");
+  }
+
+  // ---------- channel <select> helper ----------
+  function chSelect(el, def){
+    for(let c=1;c<=16;c++){ const o=document.createElement("option"); o.value=c; o.textContent=c; el.appendChild(o); }
+    el.value=def;
+  }
+  chSelect($("#sceneCh"),1);
+  chSelect($("#xyCh"),1);
+  chSelect($("#padCh"),10); // drums often land nicely on a dedicated channel
+  $("#sceneCh").onchange=e=>$("#scene-ch-lbl").textContent=e.target.value;
+
+  // ---------- transport ----------
+  document.querySelectorAll("[data-rt]").forEach(b=> b.onclick=()=>rt(+b.dataset.rt));
+  $("#panic").onclick=()=>{ for(let ch=1;ch<=16;ch++){ cc(ch,123,0); cc(ch,120,0); } setStatus("panic sent","ok"); };
+
+  // ---------- scenes (16 Program Change) ----------
+  const scenesEl=$("#scenes");
+  for(let i=0;i<16;i++){
+    const b=document.createElement("div"); b.className="scene"; b.textContent=i+1;
+    b.onclick=()=>pc(+$("#sceneCh").value, i);
+    scenesEl.appendChild(b);
+  }
+
+  // ---------- track strips ----------
+  const FIXED=[["FILTER",80,"h"],["MOD",81,"w"],["FX",82,"h"],["SOUND",83,"w"]];
+  const tracksEl=$("#tracks");
+  for(let t=1;t<=8;t++){
+    const ch0 = t; // default track t -> channel t
+    const strip=document.createElement("div"); strip.className="strip";
+
+    const hd=document.createElement("div"); hd.className="hd";
+    hd.innerHTML=`<span class="tn">TR <b>${t}</b></span>`;
+    const csel=document.createElement("select"); chSelect(csel,ch0);
+    const chLab=document.createElement("span"); chLab.style.cssText="font-size:9px;color:var(--faint);letter-spacing:.1em;margin-right:5px";
+    chLab.textContent="CH"; const chWrap=document.createElement("span"); chWrap.style.display="flex"; chWrap.style.alignItems="center";
+    chWrap.append(chLab,csel); hd.appendChild(chWrap);
+    strip.appendChild(hd);
+
+    const getCh=()=>+csel.value;
+
+    FIXED.forEach(([name,num,tone])=>{
+      const ctl=document.createElement("div"); ctl.className="ctl";
+      ctl.innerHTML=`<div class="lab"><span>${name} · cc${num}</span><span class="v">0</span></div>`;
+      const r=document.createElement("input"); r.type="range"; r.min=0; r.max=127; r.value=0; r.className=tone;
+      const v=ctl.querySelector(".v");
+      r.oninput=()=>{ v.textContent=r.value; cc(getCh(),num,+r.value); };
+      ctl.appendChild(r); strip.appendChild(ctl);
+    });
+
+    // two assignable matrix CC slots
+    for(let s=0;s<2;s++){
+      const ctl=document.createElement("div"); ctl.className="ctl";
+      const tone = s? "w":"h";
+      ctl.innerHTML=`<div class="ccrow"><span class="cap">matrix</span>
+        <input type="number" min="0" max="127" placeholder="CC#"></div>`;
+      const num=ctl.querySelector("input");
+      const r=document.createElement("input"); r.type="range"; r.min=0; r.max=127; r.value=0; r.className=tone;
+      r.style.marginTop="6px";
+      r.oninput=()=>{ const n=parseInt(num.value); if(Number.isInteger(n)) cc(getCh(),n,+r.value); };
+      ctl.appendChild(r); strip.appendChild(ctl);
+    }
+    tracksEl.appendChild(strip);
+  }
+
+  // ---------- X-Y pad ----------
+  const xy=$("#xy"), blob=xy.querySelector(".blob"), ring=xy.querySelector(".ring"), xyread=$("#xyread");
+  let dragging=false;
+  function xyMove(ev){
+    const r=xy.getBoundingClientRect();
+    const px=Math.min(Math.max(ev.clientX-r.left,0),r.width);
+    const py=Math.min(Math.max(ev.clientY-r.top,0),r.height);
+    const xv=Math.round(px/r.width*127);
+    const yv=Math.round((1-py/r.height)*127); // invert: up = high
+    blob.style.left=ring.style.left=px+"px";
+    blob.style.top=ring.style.top=py+"px";
+    xyread.textContent=`x ${xv} · y ${yv}`;
+    const xn=parseInt($("#xCC").value), yn=parseInt($("#yCC").value), c=+$("#xyCh").value;
+    if(Number.isInteger(xn)) cc(c,xn,xv);
+    if(Number.isInteger(yn)) cc(c,yn,yv);
+  }
+  xy.addEventListener("pointerdown",e=>{ dragging=true; xy.setPointerCapture(e.pointerId); xyMove(e); });
+  xy.addEventListener("pointermove",e=>{ if(dragging) xyMove(e); });
+  xy.addEventListener("pointerup",()=>dragging=false);
+  xy.addEventListener("pointercancel",()=>dragging=false);
+
+  // ---------- pads (one octave) ----------
+  const padsEl=$("#pads");
+  const NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const ACC=[1,3,6,8,10];
+  // octave options
+  const octSel=$("#padOct"); for(let o=1;o<=7;o++){ const op=document.createElement("option"); op.value=o; op.textContent=o; octSel.appendChild(op); } octSel.value=4;
+  function buildPads(){
+    padsEl.innerHTML="";
+    const base=(+octSel.value+1)*12; // MIDI: C4=60 in this convention (oct 4 -> 60)
+    NAMES.forEach((nm,i)=>{
+      const p=document.createElement("div"); p.className="pad"+(ACC.includes(i)?" acc":"");
+      p.textContent=nm; const note=base+i;
+      const on =()=>{ p.classList.add("down"); non(+$("#padCh").value, note, +$("#padVel").value); };
+      const off=()=>{ p.classList.remove("down"); noff(+$("#padCh").value, note); };
+      p.addEventListener("pointerdown",e=>{ p.setPointerCapture(e.pointerId); on(); });
+      p.addEventListener("pointerup",off);
+      p.addEventListener("pointerleave",()=>{ if(p.classList.contains("down")) off(); });
+      p.addEventListener("pointercancel",off);
+      padsEl.appendChild(p);
+    });
+  }
+  octSel.onchange=buildPads; buildPads();
+})();
+</script>
+</body>
+</html>
