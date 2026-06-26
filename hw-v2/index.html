@@ -24,11 +24,15 @@
     <div class="transport-row">
       <div class="grp">
         <label>Out</label>
-        <select id="outPort"><option value="">— none —</option></select>
+        <select id="outPort" title="707 USB output (CC, PC, transport)"><option value="">— none —</option></select>
       </div>
       <div class="grp">
-        <label>In</label>
-        <select id="inPort"><option value="">— none —</option></select>
+        <label>Clock in</label>
+        <select id="clockInPort" title="707 USB input — MIDI clock slave"><option value="">— none —</option></select>
+      </div>
+      <div class="grp">
+        <label>Keys in</label>
+        <select id="keysInPort" title="Keystep USB input — follow mode"><option value="">— none —</option></select>
       </div>
       <div class="grp">
         <span id="statusDot" class="status-dot" title="MIDI status"></span>
@@ -179,8 +183,31 @@
             <button data-mode="auto" class="on">auto</button>
             <button data-mode="lock">lock</button>
             <button data-mode="manual">manual</button>
+            <button data-mode="follow">follow</button>
           </div>
           <button id="harmNext" class="teal-btn" title="manual advance">next ▸</button>
+          <div class="grp" id="keysChGrp" style="display:none">
+            <label class="muted">Keys CH</label>
+            <select id="harmKeysCh"></select>
+          </div>
+        </div>
+
+        <!-- Follow-mode live readout (shown only when FOLLOW is active) -->
+        <div class="follow-box" id="followBox" style="display:none">
+          <div class="follow-row">
+            <span class="follow-lbl">held</span>
+            <span class="follow-val" id="followHeld">—</span>
+          </div>
+          <div class="follow-row">
+            <span class="follow-lbl">chord</span>
+            <span class="follow-val follow-chord" id="followChord">—</span>
+            <span class="conf-dot" id="followConf" title="interpretation confidence"></span>
+          </div>
+          <div class="follow-row">
+            <span class="follow-lbl">out</span>
+            <span class="follow-val" id="followOut">—</span>
+          </div>
+          <div class="hint" id="followResumeHint"></div>
         </div>
 
         <div class="now-box">

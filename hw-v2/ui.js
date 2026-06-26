@@ -49,7 +49,8 @@ function saveState() {
     },
     midi: {
       outputPortId: midi.getOutputPortId(),
-      inputPortId: midi.getInputPortId(),
+      clockInputPortId: midi.getClockInputPortId(),
+      keyboardInputPortId: midi.getKeyboardInputPortId(),
     },
     euclidean: { voices: euclid.getVoices() },
     lfo: { lfos: lfo.getLFOs() },
@@ -59,6 +60,7 @@ function saveState() {
       octave: harmony.octave,
       inversion: harmony.inversion,
       mode: harmony.mode,
+      followChannel: harmony.followChannel,
       progression: harmony.getProgression(),
       runningStepIndex: harmony._stepIndex,
     },
@@ -112,25 +114,22 @@ midi.onActivity(() => {
   activityTimer = setTimeout(() => statusDot.classList.remove('act'), 80);
 });
 
+function fillPortSelect(sel, ports, currentId) {
+  sel.innerHTML = '<option value="">— none —</option>';
+  ports.forEach((p) => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    if (p.id === currentId) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
 function populatePorts() {
-  const outSel = $('outPort');
-  const inSel = $('inPort');
-  const curOut = midi.getOutputPortId();
-  const curIn = midi.getInputPortId();
-  outSel.innerHTML = '<option value="">— none —</option>';
-  inSel.innerHTML = '<option value="">— none —</option>';
-  midi.getOutputPorts().forEach((p) => {
-    const o = document.createElement('option');
-    o.value = p.id; o.textContent = p.name;
-    if (p.id === curOut) o.selected = true;
-    outSel.appendChild(o);
-  });
-  midi.getInputPorts().forEach((p) => {
-    const o = document.createElement('option');
-    o.value = p.id; o.textContent = p.name;
-    if (p.id === curIn) o.selected = true;
-    inSel.appendChild(o);
-  });
+  const outs = midi.getOutputPorts();
+  const ins = midi.getInputPorts();
+  fillPortSelect($('outPort'), outs, midi.getOutputPortId());
+  fillPortSelect($('clockInPort'), ins, midi.getClockInputPortId());
+  fillPortSelect($('keysInPort'), ins, midi.getKeyboardInputPortId());
 }
 
 async function initMidi() {
@@ -158,8 +157,12 @@ function wireTransport() {
     midi.setOutputPort(e.target.value);
     scheduleSave();
   });
-  $('inPort').addEventListener('change', (e) => {
-    midi.setInputPort(e.target.value);
+  $('clockInPort').addEventListener('change', (e) => {
+    midi.setClockInputPort(e.target.value);
+    scheduleSave();
+  });
+  $('keysInPort').addEventListener('change', (e) => {
+    midi.setKeyboardInputPort(e.target.value);
     scheduleSave();
   });
 
@@ -679,15 +682,17 @@ function wireHarmony() {
   $('harmOct').addEventListener('change', (e) => { harmony.setOctave(+e.target.value); refreshHarmonyDisplay(); scheduleSave(); });
   $('harmInv').addEventListener('change', (e) => { harmony.setInversion(+e.target.value); refreshHarmonyDisplay(); scheduleSave(); });
 
+  // Keys CH selector: 0 = any (omni), 1-16 specific.
+  const keysChSel = $('harmKeysCh');
+  const anyOpt = document.createElement('option');
+  anyOpt.value = '0'; anyOpt.textContent = 'any'; keysChSel.appendChild(anyOpt);
+  for (let c = 1; c <= 16; c++) { const o = document.createElement('option'); o.value = c; o.textContent = c; keysChSel.appendChild(o); }
+  keysChSel.value = harmony.followChannel;
+  keysChSel.addEventListener('change', () => { harmony.setFollowChannel(+keysChSel.value); scheduleSave(); });
+
   $('harmMode').querySelectorAll('button').forEach((btn) => {
     btn.addEventListener('click', () => {
-      $('harmMode').querySelectorAll('button').forEach((b) => b.classList.remove('on'));
-      btn.classList.add('on');
-      const mode = btn.dataset.mode;
-      if (mode === 'lock') harmony.lock();
-      else if (mode === 'manual') harmony.setMode('manual');
-      else { harmony.unlock(); harmony.setMode('auto'); }
-      $('harmNext').style.visibility = mode === 'manual' ? 'visible' : 'hidden';
+      applyHarmonyMode(btn.dataset.mode);
       scheduleSave();
     });
   });
@@ -695,6 +700,8 @@ function wireHarmony() {
   $('harmNext').addEventListener('click', () => {
     harmony.jumpToStep(harmony._stepIndex + 1);
   });
+
+  harmony.onFollowChordChange((c) => refreshFollowDisplay(c));
 
   $('progStart').addEventListener('click', () => { harmony.startProgression(); scheduleSave(); });
   $('progStop').addEventListener('click', () => { harmony.stopProgression(); refreshHarmonyDisplay(); scheduleSave(); });
@@ -774,6 +781,51 @@ function refreshBarDots() {
   label.textContent = `${remaining} bar${remaining === 1 ? '' : 's'} remaining`;
 }
 
+// Apply a harmony mode: update engine, button states, and panel visibility.
+function applyHarmonyMode(mode) {
+  $('harmMode').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+  harmony.setMode(mode);
+
+  const isFollow = mode === 'follow';
+  $('followBox').style.display = isFollow ? '' : 'none';
+  $('keysChGrp').style.display = isFollow ? '' : 'none';
+  // Hide progression UI in follow mode (progression is paused, not shown).
+  const nowBox = document.querySelector('.now-box');
+  const progControls = document.querySelector('.prog-controls');
+  const progGrid = $('progGrid');
+  [nowBox, progControls, progGrid].forEach((el) => { if (el) el.style.display = isFollow ? 'none' : ''; });
+  $('harmNext').style.visibility = mode === 'manual' ? 'visible' : 'hidden';
+
+  if (isFollow) refreshFollowDisplay();
+  else refreshHarmonyDisplay();
+}
+
+function refreshFollowDisplay() {
+  const st = harmony.getFollowState();
+  if (!st) return;
+  $('followHeld').textContent = st.pitchClasses.length
+    ? st.pitchClasses.map((p) => NOTE_NAMES[p]).join(' · ')
+    : '—';
+  const det = st.detectedChord;
+  const chordEl = $('followChord');
+  const dot = $('followConf');
+  if (det) {
+    chordEl.textContent = chordName(det.root, det.quality);
+    // Confidence: dim = uncertain, bright = clear (no percentage shown).
+    const bright = 0.35 + 0.65 * det.confidence;
+    chordEl.style.opacity = String(bright);
+    dot.style.opacity = String(bright);
+  } else {
+    chordEl.textContent = '—';
+    chordEl.style.opacity = '0.5';
+    dot.style.opacity = '0.25';
+  }
+  const notes = harmony.getActiveNotes();
+  $('followOut').textContent = notes.length ? notes.map(midiNoteName).join(' · ') : '—';
+  $('followResumeHint').textContent =
+    '⟳ back to AUTO resumes progression from step ' + (harmony._stepIndex + 1);
+}
+
 // ---- Step editor modal ----
 let editingStepIndex = -1;
 function wireStepModal() {
@@ -838,6 +890,8 @@ function closeStepModal() {
 function animate() {
   voiceEls.forEach((_, id) => drawRing(id));
   lfoEls.forEach((_, id) => drawLfoWave(id));
+  // Keep the follow readout live as keys are pressed/released.
+  if (harmony.mode === 'follow') refreshFollowDisplay();
   requestAnimationFrame(animate);
 }
 
@@ -865,15 +919,15 @@ async function boot() {
     harmony.setVoiceCount(state.harmony.voiceCount);
     harmony.setOctave(state.harmony.octave);
     if (state.harmony.inversion != null) harmony.setInversion(state.harmony.inversion);
-    harmony.setMode(state.harmony.mode);
+    if (state.harmony.followChannel != null) harmony.setFollowChannel(state.harmony.followChannel);
     harmony.setProgression(state.harmony.progression || []);
     $('harmCh').value = state.harmony.channel;
     $('harmVoices').value = state.harmony.voiceCount;
     $('harmOct').value = state.harmony.octave;
     $('harmInv').value = state.harmony.inversion || 0;
-    $('harmMode').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.mode === state.harmony.mode));
+    $('harmKeysCh').value = state.harmony.followChannel || 0;
     buildProgressionGrid();
-    refreshHarmonyDisplay();
+    applyHarmonyMode(state.harmony.mode || 'auto');
 
     // Euclidean voices
     (state.euclidean.voices || []).forEach((vc) => addVoiceUI(vc));
@@ -899,10 +953,16 @@ async function boot() {
 
   await initMidi();
 
-  // Restore selected ports after enumeration.
-  if (state && state.midi) {
-    if (state.midi.outputPortId) { midi.setOutputPort(state.midi.outputPortId); $('outPort').value = state.midi.outputPortId; }
-    if (state.midi.inputPortId) { midi.setInputPort(state.midi.inputPortId); $('inPort').value = state.midi.inputPortId; }
+  // Restore selected ports after enumeration; auto-detect anything not saved.
+  if (midi.isAvailable()) {
+    const guess = midi.detectDefaultPorts();
+    const sm = (state && state.midi) || {};
+    const outId = sm.outputPortId || guess.out;
+    const clkId = sm.clockInputPortId || guess.clockIn;
+    const keysId = sm.keyboardInputPortId || guess.keysIn;
+    if (outId) { midi.setOutputPort(outId); $('outPort').value = outId; }
+    if (clkId) { midi.setClockInputPort(clkId); $('clockInPort').value = clkId; }
+    if (keysId) { midi.setKeyboardInputPort(keysId); $('keysInPort').value = keysId; }
   }
 
   // Slave-mode disables BPM input.

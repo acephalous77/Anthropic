@@ -26,9 +26,13 @@ export class MidiEngine {
   constructor() {
     this.access = null;
     this.output = null;
-    this.input = null;
+    // Two independent inputs, kept separate so clock and note streams never
+    // interfere: clock comes from the 707, notes come from the Keystep.
+    this.clockInput = null;
+    this.keyboardInput = null;
     this._stateCallbacks = [];
-    this._messageCallbacks = [];
+    this._clockCallbacks = [];
+    this._keyboardCallbacks = [];
     this._activityCallbacks = [];
     this._available = false;
   }
@@ -79,29 +83,72 @@ export class MidiEngine {
     this.output = id ? this.access.outputs.get(id) || null : null;
   }
 
-  setInputPort(id) {
-    if (!this.access) return;
-    // Detach previous input handler.
-    if (this.input) this.input.onmidimessage = null;
-    this.input = id ? this.access.inputs.get(id) || null : null;
-    if (this.input) {
-      this.input.onmidimessage = (msg) => {
-        this._messageCallbacks.forEach((cb) => cb(msg.data, msg.timeStamp));
-      };
-    }
-  }
-
   getOutputPortId() {
     return this.output ? this.output.id : null;
   }
 
-  getInputPortId() {
-    return this.input ? this.input.id : null;
+  // --- Clock input (707 USB) — for ClockEngine slave mode ---
+  setClockInputPort(id) {
+    if (!this.access) return;
+    if (this.clockInput) this.clockInput.onmidimessage = null;
+    this.clockInput = id ? this.access.inputs.get(id) || null : null;
+    if (this.clockInput) {
+      this.clockInput.onmidimessage = (msg) => {
+        const status = msg.data[0];
+        // Filter to realtime transport bytes only: clock/start/continue/stop.
+        if (status === 0xf8 || status === 0xfa || status === 0xfb || status === 0xfc) {
+          this._clockCallbacks.forEach((cb) => cb(msg.data, msg.timeStamp));
+        }
+      };
+    }
   }
 
-  // --- Raw input handler (for clock slave) ---
-  onMidiMessage(callback) {
-    this._messageCallbacks.push(callback);
+  onClockMessage(callback) {
+    this._clockCallbacks.push(callback);
+  }
+
+  getClockInputPortId() {
+    return this.clockInput ? this.clockInput.id : null;
+  }
+
+  // --- Keyboard input (Keystep USB) — for HarmonyEngine follow mode ---
+  setKeyboardInputPort(id) {
+    if (!this.access) return;
+    if (this.keyboardInput) this.keyboardInput.onmidimessage = null;
+    this.keyboardInput = id ? this.access.inputs.get(id) || null : null;
+    if (this.keyboardInput) {
+      this.keyboardInput.onmidimessage = (msg) => {
+        const d = msg.data;
+        const type = d[0] & 0xf0;
+        const ch = (d[0] & 0x0f) + 1; // expose 1-16
+        if (type === 0x90 && d[2] > 0) {
+          this._keyboardCallbacks.forEach((cb) => cb({ type: 'on', ch, note: d[1], vel: d[2] }));
+        } else if (type === 0x80 || (type === 0x90 && d[2] === 0)) {
+          // noteOff, or noteOn with velocity 0 (treated as noteOff).
+          this._keyboardCallbacks.forEach((cb) => cb({ type: 'off', ch, note: d[1], vel: 0 }));
+        }
+      };
+    }
+  }
+
+  onKeyboardNote(callback) {
+    this._keyboardCallbacks.push(callback);
+  }
+
+  getKeyboardInputPortId() {
+    return this.keyboardInput ? this.keyboardInput.id : null;
+  }
+
+  // Heuristic default-port detection by name. Returns suggested ids.
+  detectDefaultPorts() {
+    const outs = this.getOutputPorts();
+    const ins = this.getInputPorts();
+    const roland = /mc-?707|roland/i;
+    const arturia = /keystep|arturia/i;
+    const out = (outs.find((p) => roland.test(p.name)) || outs[0] || {}).id || null;
+    const clockIn = (ins.find((p) => roland.test(p.name)) || {}).id || null;
+    const keysIn = (ins.find((p) => arturia.test(p.name)) || {}).id || null;
+    return { out, clockIn, keysIn };
   }
 
   // --- Activity flash registration ---

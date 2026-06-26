@@ -1,12 +1,36 @@
 # husband & wife · generative engine · v2
 
-A generative MIDI engine for the Roland MC-707 + VT-4. It drives both
-algorithmically: Euclidean rhythm sequencing with probability gates, clock-synced
-LFO CC automation, and a clock-locked harmony driver that auto-advances through a
-chord progression and sends MIDI notes to the VT-4 to control its Harmony voices.
+A generative MIDI engine for the Roland MC-707 + VT-4 (+ Arturia Keystep). It
+drives them algorithmically: Euclidean rhythm sequencing with probability gates,
+clock-synced LFO CC automation, and a clock-locked harmony driver that
+auto-advances through a chord progression — or, in **follow mode**, derives the
+chord live from notes played on the Keystep — sending MIDI notes to the VT-4 to
+control its Harmony voices.
 
 Companion to v1 (`hw-707-control.html`) — the v2 header links to it. v1 is not
-modified by v2.
+modified by v2. Tone/patch/effect editing is B67's domain and is intentionally
+absent here.
+
+## MIDI routing (three ports)
+
+| Header selector | Cable | Purpose |
+|---|---|---|
+| `OUT` | 707 USB | app → 707 (CC, PC, transport) and harmony notes |
+| `CLOCK IN` | 707 USB | 707 → app, MIDI clock for slave mode |
+| `KEYS IN` | Keystep USB | Keystep → app, note input for follow mode |
+
+Hardware (707 owns tempo): `707 MIDI OUT1 → Keystep MIDI IN` (clock),
+`Keystep MIDI OUT → 707 MIDI IN` (notes/arp), `707 MIDI OUT2 → VT-4 MIDI IN`
+(harmony). Ports auto-detect by name on launch (Roland/707, Arturia/Keystep);
+override from the dropdowns.
+
+## Harmony modes
+
+- **auto** — progression advances on its per-step bar count (default).
+- **lock** — holds the current chord; press again to resume.
+- **manual** — tap NEXT to advance one step.
+- **follow** — chord is detected live from held Keystep notes (40ms debounced)
+  and sent to the VT-4; the progression pauses and resumes where it left off.
 
 ## Running it
 

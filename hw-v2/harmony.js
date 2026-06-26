@@ -53,10 +53,20 @@ export class HarmonyEngine {
     this._locked = false;
     this._activeNotes = [];
 
+    // --- Follow mode state ---
+    this.followChannel = 0; // 0 = omni (any channel)
+    this._heldNotes = new Set(); // currently held MIDI notes from the Keystep
+    this._followDebounce = null; // timer handle for 40ms chord-change debounce
+    this._lastDetected = null; // last {root, quality} sent in follow mode
+
     this._stepChangeCallbacks = [];
     this._barsRemainingCallbacks = [];
+    this._followChordCallbacks = [];
 
     this.clock.onTick((t) => this._onTick(t));
+    if (this.midi && this.midi.onKeyboardNote) {
+      this.midi.onKeyboardNote((evt) => this._onKeyboardNote(evt));
+    }
   }
 
   // --- Configuration ---
@@ -78,19 +88,41 @@ export class HarmonyEngine {
   }
 
   setMode(mode) {
-    if (mode !== 'auto' && mode !== 'lock' && mode !== 'manual') return;
-    // On mode switch, clear any orphan notes to be safe.
+    if (mode !== 'auto' && mode !== 'lock' && mode !== 'manual' && mode !== 'follow') return;
     const prev = this.mode;
+    if (mode === prev) return;
     this.mode = mode;
+
     if (mode === 'lock') {
       this._locked = true;
     } else if (prev === 'lock') {
       this._locked = false;
     }
+
+    if (mode === 'follow') {
+      // Pause the progression (do NOT reset _stepIndex). Release the
+      // progression chord so follow output takes over cleanly.
+      this._releaseActive();
+      this._lastDetected = null;
+      this._heldNotes.clear();
+    } else if (prev === 'follow') {
+      // Leaving follow: release any follow-derived chord, then resume the
+      // progression from where it paused if it was running.
+      this._releaseActive();
+      this._lastDetected = null;
+      if (this._followDebounce) { clearTimeout(this._followDebounce); this._followDebounce = null; }
+      if (this._running && mode === 'auto') {
+        this._applyStep(this._stepIndex, true);
+      }
+    }
   }
 
   getMode() {
     return this.mode;
+  }
+
+  setFollowChannel(ch) {
+    this.followChannel = Math.max(0, Math.min(16, Math.round(ch)));
   }
 
   // --- Progression ---
@@ -149,6 +181,7 @@ export class HarmonyEngine {
   }
 
   getCurrentStep() {
+    if (this.mode === 'follow') return null;
     const s = this.progression[this._stepIndex];
     if (!s) return null;
     return {
@@ -161,6 +194,7 @@ export class HarmonyEngine {
   }
 
   getNextStep() {
+    if (this.mode === 'follow') return null;
     if (this.progression.length === 0) return null;
     const ni = (this._stepIndex + 1) % this.progression.length;
     const s = this.progression[ni];
@@ -179,6 +213,95 @@ export class HarmonyEngine {
 
   onBarsRemaining(callback) {
     this._barsRemainingCallbacks.push(callback);
+  }
+
+  onFollowChordChange(callback) {
+    this._followChordCallbacks.push(callback);
+  }
+
+  // --- Follow mode ---
+
+  _onKeyboardNote(evt) {
+    if (this.mode !== 'follow') return;
+    // Channel filter: 0 = omni.
+    if (this.followChannel !== 0 && evt.ch !== this.followChannel) return;
+    if (evt.type === 'on') this._heldNotes.add(evt.note);
+    else this._heldNotes.delete(evt.note);
+
+    // Debounce: wait 40ms after the last note event before recomputing and
+    // sending to the VT-4. Prevents noteOff/noteOn floods during fast playing.
+    if (this._followDebounce) clearTimeout(this._followDebounce);
+    this._followDebounce = setTimeout(() => {
+      this._followDebounce = null;
+      this._recomputeFollow();
+    }, 40);
+  }
+
+  _recomputeFollow() {
+    const pitchClasses = Array.from(new Set(Array.from(this._heldNotes).map((n) => n % 12)));
+    // No notes held → hold the last chord (do not send noteOff).
+    if (pitchClasses.length === 0) return;
+
+    const detected = this.detectChord(pitchClasses);
+    if (!detected) return;
+
+    const notes = this.computeNotes(detected.root, detected.quality);
+    const changed =
+      !this._lastDetected ||
+      this._lastDetected.root !== detected.root ||
+      this._lastDetected.quality !== detected.quality;
+
+    if (changed) {
+      this._releaseActive();
+      notes.forEach((n) => this.midi.noteOn(this.channel, n, 100));
+      this._activeNotes = notes;
+      this._lastDetected = { root: detected.root, quality: detected.quality };
+      this._followChordCallbacks.forEach((cb) =>
+        cb({ root: detected.root, quality: detected.quality, notes, confidence: detected.confidence })
+      );
+    }
+  }
+
+  getFollowState() {
+    if (this.mode !== 'follow') return null;
+    const pitchClasses = Array.from(new Set(Array.from(this._heldNotes).map((n) => n % 12)));
+    return {
+      heldNotes: Array.from(this._heldNotes).sort((a, b) => a - b),
+      pitchClasses: pitchClasses.sort((a, b) => a - b),
+      detectedChord: pitchClasses.length ? this.detectChord(pitchClasses) : null,
+    };
+  }
+
+  // Best-match chord from a set of pitch classes (0–11). Exported behaviour
+  // for testing. Returns { root, quality, confidence } or null if empty.
+  detectChord(pitchClasses) {
+    if (!pitchClasses || pitchClasses.length === 0) return null;
+    const pcSet = new Set(pitchClasses.map((p) => ((p % 12) + 12) % 12));
+    if (pcSet.size === 1) {
+      return { root: pitchClasses[0] % 12, quality: 'maj', confidence: 0.33 };
+    }
+    // Quality keys in simplicity order (earlier = simpler) for tie-breaking.
+    const qualities = Object.keys(CHORD_QUALITIES);
+    let best = null;
+    for (let root = 0; root < 12; root++) {
+      for (let qi = 0; qi < qualities.length; qi++) {
+        const quality = qualities[qi];
+        const tones = CHORD_QUALITIES[quality].map((iv) => (root + iv) % 12);
+        const toneSet = new Set(tones);
+        let hit = 0;
+        toneSet.forEach((t) => { if (pcSet.has(t)) hit++; });
+        const score = hit / toneSet.size;
+        if (
+          !best ||
+          score > best.score ||
+          // Tie-break: prefer simpler quality (lower index in qualities list).
+          (score === best.score && qi < best.qi)
+        ) {
+          best = { root, quality, score, qi, confidence: score };
+        }
+      }
+    }
+    return best ? { root: best.root, quality: best.quality, confidence: best.confidence } : null;
   }
 
   // --- Note computation ---
@@ -204,6 +327,7 @@ export class HarmonyEngine {
 
   _onTick(t) {
     if (!this._running) return;
+    if (this.mode === 'follow') return; // progression paused in follow mode
     if (this.progression.length === 0) return;
 
     // Only act on bar boundaries — never advance mid-bar.

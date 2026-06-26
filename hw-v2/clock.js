@@ -49,7 +49,7 @@ export class ClockEngine {
 
     // Bind slave handler so we can reference identity (not strictly needed but tidy).
     this._onSlaveMessage = this._onSlaveMessage.bind(this);
-    if (this.midi) this.midi.onMidiMessage(this._onSlaveMessage);
+    if (this.midi) this.midi.onClockMessage(this._onSlaveMessage);
   }
 
   // --- Configuration ---
