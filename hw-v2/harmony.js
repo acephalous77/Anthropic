@@ -274,11 +274,18 @@ export class HarmonyEngine {
 
   // Best-match chord from a set of pitch classes (0–11). Exported behaviour
   // for testing. Returns { root, quality, confidence } or null if empty.
+  //
+  // Scoring is a Jaccard ratio: matched tones / |held ∪ chordTones|. Unlike a
+  // plain coverage ratio, this rewards a candidate for explaining the held
+  // notes *fully*, so a held C7 (C E G Bb) scores dom7 = 1.0 but maj = 0.75 —
+  // the seventh is recognised instead of being shadowed by its own triad.
+  // When no extension is held, the triad still wins (C E G → maj 1.0, dom7
+  // 0.75). Ties break to the simpler quality (earlier in CHORD_QUALITIES).
   detectChord(pitchClasses) {
     if (!pitchClasses || pitchClasses.length === 0) return null;
     const pcSet = new Set(pitchClasses.map((p) => ((p % 12) + 12) % 12));
     if (pcSet.size === 1) {
-      return { root: pitchClasses[0] % 12, quality: 'maj', confidence: 0.33 };
+      return { root: ((pitchClasses[0] % 12) + 12) % 12, quality: 'maj', confidence: 0.33 };
     }
     // Quality keys in simplicity order (earlier = simpler) for tie-breaking.
     const qualities = Object.keys(CHORD_QUALITIES);
@@ -290,7 +297,9 @@ export class HarmonyEngine {
         const toneSet = new Set(tones);
         let hit = 0;
         toneSet.forEach((t) => { if (pcSet.has(t)) hit++; });
-        const score = hit / toneSet.size;
+        // Jaccard: intersection / union. union = |tones| + (held not in tones).
+        const unionSize = toneSet.size + (pcSet.size - hit);
+        const score = unionSize === 0 ? 0 : hit / unionSize;
         if (
           !best ||
           score > best.score ||
