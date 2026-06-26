@@ -59,6 +59,26 @@ On the 707: `SHIFT + INPUT` → set EXT IN type = **LINE** (not MIC).
 For USB MIDI to the VT-4 harmony driver, enable TxUSB MIDI on the 707
 (`SHIFT + TRACK SEL` per track) and reconnect USB.
 
+## Standalone desktop app (double-click, no server)
+
+`hw-v2-standalone.html` (repo root) is a single self-contained file — all CSS
+and JS inlined — so it runs by double-clicking, no local server needed. Keep it
+on your desktop next to `hw-707-control.html` (the v1 link expects it there) and
+open it in Chrome/Edge.
+
+For an app-like window with its own icon: open the file in Chrome → ⋮ menu →
+*Cast, save, and share* → **Create shortcut…** → tick **Open as window**.
+
+Rebuild it after changing any module:
+
+```
+cd hw-v2
+node build-standalone.mjs   # → ../hw-v2-standalone.html
+```
+
+The build just inlines the existing modules (each wrapped in its own scope); the
+shipped app stays vanilla JS — no framework, no runtime dependencies.
+
 ## Files
 
 | File | Role |
