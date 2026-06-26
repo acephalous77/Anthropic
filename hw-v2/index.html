@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>husband &amp; wife · generative engine · v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ============ HEADER / TRANSPORT ============ -->
+  <header>
+    <div class="title-row">
+      <h1>husband &amp; wife</h1>
+      <span class="sub">generative engine · v2</span>
+      <a class="v1-link" href="hw-707-control.html" target="_blank" rel="noopener">v1 control surface ↗</a>
+    </div>
+
+    <div class="transport-row">
+      <div class="grp">
+        <label>Out</label>
+        <select id="outPort"><option value="">— none —</option></select>
+      </div>
+      <div class="grp">
+        <label>In</label>
+        <select id="inPort"><option value="">— none —</option></select>
+      </div>
+      <div class="grp">
+        <span id="statusDot" class="status-dot" title="MIDI status"></span>
+        <span id="statusText" class="muted">init…</span>
+      </div>
+      <div class="grp">
+        <label>BPM</label>
+        <input type="number" id="bpm" min="40" max="200" value="120" />
+        <button id="tap" class="amber-btn">tap</button>
+      </div>
+      <div class="grp">
+        <label>Clock</label>
+        <div class="seg" id="clockMode">
+          <button data-mode="internal" class="on">internal</button>
+          <button data-mode="slave">slave</button>
+        </div>
+      </div>
+      <div class="grp">
+        <label>Sub</label>
+        <select id="subdivision">
+          <option value="1/4">1/4</option>
+          <option value="1/8">1/8</option>
+          <option value="1/16" selected>1/16</option>
+          <option value="1/32">1/32</option>
+          <option value="1/8t">1/8t</option>
+          <option value="1/16t">1/16t</option>
+        </select>
+      </div>
+      <div class="grp">
+        <button id="start" class="primary">▶ start</button>
+        <button id="stop" class="warn">■ stop</button>
+      </div>
+      <div class="grp">
+        <button id="panic" class="warn" title="All notes off on all channels">panic</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ FILE:// MODULE-LOAD FALLBACK ============ -->
+  <!-- Chrome blocks ES module imports from file:// (CORS, origin 'null'), which
+       silently prevents the app from booting. This non-module inline script
+       detects that case and shows actionable guidance. -->
+  <div class="support-banner" id="moduleBanner">
+    <h3>Serve this folder over HTTP</h3>
+    <p>The app didn't start. Chrome blocks ES module imports from
+    <span class="mono">file://</span> URLs, so opening the HTML file directly
+    won't work. Run a tiny local server in the <span class="mono">hw-v2/</span>
+    folder and open it over HTTP:</p>
+    <ul>
+      <li><span class="mono">python3 -m http.server 8080</span></li>
+      <li>then open <span class="mono">http://localhost:8080</span> in Chrome or Edge.</li>
+    </ul>
+  </div>
+  <script>
+    // If the module entry point hasn't booted shortly after load, surface the
+    // file:// guidance. Plain (non-module) script so it always runs.
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        if (!window.__hwBooted) {
+          document.getElementById('moduleBanner').classList.add('show');
+        }
+      }, 1200);
+    });
+  </script>
+
+  <!-- ============ BROWSER SUPPORT BANNER ============ -->
+  <div class="support-banner" id="supportBanner">
+    <h3>Web MIDI required</h3>
+    <p>This tool uses the Web MIDI API, which runs in <strong>Chrome or Edge on desktop</strong> (not Safari or Firefox). To get going:</p>
+    <ul>
+      <li>Open this file in Chrome or Edge.</li>
+      <li>Allow MIDI access if prompted.</li>
+      <li>If ports are missing, check <span class="mono">chrome://flags</span> and your OS MIDI/audio permissions.</li>
+    </ul>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+    <!-- LEFT COLUMN: rhythm (amber) -->
+    <div class="col-left">
+
+      <section class="panel amber-section" id="euclideanPanel">
+        <div class="panel-head">
+          <span class="accent-bar"></span>
+          <h2>Euclidean</h2>
+          <span class="spacer"></span>
+          <button id="addVoice" class="amber-btn">+ add voice</button>
+        </div>
+        <div class="info-note">
+          Rhythm voices generate notes or CC gates from Bjorklund patterns.
+          Amber = rhythm. Up to 8 voices.
+        </div>
+        <div class="voice-grid" id="voiceGrid"></div>
+      </section>
+
+      <section class="panel amber-section" id="lfoPanel">
+        <div class="panel-head">
+          <span class="accent-bar"></span>
+          <h2>LFO Sweeps</h2>
+          <span class="spacer"></span>
+          <button id="addLfo" class="amber-btn">+ add LFO</button>
+        </div>
+        <div class="info-note">
+          Clock-synced LFOs continuously modulate CC values. Up to 4.
+        </div>
+        <div class="lfo-grid" id="lfoGrid"></div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: harmony (teal) -->
+    <div class="col-right">
+      <section class="panel teal-section" id="harmonyPanel">
+        <div class="panel-head">
+          <span class="accent-bar"></span>
+          <h2>Harmony · VT-4</h2>
+        </div>
+
+        <div class="harmony-config">
+          <div class="grp">
+            <label class="muted">MIDI CH</label>
+            <select id="harmCh"></select>
+          </div>
+          <div class="grp">
+            <label class="muted">Voices</label>
+            <select id="harmVoices">
+              <option>1</option><option selected>2</option><option>3</option>
+            </select>
+          </div>
+          <div class="grp">
+            <label class="muted">Oct</label>
+            <select id="harmOct">
+              <option>3</option><option selected>4</option><option>5</option>
+            </select>
+          </div>
+          <div class="grp">
+            <label class="muted">Inv</label>
+            <select id="harmInv">
+              <option value="0" selected>root</option>
+              <option value="1">1st</option>
+              <option value="2">2nd</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mode-row">
+          <div class="seg" id="harmMode">
+            <button data-mode="auto" class="on">auto</button>
+            <button data-mode="lock">lock</button>
+            <button data-mode="manual">manual</button>
+          </div>
+          <button id="harmNext" class="teal-btn" title="manual advance">next ▸</button>
+        </div>
+
+        <div class="now-box">
+          <div>
+            <div class="now-chord" id="nowChord">—</div>
+            <div class="now-notes" id="nowNotes"></div>
+          </div>
+          <div class="next-chord">
+            <div class="lbl">next</div>
+            <div class="nm" id="nextChord">—</div>
+          </div>
+          <div class="bar-dots" id="barDots">
+            <span class="bar-remaining" id="barRemaining"></span>
+          </div>
+        </div>
+
+        <div class="prog-controls">
+          <button id="progStart" class="primary">▶ start</button>
+          <button id="progStop" class="warn">■ stop</button>
+          <button id="progReset" class="teal-btn">↺ reset</button>
+        </div>
+
+        <div class="prog-grid" id="progGrid"></div>
+        <div class="hint">Click a step to edit. Empty steps are skipped.</div>
+
+        <div class="info-note">
+          <strong>VT-4 note semantics:</strong> notes sent set the harmonic
+          context (key/scale center), not the pitch the VT-4 outputs. Sending
+          C–E–G tells it to harmonize around C major. VT-4 MIDI channel defaults
+          to 1; change above if your VT-4 listens elsewhere.
+        </div>
+
+        <div class="info-note">
+          <strong>Signal chain:</strong> condenser mic → VT-4 (phantom ON, rear
+          XLR) → L OUT (wet) + R OUT (dry/bypass) → 707 EXT IN L/R. Set 707
+          EXT IN type = LINE. The R/BYPASS jack carries the dry vocal — route it
+          to one side of the looper to capture dry while monitoring wet.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ============ PROGRESSION STEP EDITOR MODAL ============ -->
+  <div class="modal-backdrop" id="stepModal">
+    <div class="modal">
+      <h3>Edit step <span id="stepModalNum"></span></h3>
+      <div class="field">
+        <label>Root</label>
+        <select id="stepRoot"></select>
+      </div>
+      <div class="field">
+        <label>Quality</label>
+        <select id="stepQuality"></select>
+      </div>
+      <div class="field">
+        <label>Bars (1–8)</label>
+        <input type="number" id="stepBars" min="1" max="8" value="2" />
+      </div>
+      <div class="modal-actions">
+        <button id="stepClear" class="warn">clear</button>
+        <button id="stepCancel">cancel</button>
+        <button id="stepSave" class="primary">save</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Chrome / Edge desktop · Web MIDI · no SysEx · state auto-saved locally.
+    Companion to the v1 control surface.
+  </footer>
+
+  <script type="module" src="ui.js"></script>
+</body>
+</html>
