@@ -1,0 +1,3057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>husband &amp; wife · generative engine · v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+/* style.css — design tokens + all CSS. Palette matches v1 exactly. */
+
+:root {
+  --bg:      #16131a;
+  --panel:   #1f1b25;
+  --panel-2: #262130;
+  --line:    #352d40;
+  --ink:     #e8e2ee;
+  --muted:   #8a8194;
+  --faint:   #5c5468;
+  --h:       #e0a44a; /* amber — Adnan / rhythm / Euclidean / LFO */
+  --w:       #4ec5c1; /* teal  — Sophia / harmony / VT-4 */
+  --live:    #7ee081;
+  --warn:    #e06a6a;
+  --r:       6px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+h1, h2, h3, .display {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+a { color: var(--w); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.amber { color: var(--h); }
+.teal  { color: var(--w); }
+
+/* ---------- Header ---------- */
+
+header {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 16px;
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title-row h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.title-row .sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.v1-link {
+  margin-left: auto;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  padding: 3px 8px;
+  border-radius: var(--r);
+}
+
+.transport-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.transport-row .grp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transport-row label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Controls ---------- */
+
+select, input[type="text"], input[type="number"] {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 4px 6px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+}
+
+input[type="number"] { width: 64px; }
+
+button {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 5px 10px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+button:hover { border-color: var(--faint); }
+button:active { background: var(--line); }
+
+button.primary { border-color: var(--live); color: var(--live); }
+button.warn { border-color: var(--warn); color: var(--warn); }
+button.amber-btn { border-color: var(--h); color: var(--h); }
+button.teal-btn { border-color: var(--w); color: var(--w); }
+
+button.toggle.on { background: var(--line); border-color: var(--ink); }
+button.amber-btn.on { background: rgba(224,164,74,0.18); }
+button.teal-btn.on { background: rgba(78,197,193,0.18); }
+
+input[type="range"] { width: 100%; accent-color: var(--h); }
+.teal-section input[type="range"] { accent-color: var(--w); }
+
+/* Status dot + MIDI activity */
+.status-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--faint); display: inline-block;
+  transition: background 0.1s;
+}
+.status-dot.ok { background: var(--live); }
+.status-dot.err { background: var(--warn); }
+.status-dot.act { background: var(--h); box-shadow: 0 0 6px var(--h); }
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.seg button {
+  border: none;
+  border-radius: 0;
+  border-right: 1px solid var(--line);
+}
+.seg button:last-child { border-right: none; }
+.seg button.on { background: var(--line); }
+
+/* ---------- Layout ---------- */
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; }
+}
+
+.col-left { border-right: 1px solid var(--line); }
+@media (max-width: 900px) {
+  .col-left { border-right: none; border-bottom: 1px solid var(--line); }
+}
+
+.col-right { position: sticky; top: 92px; }
+@media (max-width: 900px) {
+  .col-right { position: static; }
+}
+
+section.panel {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.panel-head .accent-bar {
+  width: 4px; height: 16px; border-radius: 2px;
+}
+.amber-section .accent-bar { background: var(--h); }
+.teal-section .accent-bar { background: var(--w); }
+.panel-head .spacer { margin-left: auto; }
+
+/* ---------- Euclidean voices ---------- */
+
+.voice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 560px) { .voice-grid { grid-template-columns: 1fr; } }
+
+.voice {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  overflow: hidden;
+}
+.voice.inactive { opacity: 0.55; }
+
+.voice-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.voice-top canvas { flex: 0 0 auto; }
+.voice-top .vmeta { flex: 1 1 auto; min-width: 0; }
+.voice-top .vmeta .vlabel {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 13px;
+  color: var(--h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.voice-top .vmeta .vinfo { color: var(--muted); font-size: 11px; }
+
+.voice-body {
+  padding: 8px 10px 12px;
+  border-top: 1px solid var(--line);
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.voice.open .voice-body { display: grid; }
+
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field.full { grid-column: 1 / -1; }
+.field label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.field .row { display: flex; align-items: center; gap: 6px; }
+.field .val { color: var(--h); min-width: 30px; text-align: right; }
+.teal-section .field .val { color: var(--w); }
+
+/* ---------- LFO ---------- */
+
+.lfo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 560px) { .lfo-grid { grid-template-columns: 1fr; } }
+
+.lfo {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  padding: 8px 10px;
+}
+.lfo.inactive { opacity: 0.55; }
+.lfo-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.lfo-head .llabel { color: var(--w); font-family: "Space Grotesk"; font-size: 13px; }
+.lfo canvas { width: 100%; height: 40px; display: block; background: var(--panel-2); border-radius: 4px; }
+.lfo-body { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 8px; }
+
+/* ---------- Harmony ---------- */
+
+.teal-section { }
+
+.harmony-config {
+  display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.harmony-config .grp { display: flex; align-items: center; gap: 6px; }
+
+.mode-row { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+
+.now-box {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  align-items: center;
+}
+.now-chord {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--w);
+  line-height: 1;
+}
+.next-chord { text-align: right; }
+.next-chord .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+.next-chord .nm { font-family: "Space Grotesk"; font-size: 20px; color: var(--muted); }
+
+.now-notes { color: var(--muted); font-size: 13px; letter-spacing: 0.04em; }
+
+.bar-dots { display: flex; gap: 5px; align-items: center; grid-column: 1 / -1; margin-top: 4px; }
+.bar-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1px solid var(--w); background: transparent;
+}
+.bar-dot.filled { background: var(--w); }
+.bar-remaining { margin-left: 8px; color: var(--w); font-size: 12px; }
+
+.prog-controls { display: flex; gap: 8px; margin-bottom: 12px; }
+
+.prog-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+@media (max-width: 600px) { .prog-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.prog-step {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel-2);
+  padding: 6px 4px;
+  text-align: center;
+  cursor: pointer;
+  min-height: 56px;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+}
+.prog-step .num { font-size: 9px; color: var(--faint); }
+.prog-step .chord { font-family: "Space Grotesk"; font-size: 13px; color: var(--ink); }
+.prog-step .bars { font-size: 10px; color: var(--muted); }
+.prog-step.empty .chord { color: var(--faint); }
+.prog-step.current { border-color: var(--w); background: rgba(78,197,193,0.16); }
+.prog-step.next { border-color: var(--faint); }
+.prog-step:hover { border-color: var(--faint); }
+
+.hint { color: var(--faint); font-size: 11px; margin-top: 8px; }
+
+/* ---------- Follow mode ---------- */
+.follow-box {
+  border: 1px solid var(--w);
+  border-radius: var(--r);
+  background: var(--panel);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.follow-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.follow-row:last-of-type { margin-bottom: 4px; }
+.follow-lbl {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); width: 44px; flex: 0 0 auto;
+}
+.follow-val { font-family: "IBM Plex Mono", monospace; font-size: 14px; color: var(--ink); letter-spacing: 0.05em; }
+.follow-chord { font-family: "Space Grotesk", sans-serif; font-size: 24px; color: var(--w); }
+.conf-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--w); display: inline-block;
+}
+/* Confidence: dim = uncertain, bright = clear. Set via opacity in JS. */
+
+.info-note {
+  border-left: 2px solid var(--w);
+  padding: 6px 10px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 11px;
+  background: var(--panel-2);
+  border-radius: 0 var(--r) var(--r) 0;
+}
+.amber-section .info-note { border-left-color: var(--h); }
+
+/* ---------- Editor modal for progression step ---------- */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: none; align-items: center; justify-content: center; z-index: 50;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 18px;
+  width: 320px;
+  max-width: 90vw;
+}
+.modal h3 { margin: 0 0 12px; font-size: 14px; }
+.modal .field { margin-bottom: 10px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+
+/* ---------- Browser-support banner ---------- */
+.support-banner {
+  background: rgba(224,106,106,0.12);
+  border: 1px solid var(--warn);
+  color: var(--ink);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  margin: 14px 16px;
+  font-size: 12px;
+  display: none;
+}
+.support-banner.show { display: block; }
+.support-banner h3 { margin: 0 0 6px; color: var(--warn); font-size: 13px; }
+.support-banner ul { margin: 6px 0 0; padding-left: 18px; }
+
+.tooltip-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid var(--faint); color: var(--muted);
+  font-size: 9px; cursor: help;
+}
+
+footer {
+  padding: 16px; color: var(--faint); font-size: 11px;
+  border-top: 1px solid var(--line);
+}
+
+</style>
+</head>
+<body>
+  <!-- ============ HEADER / TRANSPORT ============ -->
+  <header>
+    <div class="title-row">
+      <h1>husband &amp; wife</h1>
+      <span class="sub">generative engine · v2</span>
+      <a class="v1-link" href="hw-707-control.html" target="_blank" rel="noopener">v1 control surface ↗</a>
+    </div>
+
+    <div class="transport-row">
+      <div class="grp">
+        <label>Out</label>
+        <select id="outPort" title="707 USB output (CC, PC, transport)"><option value="">— none —</option></select>
+      </div>
+      <div class="grp">
+        <label>Clock in</label>
+        <select id="clockInPort" title="707 USB input — MIDI clock slave"><option value="">— none —</option></select>
+      </div>
+      <div class="grp">
+        <label>Keys in</label>
+        <select id="keysInPort" title="Keystep USB input — follow mode"><option value="">— none —</option></select>
+      </div>
+      <div class="grp">
+        <span id="statusDot" class="status-dot" title="MIDI status"></span>
+        <span id="statusText" class="muted">init…</span>
+      </div>
+      <div class="grp">
+        <label>BPM</label>
+        <input type="number" id="bpm" min="40" max="200" value="120" />
+        <button id="tap" class="amber-btn">tap</button>
+      </div>
+      <div class="grp">
+        <label>Clock</label>
+        <div class="seg" id="clockMode">
+          <button data-mode="internal" class="on">internal</button>
+          <button data-mode="slave">slave</button>
+        </div>
+      </div>
+      <div class="grp">
+        <label>Sub</label>
+        <select id="subdivision">
+          <option value="1/4">1/4</option>
+          <option value="1/8">1/8</option>
+          <option value="1/16" selected>1/16</option>
+          <option value="1/32">1/32</option>
+          <option value="1/8t">1/8t</option>
+          <option value="1/16t">1/16t</option>
+        </select>
+      </div>
+      <div class="grp">
+        <button id="start" class="primary">▶ start</button>
+        <button id="stop" class="warn">■ stop</button>
+      </div>
+      <div class="grp">
+        <button id="panic" class="warn" title="All notes off on all channels">panic</button>
+      </div>
+    </div>
+  </header>
+
+  
+  <!-- ============ BROWSER SUPPORT BANNER ============ -->
+  <div class="support-banner" id="supportBanner">
+    <h3>Web MIDI required</h3>
+    <p>This tool uses the Web MIDI API, which runs in <strong>Chrome or Edge on desktop</strong> (not Safari or Firefox). To get going:</p>
+    <ul>
+      <li>Open this file in Chrome or Edge.</li>
+      <li>Allow MIDI access if prompted.</li>
+      <li>If ports are missing, check <span class="mono">chrome://flags</span> and your OS MIDI/audio permissions.</li>
+    </ul>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+    <!-- LEFT COLUMN: rhythm (amber) -->
+    <div class="col-left">
+
+      <section class="panel amber-section" id="euclideanPanel">
+        <div class="panel-head">
+          <span class="accent-bar"></span>
+          <h2>Euclidean</h2>
+          <span class="spacer"></span>
+          <button id="addVoice" class="amber-btn">+ add voice</button>
+        </div>
+        <div class="info-note">
+          Rhythm voices generate notes or CC gates from Bjorklund patterns.
+          Amber = rhythm. Up to 8 voices.
+        </div>
+        <div class="voice-grid" id="voiceGrid"></div>
+      </section>
+
+      <section class="panel amber-section" id="lfoPanel">
+        <div class="panel-head">
+          <span class="accent-bar"></span>
+          <h2>LFO Sweeps</h2>
+          <span class="spacer"></span>
+          <button id="addLfo" class="amber-btn">+ add LFO</button>
+        </div>
+        <div class="info-note">
+          Clock-synced LFOs continuously modulate CC values. Up to 4.
+        </div>
+        <div class="lfo-grid" id="lfoGrid"></div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: harmony (teal) -->
+    <div class="col-right">
+      <section class="panel teal-section" id="harmonyPanel">
+        <div class="panel-head">
+          <span class="accent-bar"></span>
+          <h2>Harmony · VT-4</h2>
+        </div>
+
+        <div class="harmony-config">
+          <div class="grp">
+            <label class="muted">MIDI CH</label>
+            <select id="harmCh"></select>
+          </div>
+          <div class="grp">
+            <label class="muted">Voices</label>
+            <select id="harmVoices">
+              <option>1</option><option selected>2</option><option>3</option>
+            </select>
+          </div>
+          <div class="grp">
+            <label class="muted">Oct</label>
+            <select id="harmOct">
+              <option>3</option><option selected>4</option><option>5</option>
+            </select>
+          </div>
+          <div class="grp">
+            <label class="muted">Inv</label>
+            <select id="harmInv">
+              <option value="0" selected>root</option>
+              <option value="1">1st</option>
+              <option value="2">2nd</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mode-row">
+          <div class="seg" id="harmMode">
+            <button data-mode="auto" class="on">auto</button>
+            <button data-mode="lock">lock</button>
+            <button data-mode="manual">manual</button>
+            <button data-mode="follow">follow</button>
+          </div>
+          <button id="harmNext" class="teal-btn" title="manual advance">next ▸</button>
+          <div class="grp" id="keysChGrp" style="display:none">
+            <label class="muted">Keys CH</label>
+            <select id="harmKeysCh"></select>
+          </div>
+        </div>
+
+        <!-- Follow-mode live readout (shown only when FOLLOW is active) -->
+        <div class="follow-box" id="followBox" style="display:none">
+          <div class="follow-row">
+            <span class="follow-lbl">held</span>
+            <span class="follow-val" id="followHeld">—</span>
+          </div>
+          <div class="follow-row">
+            <span class="follow-lbl">chord</span>
+            <span class="follow-val follow-chord" id="followChord">—</span>
+            <span class="conf-dot" id="followConf" title="interpretation confidence"></span>
+          </div>
+          <div class="follow-row">
+            <span class="follow-lbl">out</span>
+            <span class="follow-val" id="followOut">—</span>
+          </div>
+          <div class="hint" id="followResumeHint"></div>
+        </div>
+
+        <div class="now-box">
+          <div>
+            <div class="now-chord" id="nowChord">—</div>
+            <div class="now-notes" id="nowNotes"></div>
+          </div>
+          <div class="next-chord">
+            <div class="lbl">next</div>
+            <div class="nm" id="nextChord">—</div>
+          </div>
+          <div class="bar-dots" id="barDots">
+            <span class="bar-remaining" id="barRemaining"></span>
+          </div>
+        </div>
+
+        <div class="prog-controls">
+          <button id="progStart" class="primary">▶ start</button>
+          <button id="progStop" class="warn">■ stop</button>
+          <button id="progReset" class="teal-btn">↺ reset</button>
+        </div>
+
+        <div class="prog-grid" id="progGrid"></div>
+        <div class="hint">Click a step to edit. Empty steps are skipped.</div>
+
+        <div class="info-note">
+          <strong>VT-4 note semantics:</strong> notes sent set the harmonic
+          context (key/scale center), not the pitch the VT-4 outputs. Sending
+          C–E–G tells it to harmonize around C major. VT-4 MIDI channel defaults
+          to 1; change above if your VT-4 listens elsewhere.
+        </div>
+
+        <div class="info-note">
+          <strong>Signal chain:</strong> condenser mic → VT-4 (phantom ON, rear
+          XLR) → L OUT (wet) + R OUT (dry/bypass) → 707 EXT IN L/R. Set 707
+          EXT IN type = LINE. The R/BYPASS jack carries the dry vocal — route it
+          to one side of the looper to capture dry while monitoring wet.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ============ PROGRESSION STEP EDITOR MODAL ============ -->
+  <div class="modal-backdrop" id="stepModal">
+    <div class="modal">
+      <h3>Edit step <span id="stepModalNum"></span></h3>
+      <div class="field">
+        <label>Root</label>
+        <select id="stepRoot"></select>
+      </div>
+      <div class="field">
+        <label>Quality</label>
+        <select id="stepQuality"></select>
+      </div>
+      <div class="field">
+        <label>Bars (1–8)</label>
+        <input type="number" id="stepBars" min="1" max="8" value="2" />
+      </div>
+      <div class="modal-actions">
+        <button id="stepClear" class="warn">clear</button>
+        <button id="stepCancel">cancel</button>
+        <button id="stepSave" class="primary">save</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Chrome / Edge desktop · Web MIDI · no SysEx · state auto-saved locally.
+    Companion to the v1 control surface.
+  </footer>
+
+  <script>
+/* ===== midi.js ===== */
+(function(){
+"use strict";
+// midi.js — MIDI plumbing: port management, send helpers, activity flash.
+// Web MIDI API only. No SysEx. No backend.
+
+const NOTE_ON = 0x90;
+const NOTE_OFF = 0x80;
+const CONTROL_CHANGE = 0xb0;
+const PROGRAM_CHANGE = 0xc0;
+
+// Clamp a value into a valid MIDI 7-bit range.
+function clamp7(v) {
+  v = Math.round(v);
+  if (v < 0) return 0;
+  if (v > 127) return 127;
+  return v;
+}
+
+// Channel is exposed to callers as 1-16; on the wire it is 0-15.
+function chNibble(ch) {
+  const c = Math.round(ch) - 1;
+  if (c < 0) return 0;
+  if (c > 15) return 15;
+  return c;
+}
+
+class MidiEngine {
+  constructor() {
+    this.access = null;
+    this.output = null;
+    // Two independent inputs, kept separate so clock and note streams never
+    // interfere: clock comes from the 707, notes come from the Keystep.
+    this.clockInput = null;
+    this.keyboardInput = null;
+    this._stateCallbacks = [];
+    this._clockCallbacks = [];
+    this._keyboardCallbacks = [];
+    this._activityCallbacks = [];
+    this._available = false;
+  }
+
+  // Request access and populate ports. Returns true on success.
+  async init() {
+    if (!navigator.requestMIDIAccess) {
+      this._available = false;
+      const err = new Error('Web MIDI API not available in this browser.');
+      err.code = 'NO_WEB_MIDI';
+      throw err;
+    }
+    // sysex:false is a hard constraint of the project.
+    this.access = await navigator.requestMIDIAccess({ sysex: false });
+    this._available = true;
+    this.access.onstatechange = (e) => {
+      this._stateCallbacks.forEach((cb) => cb(e));
+    };
+    return true;
+  }
+
+  isAvailable() {
+    return this._available;
+  }
+
+  onStateChange(callback) {
+    this._stateCallbacks.push(callback);
+  }
+
+  // --- Port enumeration ---
+
+  getOutputPorts() {
+    if (!this.access) return [];
+    const out = [];
+    this.access.outputs.forEach((p) => out.push({ id: p.id, name: p.name }));
+    return out;
+  }
+
+  getInputPorts() {
+    if (!this.access) return [];
+    const out = [];
+    this.access.inputs.forEach((p) => out.push({ id: p.id, name: p.name }));
+    return out;
+  }
+
+  setOutputPort(id) {
+    if (!this.access) return;
+    this.output = id ? this.access.outputs.get(id) || null : null;
+  }
+
+  getOutputPortId() {
+    return this.output ? this.output.id : null;
+  }
+
+  // --- Clock input (707 USB) — for ClockEngine slave mode ---
+  setClockInputPort(id) {
+    if (!this.access) return;
+    if (this.clockInput) this.clockInput.onmidimessage = null;
+    this.clockInput = id ? this.access.inputs.get(id) || null : null;
+    if (this.clockInput) {
+      this.clockInput.onmidimessage = (msg) => {
+        const status = msg.data[0];
+        // Filter to realtime transport bytes only: clock/start/continue/stop.
+        if (status === 0xf8 || status === 0xfa || status === 0xfb || status === 0xfc) {
+          this._clockCallbacks.forEach((cb) => cb(msg.data, msg.timeStamp));
+        }
+      };
+    }
+  }
+
+  onClockMessage(callback) {
+    this._clockCallbacks.push(callback);
+  }
+
+  getClockInputPortId() {
+    return this.clockInput ? this.clockInput.id : null;
+  }
+
+  // --- Keyboard input (Keystep USB) — for HarmonyEngine follow mode ---
+  setKeyboardInputPort(id) {
+    if (!this.access) return;
+    if (this.keyboardInput) this.keyboardInput.onmidimessage = null;
+    this.keyboardInput = id ? this.access.inputs.get(id) || null : null;
+    if (this.keyboardInput) {
+      this.keyboardInput.onmidimessage = (msg) => {
+        const d = msg.data;
+        const type = d[0] & 0xf0;
+        const ch = (d[0] & 0x0f) + 1; // expose 1-16
+        if (type === 0x90 && d[2] > 0) {
+          this._keyboardCallbacks.forEach((cb) => cb({ type: 'on', ch, note: d[1], vel: d[2] }));
+        } else if (type === 0x80 || (type === 0x90 && d[2] === 0)) {
+          // noteOff, or noteOn with velocity 0 (treated as noteOff).
+          this._keyboardCallbacks.forEach((cb) => cb({ type: 'off', ch, note: d[1], vel: 0 }));
+        }
+      };
+    }
+  }
+
+  onKeyboardNote(callback) {
+    this._keyboardCallbacks.push(callback);
+  }
+
+  getKeyboardInputPortId() {
+    return this.keyboardInput ? this.keyboardInput.id : null;
+  }
+
+  // Heuristic default-port detection by name. Returns suggested ids.
+  detectDefaultPorts() {
+    const outs = this.getOutputPorts();
+    const ins = this.getInputPorts();
+    const roland = /mc-?707|roland/i;
+    const arturia = /keystep|arturia/i;
+    const out = (outs.find((p) => roland.test(p.name)) || outs[0] || {}).id || null;
+    const clockIn = (ins.find((p) => roland.test(p.name)) || {}).id || null;
+    const keysIn = (ins.find((p) => arturia.test(p.name)) || {}).id || null;
+    return { out, clockIn, keysIn };
+  }
+
+  // --- Activity flash registration ---
+  onActivity(callback) {
+    this._activityCallbacks.push(callback);
+  }
+
+  _flash(direction) {
+    this._activityCallbacks.forEach((cb) => cb(direction));
+  }
+
+  // --- Send helpers ---
+
+  send(bytes) {
+    if (!this.output) return false;
+    this.output.send(bytes);
+    this._flash('out');
+    return true;
+  }
+
+  noteOn(ch, note, vel) {
+    this.send([NOTE_ON | chNibble(ch), clamp7(note), clamp7(vel)]);
+  }
+
+  noteOff(ch, note) {
+    this.send([NOTE_OFF | chNibble(ch), clamp7(note), 0]);
+  }
+
+  cc(ch, number, value) {
+    this.send([CONTROL_CHANGE | chNibble(ch), clamp7(number), clamp7(value)]);
+  }
+
+  pc(ch, program) {
+    this.send([PROGRAM_CHANGE | chNibble(ch), clamp7(program)]);
+  }
+
+  // Realtime bytes: 0xF8 clock, 0xFA start, 0xFB continue, 0xFC stop.
+  rt(byte) {
+    this.send([byte]);
+  }
+
+  // Panic helpers — used on stop, mode switch, port change.
+  allNotesOff() {
+    for (let ch = 1; ch <= 16; ch++) this.cc(ch, 123, 0);
+  }
+
+  allSoundOff() {
+    for (let ch = 1; ch <= 16; ch++) this.cc(ch, 120, 0);
+  }
+}
+
+Object.assign(window, { MidiEngine });
+})();
+
+/* ===== clock.js ===== */
+(function(){
+"use strict";
+// clock.js — clock engine: AudioContext lookahead scheduler + MIDI clock slave.
+// Emits 24 ticks per quarter note (MIDI PPQ standard) in both modes.
+
+const PPQ = 24; // MIDI pulses per quarter note.
+
+// Subdivision -> ticks per step (relative to the 24-PPQ grid).
+const SUBDIV_TICKS = {
+  '1/4': 24,
+  '1/8': 12,
+  '1/16': 6,
+  '1/32': 3,
+  '1/8t': 8, // eighth triplet: 3 per quarter
+  '1/16t': 4, // sixteenth triplet: 6 per quarter
+};
+
+class ClockEngine {
+  constructor(midiEngine) {
+    this.midi = midiEngine;
+    this.mode = 'internal';
+    this.bpm = 120;
+    this.beatsPerBar = 4;
+    this.subdivision = '1/16';
+
+    this._running = false;
+
+    // Position state (zero-indexed).
+    this._tick = 0; // absolute tick counter since start
+    this._bar = 0;
+    this._beat = 0;
+    this._subdiv = 0;
+
+    // Internal scheduler state (Chris Wilson lookahead pattern).
+    this._audioCtx = null;
+    this._lookahead = 25; // ms between scheduler runs
+    this._scheduleAhead = 0.1; // seconds to schedule ahead
+    this._nextTickTime = 0; // audio-context time of the next tick
+    this._timerId = null;
+
+    // Tap tempo.
+    this._tapTimes = [];
+
+    // Slave-mode timing.
+    this._slaveTickTimes = [];
+    this._slaveBPM = 120;
+
+    // Callbacks.
+    this._tickCallbacks = [];
+    this._bpmCallbacks = [];
+
+    // Bind slave handler so we can reference identity (not strictly needed but tidy).
+    this._onSlaveMessage = this._onSlaveMessage.bind(this);
+    if (this.midi) this.midi.onClockMessage(this._onSlaveMessage);
+  }
+
+  // --- Configuration ---
+
+  setMode(mode) {
+    if (mode !== 'internal' && mode !== 'slave') return;
+    if (mode === this.mode) return;
+    const wasRunning = this._running;
+    // Switch cleanly without forcing a full stop of musical state.
+    if (this.mode === 'internal') this._stopInternalScheduler();
+    this.mode = mode;
+    // In slave mode, the incoming 0xF8 stream drives ticks. In internal mode,
+    // restart the scheduler if we were running.
+    if (mode === 'internal' && wasRunning) {
+      this._startInternalScheduler();
+    }
+  }
+
+  setBPM(bpm) {
+    bpm = Math.max(40, Math.min(200, bpm));
+    this.bpm = bpm;
+  }
+
+  setBeatsPerBar(n) {
+    this.beatsPerBar = Math.max(1, Math.round(n));
+  }
+
+  setSubdivision(sub) {
+    if (SUBDIV_TICKS[sub] != null) this.subdivision = sub;
+  }
+
+  tapTempo() {
+    const now = (this._audioCtx ? this._audioCtx.currentTime : performance.now() / 1000) * 1000;
+    this._tapTimes.push(now);
+    // Keep only the last 4 taps.
+    if (this._tapTimes.length > 4) this._tapTimes.shift();
+    if (this._tapTimes.length >= 2) {
+      let sum = 0;
+      for (let i = 1; i < this._tapTimes.length; i++) {
+        sum += this._tapTimes[i] - this._tapTimes[i - 1];
+      }
+      const avgMs = sum / (this._tapTimes.length - 1);
+      if (avgMs > 0) {
+        const bpm = 60000 / avgMs;
+        this.setBPM(bpm);
+        this._emitBPM(this.bpm);
+      }
+    }
+    // If gap since last tap is large, reset the averaging window next time.
+    return this.bpm;
+  }
+
+  // --- Transport ---
+
+  start() {
+    if (this._running) return;
+    this._running = true;
+    this._tick = 0;
+    this._bar = 0;
+    this._beat = 0;
+    this._subdiv = 0;
+
+    if (this.mode === 'internal') {
+      this._ensureAudioCtx();
+      this._nextTickTime = this._audioCtx.currentTime + 0.05;
+      this._startInternalScheduler();
+    } else {
+      // Slave mode: reset slave timing; ticks arrive from MIDI input.
+      this._slaveTickTimes = [];
+    }
+  }
+
+  stop() {
+    if (!this._running) return;
+    this._running = false;
+    this._stopInternalScheduler();
+  }
+
+  isRunning() {
+    return this._running;
+  }
+
+  // --- Callbacks ---
+
+  onTick(callback) {
+    this._tickCallbacks.push(callback);
+  }
+
+  onBPMChange(callback) {
+    this._bpmCallbacks.push(callback);
+  }
+
+  getCurrentBPM() {
+    return this.mode === 'slave' ? this._slaveBPM : this.bpm;
+  }
+
+  getPosition() {
+    return { bar: this._bar, beat: this._beat, subdiv: this._subdiv };
+  }
+
+  // --- Internal scheduler (AudioContext lookahead) ---
+
+  _ensureAudioCtx() {
+    if (!this._audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      this._audioCtx = new Ctx();
+    }
+    if (this._audioCtx.state === 'suspended') {
+      this._audioCtx.resume();
+    }
+  }
+
+  _secondsPerTick() {
+    // 24 ticks per quarter note.
+    return 60 / this.bpm / PPQ;
+  }
+
+  _startInternalScheduler() {
+    if (this._timerId != null) return;
+    const scheduler = () => {
+      const ctx = this._audioCtx;
+      while (this._nextTickTime < ctx.currentTime + this._scheduleAhead) {
+        this._scheduleTick(this._nextTickTime);
+        this._nextTickTime += this._secondsPerTick();
+      }
+      this._timerId = setTimeout(scheduler, this._lookahead);
+    };
+    scheduler();
+  }
+
+  _stopInternalScheduler() {
+    if (this._timerId != null) {
+      clearTimeout(this._timerId);
+      this._timerId = null;
+    }
+  }
+
+  // Schedule a tick to fire at a precise audio-context time. We use a
+  // setTimeout aligned to the audio clock for the callback dispatch, which is
+  // the standard Wilson approach: scheduling precision comes from computing
+  // times against the audio clock, not from setTimeout itself.
+  _scheduleTick(time) {
+    const tickIndex = this._tick;
+    const delayMs = Math.max(0, (time - this._audioCtx.currentTime) * 1000);
+    setTimeout(() => {
+      if (this.mode === 'internal' && this._running) {
+        this._advanceAndEmit(tickIndex);
+      }
+    }, delayMs);
+    this._tick++;
+  }
+
+  // --- Slave mode (MIDI clock input) ---
+
+  _onSlaveMessage(data) {
+    if (this.mode !== 'slave') return;
+    const status = data[0];
+    if (status === 0xfa) {
+      // Start
+      this._running = true;
+      this._tick = 0;
+      this._bar = 0;
+      this._beat = 0;
+      this._subdiv = 0;
+      this._slaveTickTimes = [];
+      return;
+    }
+    if (status === 0xfc) {
+      // Stop
+      this._running = false;
+      return;
+    }
+    if (status === 0xfb) {
+      // Continue
+      this._running = true;
+      return;
+    }
+    if (status === 0xf8) {
+      // Clock tick.
+      if (!this._running) this._running = true;
+      this._deriveSlaveBPM();
+      this._advanceAndEmit(this._tick);
+      this._tick++;
+    }
+  }
+
+  // Derive BPM from inter-tick timing averaged over 8 ticks, with hysteresis.
+  _deriveSlaveBPM() {
+    const now = performance.now();
+    this._slaveTickTimes.push(now);
+    if (this._slaveTickTimes.length > 9) this._slaveTickTimes.shift();
+    if (this._slaveTickTimes.length >= 2) {
+      const n = this._slaveTickTimes.length;
+      const span = this._slaveTickTimes[n - 1] - this._slaveTickTimes[0];
+      const intervals = n - 1;
+      const msPerTick = span / intervals;
+      if (msPerTick > 0) {
+        // 24 ticks per quarter; quarter = msPerTick * 24.
+        const msPerBeat = msPerTick * PPQ;
+        const bpm = 60000 / msPerBeat;
+        // Hysteresis: only update display BPM if it moved by > 2.
+        if (Math.abs(bpm - this._slaveBPM) > 2) {
+          this._slaveBPM = Math.round(bpm);
+          this._emitBPM(this._slaveBPM);
+        }
+      }
+    }
+  }
+
+  // --- Shared tick advance + emission ---
+
+  _advanceAndEmit(tickIndex) {
+    // Compute musical position from the absolute tick count.
+    // bar/beat/subdiv are zero-indexed.
+    const ticksPerBeat = PPQ;
+    const beat = Math.floor(tickIndex / ticksPerBeat) % this.beatsPerBar;
+    const bar = Math.floor(tickIndex / (ticksPerBeat * this.beatsPerBar));
+    const stepTicks = SUBDIV_TICKS[this.subdivision] || 6;
+    const subdiv = Math.floor(tickIndex / stepTicks);
+
+    this._bar = bar;
+    this._beat = beat;
+    this._subdiv = subdiv;
+
+    const payload = {
+      tick: tickIndex,
+      bar,
+      beat,
+      subdiv,
+      bpm: this.getCurrentBPM(),
+      // True only on the exact tick that begins a subdivision step — lets
+      // consumers (Euclidean) advance once per musical step rather than per PPQ tick.
+      isStepBoundary: tickIndex % stepTicks === 0,
+      isBeatBoundary: tickIndex % ticksPerBeat === 0,
+      isBarBoundary: tickIndex % (ticksPerBeat * this.beatsPerBar) === 0,
+      stepIndex: Math.floor(tickIndex / stepTicks),
+    };
+    this._tickCallbacks.forEach((cb) => cb(payload));
+  }
+
+  _emitBPM(bpm) {
+    this._bpmCallbacks.forEach((cb) => cb(bpm));
+  }
+}
+
+Object.assign(window, { ClockEngine });
+})();
+
+/* ===== euclidean.js ===== */
+(function(){
+"use strict";
+// euclidean.js — Euclidean rhythm generator (Bjorklund) + probability gate.
+// Each voice is an independent generator driven by the clock's step boundaries.
+
+// Standard Bjorklund/Toussaint implementation.
+// Returns bool[] of length `steps`, true = active step.
+//   E(3,8)  = [1,0,0,1,0,0,1,0]
+//   E(5,8)  = [1,0,1,1,0,1,1,0]
+//   E(7,16) = [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] ... (Toussaint distribution)
+function euclidean(pulses, steps) {
+  steps = Math.max(1, Math.round(steps));
+  pulses = Math.max(0, Math.min(Math.round(pulses), steps));
+  if (pulses === 0) return new Array(steps).fill(false);
+  if (pulses === steps) return new Array(steps).fill(true);
+
+  // Bjorklund: start with `pulses` groups of [true] and `steps-pulses`
+  // groups of [false], then repeatedly distribute remainders.
+  let groups = [];
+  for (let i = 0; i < pulses; i++) groups.push([true]);
+  let remainders = [];
+  for (let i = 0; i < steps - pulses; i++) remainders.push([false]);
+
+  while (remainders.length > 1) {
+    const count = Math.min(groups.length, remainders.length);
+    const newGroups = [];
+    for (let i = 0; i < count; i++) {
+      newGroups.push(groups[i].concat(remainders[i]));
+    }
+    const newRemainders = [];
+    if (groups.length > remainders.length) {
+      for (let i = count; i < groups.length; i++) newRemainders.push(groups[i]);
+    } else {
+      for (let i = count; i < remainders.length; i++) newRemainders.push(remainders[i]);
+    }
+    groups = newGroups;
+    remainders = newRemainders;
+  }
+
+  // Flatten groups then remainders.
+  const out = [];
+  groups.forEach((g) => g.forEach((v) => out.push(v)));
+  remainders.forEach((g) => g.forEach((v) => out.push(v)));
+  return out;
+}
+
+// Rotate a pattern by `offset` steps (positive = shift earlier in time).
+function rotate(pattern, offset) {
+  const n = pattern.length;
+  if (n === 0) return pattern.slice();
+  const o = ((offset % n) + n) % n;
+  return pattern.slice(o).concat(pattern.slice(0, o));
+}
+
+const NOTE_LEN_STEPS = {
+  '1/16': 1,
+  '1/8': 2,
+  '1/4': 4,
+};
+
+class EuclideanEngine {
+  constructor(clockEngine, midiEngine) {
+    this.clock = clockEngine;
+    this.midi = midiEngine;
+    this.voices = new Map(); // id -> voice state
+    this._stepCallbacks = new Map(); // id -> [callbacks]
+    this._idCounter = 0;
+
+    // Active note scheduling: track held notes per voice to send noteOff.
+    // Each entry: { ch, note, offStep } scheduled by global step index.
+    this._heldNotes = new Map(); // id -> { note, ch, offStep }
+
+    this.clock.onTick((t) => this._onTick(t));
+  }
+
+  _genId() {
+    this._idCounter++;
+    return 'euc_' + this._idCounter;
+  }
+
+  addVoice(config = {}) {
+    const id = config.id || this._genId();
+    // Keep the counter ahead of any explicit id restored from saved state.
+    const m = /^euc_(\d+)$/.exec(id);
+    if (m) this._idCounter = Math.max(this._idCounter, parseInt(m[1], 10));
+    const voice = Object.assign(
+      {
+        id,
+        label: 'Voice',
+        steps: 8,
+        pulses: 3,
+        offset: 0,
+        mode: 'note',
+        channel: 1,
+        note: 36,
+        velocity: 100,
+        noteLength: '1/16',
+        ccNumber: 80,
+        ccHigh: 127,
+        ccLow: 0,
+        probability: 1.0,
+        active: true,
+      },
+      config,
+      { id }
+    );
+    voice.pulses = Math.min(voice.pulses, voice.steps);
+    voice._pattern = rotate(euclidean(voice.pulses, voice.steps), voice.offset);
+    voice._localStep = 0;
+    this.voices.set(id, voice);
+    if (!this._stepCallbacks.has(id)) this._stepCallbacks.set(id, []);
+    return id;
+  }
+
+  removeVoice(id) {
+    const v = this.voices.get(id);
+    if (v && v.mode === 'note') this._releaseHeld(id);
+    this.voices.delete(id);
+    this._stepCallbacks.delete(id);
+    this._heldNotes.delete(id);
+  }
+
+  updateVoice(id, partial) {
+    const v = this.voices.get(id);
+    if (!v) return;
+    Object.assign(v, partial);
+    if (v.pulses > v.steps) v.pulses = v.steps;
+    if (v.offset >= v.steps) v.offset = ((v.offset % v.steps) + v.steps) % v.steps;
+    // Recompute pattern when structural params change.
+    if (
+      'steps' in partial ||
+      'pulses' in partial ||
+      'offset' in partial
+    ) {
+      v._pattern = rotate(euclidean(v.pulses, v.steps), v.offset);
+      if (v._localStep >= v.steps) v._localStep = 0;
+    }
+  }
+
+  setActive(id, bool) {
+    const v = this.voices.get(id);
+    if (!v) return;
+    v.active = !!bool;
+    if (!bool) this._releaseHeld(id);
+  }
+
+  getPattern(id) {
+    const v = this.voices.get(id);
+    return v ? v._pattern.slice() : [];
+  }
+
+  onStep(id, callback) {
+    if (!this._stepCallbacks.has(id)) this._stepCallbacks.set(id, []);
+    this._stepCallbacks.get(id).push(callback);
+  }
+
+  getVoices() {
+    return Array.from(this.voices.values()).map((v) => {
+      const copy = Object.assign({}, v);
+      delete copy._pattern;
+      delete copy._localStep;
+      return copy;
+    });
+  }
+
+  // --- Clock-driven stepping ---
+
+  _onTick(t) {
+    if (!t.isStepBoundary) {
+      // Still check for note-off scheduling on every step boundary only;
+      // since we step on boundaries, releases are checked there too.
+      return;
+    }
+    const globalStep = t.stepIndex;
+
+    // First, release any held notes whose off-step has arrived.
+    this._heldNotes.forEach((held, id) => {
+      if (held && globalStep >= held.offStep) {
+        this.midi.noteOff(held.ch, held.note);
+        this._heldNotes.set(id, null);
+      }
+    });
+
+    this.voices.forEach((v) => {
+      const local = v._localStep % v.steps;
+      const isActiveStep = v._pattern[local] === true;
+      let fired = false;
+
+      if (v.active && isActiveStep) {
+        // Probability gate.
+        const pass = v.probability >= 1.0 || Math.random() < v.probability;
+        if (pass) {
+          fired = true;
+          this._fireVoice(v, globalStep);
+        }
+      }
+
+      // CC low value on inactive/non-firing steps (for gate-style CC voices).
+      if (v.active && v.mode === 'cc' && !fired) {
+        this.midi.cc(v.channel, v.ccNumber, v.ccLow);
+      }
+
+      // Emit step event.
+      const cbs = this._stepCallbacks.get(v.id);
+      if (cbs && cbs.length) {
+        cbs.forEach((cb) =>
+          cb({ step: local, total: v.steps, fired, pattern: v._pattern })
+        );
+      }
+
+      v._localStep = (v._localStep + 1) % v.steps;
+    });
+  }
+
+  _fireVoice(v, globalStep) {
+    if (v.mode === 'note') {
+      // Release any currently held note on this voice first (mono behaviour).
+      const prev = this._heldNotes.get(v.id);
+      if (prev) this.midi.noteOff(prev.ch, prev.note);
+
+      this.midi.noteOn(v.channel, v.note, v.velocity);
+      if (v.noteLength === 'gate') {
+        // Held until next hit — release scheduled far ahead; replaced on next fire.
+        this._heldNotes.set(v.id, {
+          ch: v.channel,
+          note: v.note,
+          offStep: globalStep + v.steps, // effectively "until next hit"
+        });
+      } else {
+        const lenSteps = NOTE_LEN_STEPS[v.noteLength] || 1;
+        this._heldNotes.set(v.id, {
+          ch: v.channel,
+          note: v.note,
+          offStep: globalStep + lenSteps,
+        });
+      }
+    } else if (v.mode === 'cc') {
+      this.midi.cc(v.channel, v.ccNumber, v.ccHigh);
+    }
+  }
+
+  _releaseHeld(id) {
+    const held = this._heldNotes.get(id);
+    if (held) {
+      this.midi.noteOff(held.ch, held.note);
+      this._heldNotes.set(id, null);
+    }
+  }
+
+  // Release all held notes (used on stop / panic).
+  releaseAll() {
+    this._heldNotes.forEach((held) => {
+      if (held) this.midi.noteOff(held.ch, held.note);
+    });
+    this._heldNotes.forEach((_, id) => this._heldNotes.set(id, null));
+  }
+
+  // Reset all voices' local step counters (used on transport start).
+  resetSteps() {
+    this.voices.forEach((v) => (v._localStep = 0));
+  }
+}
+
+Object.assign(window, { euclidean, EuclideanEngine });
+})();
+
+/* ===== lfo.js ===== */
+(function(){
+"use strict";
+// lfo.js — LFO engine: shapes, CC targeting, rate/depth. Synced to clock.
+// Each LFO continuously modulates a CC. Output computed per clock tick.
+
+// Rate -> number of quarter notes per full LFO cycle.
+// '4/1' = 4 bars (16 quarters at 4/4), '1/4' = one quarter, etc.
+const RATE_QUARTERS = {
+  '4/1': 16,
+  '2/1': 8,
+  '1/1': 4,
+  '1/2': 2,
+  '1/4': 1,
+  '1/8': 0.5,
+  '1/16': 0.25,
+  '1/4t': 2 / 3,
+  '1/8t': 1 / 3,
+};
+
+const PPQ = 24;
+
+function clamp7(v) {
+  v = Math.round(v);
+  if (v < 0) return 0;
+  if (v > 127) return 127;
+  return v;
+}
+
+// Shape math: pos is normalized 0.0–1.0 position within the LFO cycle.
+// Each returns a normalized 0.0–1.0 amplitude.
+function shapeValue(shape, pos, lfo) {
+  switch (shape) {
+    case 'sine':
+      return Math.sin(pos * 2 * Math.PI) * 0.5 + 0.5;
+    case 'triangle':
+      return 1 - Math.abs(pos * 2 - 1);
+    case 'sawtooth':
+      return pos;
+    case 'ramp':
+      return 1 - pos;
+    case 'square':
+      return pos < 0.5 ? 1 : 0;
+    case 'random':
+      // New random value each cycle start; held across the cycle.
+      return lfo._randomHold;
+    case 's&h':
+      // New random value each clock tick (handled at sample time).
+      return lfo._shHold;
+    default:
+      return 0.5;
+  }
+}
+
+class LFOEngine {
+  constructor(clockEngine, midiEngine) {
+    this.clock = clockEngine;
+    this.midi = midiEngine;
+    this.lfos = new Map();
+    this._idCounter = 0;
+    this.clock.onTick((t) => this._onTick(t));
+  }
+
+  _genId() {
+    this._idCounter++;
+    return 'lfo_' + this._idCounter;
+  }
+
+  addLFO(config = {}) {
+    const id = config.id || this._genId();
+    // Keep the counter ahead of any explicit id restored from saved state.
+    const m = /^lfo_(\d+)$/.exec(id);
+    if (m) this._idCounter = Math.max(this._idCounter, parseInt(m[1], 10));
+    const lfo = Object.assign(
+      {
+        id,
+        label: 'LFO',
+        shape: 'sine',
+        rate: '1/4',
+        depth: 64,
+        center: 64,
+        channel: 1,
+        ccNumber: 80,
+        phase: 0.0,
+        active: true,
+      },
+      config,
+      { id }
+    );
+    lfo._lastCycle = -1;
+    lfo._randomHold = Math.random();
+    lfo._shHold = Math.random();
+    lfo._currentValue = lfo.center;
+    lfo._lastSent = null; // throttle: last CC value actually transmitted
+    this.lfos.set(id, lfo);
+    return id;
+  }
+
+  removeLFO(id) {
+    this.lfos.delete(id);
+  }
+
+  updateLFO(id, partial) {
+    const lfo = this.lfos.get(id);
+    if (!lfo) return;
+    Object.assign(lfo, partial);
+  }
+
+  setActive(id, bool) {
+    const lfo = this.lfos.get(id);
+    if (lfo) lfo.active = !!bool;
+  }
+
+  getCurrentValue(id) {
+    const lfo = this.lfos.get(id);
+    return lfo ? lfo._currentValue : 0;
+  }
+
+  getLFOs() {
+    return Array.from(this.lfos.values()).map((l) => {
+      const c = Object.assign({}, l);
+      delete c._lastCycle;
+      delete c._randomHold;
+      delete c._shHold;
+      delete c._currentValue;
+      return c;
+    });
+  }
+
+  // Compute normalized position within an LFO cycle from absolute tick count.
+  _positionFor(lfo, tickIndex) {
+    const quartersPerCycle = RATE_QUARTERS[lfo.rate] || 1;
+    const ticksPerCycle = quartersPerCycle * PPQ;
+    const raw = (tickIndex / ticksPerCycle + lfo.phase) % 1;
+    return raw < 0 ? raw + 1 : raw;
+  }
+
+  _onTick(t) {
+    if (!this.clock.isRunning()) return;
+    this.lfos.forEach((lfo) => {
+      if (!lfo.active) return;
+      const pos = this._positionFor(lfo, t.tick);
+
+      // Detect cycle boundary for 'random' (new value each cycle start).
+      const quartersPerCycle = RATE_QUARTERS[lfo.rate] || 1;
+      const ticksPerCycle = quartersPerCycle * PPQ;
+      const cycle = Math.floor((t.tick / ticksPerCycle + lfo.phase));
+      if (cycle !== lfo._lastCycle) {
+        lfo._lastCycle = cycle;
+        lfo._randomHold = Math.random();
+      }
+      // s&h: new random value each tick.
+      lfo._shHold = Math.random();
+
+      const norm = shapeValue(lfo.shape, pos, lfo); // 0..1
+      // Map to CC range around center with peak-to-peak depth.
+      const value = clamp7(lfo.center + (norm - 0.5) * lfo.depth);
+      // Compute every tick (keeps _currentValue smooth for the UI cursor),
+      // but throttle MIDI: send at most once per 16th note (6 ticks @ 24 PPQ)
+      // and skip if the value has not changed since the last send. This avoids
+      // CC zipper noise from emitting ~96 messages/beat.
+      lfo._currentValue = value;
+      const isSixteenth = t.tick % 6 === 0;
+      if (isSixteenth && value !== lfo._lastSent) {
+        this.midi.cc(lfo.channel, lfo.ccNumber, value);
+        lfo._lastSent = value;
+      }
+    });
+  }
+
+  // Compute a preview value at a given normalized position (for UI waveform).
+  // Pure function of shape + pos; does not touch MIDI.
+  static previewShape(shape, pos) {
+    switch (shape) {
+      case 'sine':
+        return Math.sin(pos * 2 * Math.PI) * 0.5 + 0.5;
+      case 'triangle':
+        return 1 - Math.abs(pos * 2 - 1);
+      case 'sawtooth':
+        return pos;
+      case 'ramp':
+        return 1 - pos;
+      case 'square':
+        return pos < 0.5 ? 1 : 0;
+      case 'random':
+        return 0.5; // preview shows midline; randomness is per-cycle live
+      case 's&h':
+        return 0.5;
+      default:
+        return 0.5;
+    }
+  }
+}
+
+Object.assign(window, { LFOEngine });
+})();
+
+/* ===== harmony.js ===== */
+(function(){
+"use strict";
+// harmony.js — VT-4 harmony driver: progression, clock-locked auto-advance,
+// note output. The core of v2's musical intelligence.
+//
+// VT-4 Harmony mode interprets incoming MIDI notes as the key/scale center for
+// its harmony generation, not as specific pitches to play. Sending C4+E4+G4
+// sets a C-major harmonic context.
+
+// Chord quality -> interval sets (semitones above root).
+const CHORD_QUALITIES = {
+  maj: [0, 4, 7],
+  min: [0, 3, 7],
+  dom7: [0, 4, 7, 10],
+  maj7: [0, 4, 7, 11],
+  min7: [0, 3, 7, 10],
+  dim: [0, 3, 6],
+  aug: [0, 4, 8],
+  sus2: [0, 2, 7],
+  sus4: [0, 5, 7],
+  min9: [0, 3, 7, 10, 14],
+  add9: [0, 4, 7, 14],
+};
+
+const NOTE_NAMES = [
+  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+];
+
+function chordName(root, quality) {
+  return NOTE_NAMES[((root % 12) + 12) % 12] + ' ' + quality;
+}
+
+function midiNoteName(note) {
+  const n = NOTE_NAMES[((note % 12) + 12) % 12];
+  const oct = Math.floor(note / 12) - 1;
+  return n + oct;
+}
+
+class HarmonyEngine {
+  constructor(clockEngine, midiEngine) {
+    this.clock = clockEngine;
+    this.midi = midiEngine;
+
+    this.channel = 1; // VT-4 default
+    this.voiceCount = 2;
+    this.octave = 4;
+    this.inversion = 0; // 0 root, 1 first, 2 second
+    this.mode = 'auto';
+
+    this.progression = [];
+    this._stepIndex = 0;
+    this._barsRemaining = 0;
+    this._lastBar = -1;
+    this._running = false;
+    this._locked = false;
+    this._activeNotes = [];
+
+    // --- Follow mode state ---
+    this.followChannel = 0; // 0 = omni (any channel)
+    this._heldNotes = new Set(); // currently held MIDI notes from the Keystep
+    this._followDebounce = null; // timer handle for 40ms chord-change debounce
+    this._lastDetected = null; // last {root, quality} sent in follow mode
+
+    this._stepChangeCallbacks = [];
+    this._barsRemainingCallbacks = [];
+    this._followChordCallbacks = [];
+
+    this.clock.onTick((t) => this._onTick(t));
+    if (this.midi && this.midi.onKeyboardNote) {
+      this.midi.onKeyboardNote((evt) => this._onKeyboardNote(evt));
+    }
+  }
+
+  // --- Configuration ---
+
+  setChannel(ch) {
+    this.channel = Math.max(1, Math.min(16, Math.round(ch)));
+  }
+
+  setVoiceCount(n) {
+    this.voiceCount = Math.max(1, Math.min(3, Math.round(n)));
+  }
+
+  setOctave(n) {
+    this.octave = Math.max(3, Math.min(5, Math.round(n)));
+  }
+
+  setInversion(n) {
+    this.inversion = Math.max(0, Math.min(2, Math.round(n)));
+  }
+
+  setMode(mode) {
+    if (mode !== 'auto' && mode !== 'lock' && mode !== 'manual' && mode !== 'follow') return;
+    const prev = this.mode;
+    if (mode === prev) return;
+    this.mode = mode;
+
+    if (mode === 'lock') {
+      this._locked = true;
+    } else if (prev === 'lock') {
+      this._locked = false;
+    }
+
+    if (mode === 'follow') {
+      // Pause the progression (do NOT reset _stepIndex). Release the
+      // progression chord so follow output takes over cleanly.
+      this._releaseActive();
+      this._lastDetected = null;
+      this._heldNotes.clear();
+    } else if (prev === 'follow') {
+      // Leaving follow: release any follow-derived chord, then resume the
+      // progression from where it paused if it was running.
+      this._releaseActive();
+      this._lastDetected = null;
+      if (this._followDebounce) { clearTimeout(this._followDebounce); this._followDebounce = null; }
+      if (this._running && mode === 'auto') {
+        this._applyStep(this._stepIndex, true);
+      }
+    }
+  }
+
+  getMode() {
+    return this.mode;
+  }
+
+  setFollowChannel(ch) {
+    this.followChannel = Math.max(0, Math.min(16, Math.round(ch)));
+  }
+
+  // --- Progression ---
+
+  setProgression(steps) {
+    this.progression = (steps || []).slice(0, 8).map((s) => ({
+      root: ((Math.round(s.root) % 12) + 12) % 12,
+      quality: CHORD_QUALITIES[s.quality] ? s.quality : 'maj',
+      bars: Math.max(1, Math.min(8, Math.round(s.bars || 1))),
+    }));
+    if (this._stepIndex >= this.progression.length) this._stepIndex = 0;
+  }
+
+  getProgression() {
+    return this.progression.map((s) => Object.assign({}, s));
+  }
+
+  startProgression() {
+    if (this.progression.length === 0) return;
+    this._running = true;
+    this._stepIndex = 0;
+    this._lastBar = -1;
+    this._applyStep(this._stepIndex, true);
+  }
+
+  stopProgression() {
+    this._running = false;
+    this._releaseActive();
+    this._stepIndex = 0;
+    this._barsRemaining = 0;
+  }
+
+  // Manual advance in 'manual' mode, or forced jump.
+  jumpToStep(index) {
+    if (this.progression.length === 0) return;
+    const i = ((index % this.progression.length) + this.progression.length) % this.progression.length;
+    this._stepIndex = i;
+    this._applyStep(i, true);
+  }
+
+  lock() {
+    this._locked = true;
+    this.mode = 'lock';
+  }
+
+  unlock() {
+    this._locked = false;
+    // Resume auto from current step.
+    if (this.mode === 'lock') this.mode = 'auto';
+  }
+
+  // --- Output / inspection ---
+
+  getActiveNotes() {
+    return this._activeNotes.slice();
+  }
+
+  getCurrentStep() {
+    if (this.mode === 'follow') return null;
+    const s = this.progression[this._stepIndex];
+    if (!s) return null;
+    return {
+      index: this._stepIndex,
+      root: s.root,
+      quality: s.quality,
+      bars: s.bars,
+      barsRemaining: this._barsRemaining,
+    };
+  }
+
+  getNextStep() {
+    if (this.mode === 'follow') return null;
+    if (this.progression.length === 0) return null;
+    const ni = (this._stepIndex + 1) % this.progression.length;
+    const s = this.progression[ni];
+    return { index: ni, root: s.root, quality: s.quality };
+  }
+
+  isRunning() {
+    return this._running;
+  }
+
+  // --- Events ---
+
+  onStepChange(callback) {
+    this._stepChangeCallbacks.push(callback);
+  }
+
+  onBarsRemaining(callback) {
+    this._barsRemainingCallbacks.push(callback);
+  }
+
+  onFollowChordChange(callback) {
+    this._followChordCallbacks.push(callback);
+  }
+
+  // --- Follow mode ---
+
+  _onKeyboardNote(evt) {
+    if (this.mode !== 'follow') return;
+    // Channel filter: 0 = omni.
+    if (this.followChannel !== 0 && evt.ch !== this.followChannel) return;
+    if (evt.type === 'on') this._heldNotes.add(evt.note);
+    else this._heldNotes.delete(evt.note);
+
+    // Debounce: wait 40ms after the last note event before recomputing and
+    // sending to the VT-4. Prevents noteOff/noteOn floods during fast playing.
+    if (this._followDebounce) clearTimeout(this._followDebounce);
+    this._followDebounce = setTimeout(() => {
+      this._followDebounce = null;
+      this._recomputeFollow();
+    }, 40);
+  }
+
+  _recomputeFollow() {
+    const pitchClasses = Array.from(new Set(Array.from(this._heldNotes).map((n) => n % 12)));
+    // No notes held → hold the last chord (do not send noteOff).
+    if (pitchClasses.length === 0) return;
+
+    const detected = this.detectChord(pitchClasses);
+    if (!detected) return;
+
+    const notes = this.computeNotes(detected.root, detected.quality);
+    const changed =
+      !this._lastDetected ||
+      this._lastDetected.root !== detected.root ||
+      this._lastDetected.quality !== detected.quality;
+
+    if (changed) {
+      this._releaseActive();
+      notes.forEach((n) => this.midi.noteOn(this.channel, n, 100));
+      this._activeNotes = notes;
+      this._lastDetected = { root: detected.root, quality: detected.quality };
+      this._followChordCallbacks.forEach((cb) =>
+        cb({ root: detected.root, quality: detected.quality, notes, confidence: detected.confidence })
+      );
+    }
+  }
+
+  getFollowState() {
+    if (this.mode !== 'follow') return null;
+    const pitchClasses = Array.from(new Set(Array.from(this._heldNotes).map((n) => n % 12)));
+    return {
+      heldNotes: Array.from(this._heldNotes).sort((a, b) => a - b),
+      pitchClasses: pitchClasses.sort((a, b) => a - b),
+      detectedChord: pitchClasses.length ? this.detectChord(pitchClasses) : null,
+    };
+  }
+
+  // Best-match chord from a set of pitch classes (0–11). Exported behaviour
+  // for testing. Returns { root, quality, confidence } or null if empty.
+  //
+  // Scoring is a Jaccard ratio: matched tones / |held ∪ chordTones|. Unlike a
+  // plain coverage ratio, this rewards a candidate for explaining the held
+  // notes *fully*, so a held C7 (C E G Bb) scores dom7 = 1.0 but maj = 0.75 —
+  // the seventh is recognised instead of being shadowed by its own triad.
+  // When no extension is held, the triad still wins (C E G → maj 1.0, dom7
+  // 0.75). Ties break to the simpler quality (earlier in CHORD_QUALITIES).
+  detectChord(pitchClasses) {
+    if (!pitchClasses || pitchClasses.length === 0) return null;
+    const pcSet = new Set(pitchClasses.map((p) => ((p % 12) + 12) % 12));
+    if (pcSet.size === 1) {
+      return { root: ((pitchClasses[0] % 12) + 12) % 12, quality: 'maj', confidence: 0.33 };
+    }
+    // Quality keys in simplicity order (earlier = simpler) for tie-breaking.
+    const qualities = Object.keys(CHORD_QUALITIES);
+    let best = null;
+    for (let root = 0; root < 12; root++) {
+      for (let qi = 0; qi < qualities.length; qi++) {
+        const quality = qualities[qi];
+        const tones = CHORD_QUALITIES[quality].map((iv) => (root + iv) % 12);
+        const toneSet = new Set(tones);
+        let hit = 0;
+        toneSet.forEach((t) => { if (pcSet.has(t)) hit++; });
+        // Jaccard: intersection / union. union = |tones| + (held not in tones).
+        const unionSize = toneSet.size + (pcSet.size - hit);
+        const score = unionSize === 0 ? 0 : hit / unionSize;
+        if (
+          !best ||
+          score > best.score ||
+          // Tie-break: prefer simpler quality (lower index in qualities list).
+          (score === best.score && qi < best.qi)
+        ) {
+          best = { root, quality, score, qi, confidence: score };
+        }
+      }
+    }
+    return best ? { root: best.root, quality: best.quality, confidence: best.confidence } : null;
+  }
+
+  // --- Note computation ---
+
+  // Given a chord (root, quality), select voiceCount notes near the center
+  // octave, applying the configured inversion. Returns MIDI note numbers.
+  computeNotes(root, quality) {
+    const intervals = CHORD_QUALITIES[quality] || CHORD_QUALITIES.maj;
+    // Base MIDI note for root at the chosen octave. MIDI octave: C4 = 60.
+    const base = (this.octave + 1) * 12 + root;
+    let chosen = intervals.slice(0, this.voiceCount).map((iv) => base + iv);
+
+    // Apply inversion by lifting the lowest notes up an octave.
+    for (let inv = 0; inv < this.inversion && inv < chosen.length; inv++) {
+      chosen[inv] = chosen[inv] + 12;
+    }
+    chosen.sort((a, b) => a - b);
+    // Clamp into MIDI range.
+    return chosen.map((n) => Math.max(0, Math.min(127, n)));
+  }
+
+  // --- Internal clock handler ---
+
+  _onTick(t) {
+    if (!this._running) return;
+    if (this.mode === 'follow') return; // progression paused in follow mode
+    if (this.progression.length === 0) return;
+
+    // Only act on bar boundaries — never advance mid-bar.
+    if (!t.isBarBoundary) return;
+    if (t.bar === this._lastBar) return;
+    this._lastBar = t.bar;
+
+    // A new bar elapsed.
+    if (this._barsRemaining > 0) {
+      this._barsRemaining--;
+      this._emitBarsRemaining(this._barsRemaining);
+    }
+
+    // Lock / manual: hold the current chord, do not advance.
+    if (this.mode === 'lock' || this._locked) return;
+    if (this.mode === 'manual') return;
+
+    // Auto mode: advance when the current step's bars are exhausted.
+    if (this._barsRemaining <= 0) {
+      this._advance();
+    }
+  }
+
+  _advance() {
+    const nextIndex = (this._stepIndex + 1) % this.progression.length;
+    this._stepIndex = nextIndex;
+    this._applyStep(nextIndex, true);
+  }
+
+  // Send noteOff for the previous chord, compute and send the new chord.
+  _applyStep(index, isChange) {
+    const step = this.progression[index];
+    if (!step) return;
+    this._releaseActive();
+
+    const notes = this.computeNotes(step.root, step.quality);
+    notes.forEach((n) => this.midi.noteOn(this.channel, n, 100));
+    this._activeNotes = notes;
+
+    this._barsRemaining = step.bars;
+    this._emitBarsRemaining(this._barsRemaining);
+
+    if (isChange) {
+      const cur = this.getCurrentStep();
+      const next = this.getNextStep();
+      this._stepChangeCallbacks.forEach((cb) => cb(cur, next));
+    }
+  }
+
+  _releaseActive() {
+    this._activeNotes.forEach((n) => this.midi.noteOff(this.channel, n));
+    this._activeNotes = [];
+  }
+
+  _emitBarsRemaining(n) {
+    this._barsRemainingCallbacks.forEach((cb) => cb(n));
+  }
+
+  // Release all notes (panic / port change).
+  releaseAll() {
+    this._releaseActive();
+  }
+}
+
+Object.assign(window, { CHORD_QUALITIES, NOTE_NAMES, chordName, midiNoteName, HarmonyEngine });
+})();
+
+/* ===== ui.js (entry) ===== */
+(function(){
+"use strict";
+const { MidiEngine, ClockEngine, EuclideanEngine, LFOEngine, HarmonyEngine, CHORD_QUALITIES, NOTE_NAMES, chordName, midiNoteName } = window;
+// ui.js — wires all modules to the DOM. Owns no musical logic.
+
+
+
+
+
+
+
+// Module evaluated successfully → ES modules loaded. This clears the file://
+// fallback notice. Set synchronously at top level, independent of async MIDI
+// init (which may hang waiting on a permission prompt).
+window.__hwBooted = true;
+
+const STATE_KEY = 'hw_v2_state';
+const STATE_VERSION = 2;
+
+// ---- Engine instances ----
+const midi = new MidiEngine();
+const clock = new ClockEngine(midi);
+const euclid = new EuclideanEngine(clock, midi);
+const lfo = new LFOEngine(clock, midi);
+const harmony = new HarmonyEngine(clock, midi);
+
+const $ = (id) => document.getElementById(id);
+
+// =====================================================================
+//  PERSISTENCE
+// =====================================================================
+
+let saveTimer = null;
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 500);
+}
+
+function saveState() {
+  const state = {
+    version: STATE_VERSION,
+    clock: {
+      bpm: clock.bpm,
+      subdivision: clock.subdivision,
+      mode: clock.mode,
+    },
+    midi: {
+      outputPortId: midi.getOutputPortId(),
+      clockInputPortId: midi.getClockInputPortId(),
+      keyboardInputPortId: midi.getKeyboardInputPortId(),
+    },
+    euclidean: { voices: euclid.getVoices() },
+    lfo: { lfos: lfo.getLFOs() },
+    harmony: {
+      channel: harmony.channel,
+      voiceCount: harmony.voiceCount,
+      octave: harmony.octave,
+      inversion: harmony.inversion,
+      mode: harmony.mode,
+      followChannel: harmony.followChannel,
+      progression: harmony.getProgression(),
+      runningStepIndex: harmony._stepIndex,
+    },
+  };
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  } catch (e) {
+    /* storage full / unavailable — ignore silently */
+  }
+}
+
+function loadState() {
+  let raw;
+  try {
+    raw = localStorage.getItem(STATE_KEY);
+  } catch (e) {
+    return null;
+  }
+  if (!raw) return null;
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+  // Version mismatch → discard stale state, start fresh.
+  if (!parsed || parsed.version !== STATE_VERSION) {
+    try { localStorage.removeItem(STATE_KEY); } catch (e) {}
+    return null;
+  }
+  return parsed;
+}
+
+// =====================================================================
+//  MIDI + STATUS
+// =====================================================================
+
+const statusDot = $('statusDot');
+const statusText = $('statusText');
+let activityTimer = null;
+
+function setStatus(kind, text) {
+  statusDot.classList.remove('ok', 'err', 'act');
+  if (kind) statusDot.classList.add(kind);
+  if (text != null) statusText.textContent = text;
+}
+
+midi.onActivity(() => {
+  statusDot.classList.add('act');
+  if (activityTimer) clearTimeout(activityTimer);
+  activityTimer = setTimeout(() => statusDot.classList.remove('act'), 80);
+});
+
+function fillPortSelect(sel, ports, currentId) {
+  sel.innerHTML = '<option value="">— none —</option>';
+  ports.forEach((p) => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    if (p.id === currentId) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function populatePorts() {
+  const outs = midi.getOutputPorts();
+  const ins = midi.getInputPorts();
+  fillPortSelect($('outPort'), outs, midi.getOutputPortId());
+  fillPortSelect($('clockInPort'), ins, midi.getClockInputPortId());
+  fillPortSelect($('keysInPort'), ins, midi.getKeyboardInputPortId());
+}
+
+async function initMidi() {
+  try {
+    await midi.init();
+    setStatus('ok', 'MIDI ready');
+    populatePorts();
+    midi.onStateChange(() => {
+      populatePorts();
+    });
+  } catch (e) {
+    setStatus('err', 'No Web MIDI');
+    $('supportBanner').classList.add('show');
+  }
+}
+
+// =====================================================================
+//  TRANSPORT / CLOCK WIRING
+// =====================================================================
+
+function wireTransport() {
+  $('outPort').addEventListener('change', (e) => {
+    // Release notes before swapping ports to avoid orphans.
+    panic();
+    midi.setOutputPort(e.target.value);
+    scheduleSave();
+  });
+  $('clockInPort').addEventListener('change', (e) => {
+    midi.setClockInputPort(e.target.value);
+    scheduleSave();
+  });
+  $('keysInPort').addEventListener('change', (e) => {
+    midi.setKeyboardInputPort(e.target.value);
+    scheduleSave();
+  });
+
+  const bpmInput = $('bpm');
+  bpmInput.addEventListener('change', () => {
+    clock.setBPM(parseFloat(bpmInput.value) || 120);
+    bpmInput.value = clock.bpm;
+    scheduleSave();
+  });
+
+  $('tap').addEventListener('click', () => {
+    const bpm = clock.tapTempo();
+    bpmInput.value = Math.round(bpm);
+    scheduleSave();
+  });
+
+  $('subdivision').addEventListener('change', (e) => {
+    clock.setSubdivision(e.target.value);
+    scheduleSave();
+  });
+
+  $('clockMode').querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      $('clockMode').querySelectorAll('button').forEach((b) => b.classList.remove('on'));
+      btn.classList.add('on');
+      const mode = btn.dataset.mode;
+      // Releasing notes before a clock-mode switch avoids orphaned noteOns.
+      panic();
+      clock.setMode(mode);
+      bpmInput.disabled = mode === 'slave';
+      $('tap').disabled = mode === 'slave';
+      scheduleSave();
+    });
+  });
+
+  $('start').addEventListener('click', () => {
+    euclid.resetSteps();
+    clock.start();
+    if (clock.mode === 'internal') midi.rt(0xfa); // send MIDI start downstream
+  });
+
+  $('stop').addEventListener('click', stopAll);
+  $('panic').addEventListener('click', panic);
+
+  // Reflect slave-derived BPM in the input.
+  clock.onBPMChange((bpm) => {
+    if (clock.mode === 'slave') bpmInput.value = Math.round(bpm);
+  });
+}
+
+function stopAll() {
+  clock.stop();
+  if (clock.mode === 'internal') midi.rt(0xfc);
+  euclid.releaseAll();
+  harmony.stopProgression();
+  midi.allNotesOff();
+}
+
+function panic() {
+  euclid.releaseAll();
+  harmony.releaseAll();
+  midi.allNotesOff();
+  midi.allSoundOff();
+}
+
+// Flush all notes if the page is closed/reloaded mid-playback so the 707/VT-4
+// are never left with hanging notes.
+window.addEventListener('beforeunload', () => {
+  euclid.releaseAll();
+  harmony.releaseAll();
+  midi.allNotesOff();
+});
+
+// =====================================================================
+//  EUCLIDEAN UI
+// =====================================================================
+
+const voiceGrid = $('voiceGrid');
+const MAX_VOICES = 8;
+const voiceEls = new Map(); // id -> { el, canvas, currentStep }
+
+function defaultVoiceConfig(n) {
+  return {
+    label: 'Voice ' + n,
+    steps: 8, pulses: 3, offset: 0,
+    mode: 'note', channel: 1, note: 36, velocity: 100,
+    noteLength: '1/16', ccNumber: 80, ccHigh: 127, ccLow: 0,
+    probability: 1.0, active: true,
+  };
+}
+
+function addVoiceUI(config) {
+  if (euclid.voices.size >= MAX_VOICES) return null;
+  const id = euclid.addVoice(config || defaultVoiceConfig(euclid.voices.size + 1));
+  const v = euclid.voices.get(id);
+
+  const el = document.createElement('div');
+  el.className = 'voice open';
+  el.dataset.id = id;
+  el.innerHTML = `
+    <div class="voice-top">
+      <canvas width="120" height="120" style="width:60px;height:60px"></canvas>
+      <div class="vmeta">
+        <div class="vlabel"></div>
+        <div class="vinfo"></div>
+      </div>
+      <button class="amber-btn vtoggle" title="active">●</button>
+      <button class="vremove" title="remove">✕</button>
+    </div>
+    <div class="voice-body">
+      <div class="field full">
+        <label>Label</label>
+        <input type="text" class="f-label" />
+      </div>
+      <div class="field">
+        <label>Steps <span class="val f-steps-v"></span></label>
+        <input type="range" class="f-steps" min="8" max="32" />
+      </div>
+      <div class="field">
+        <label>Pulses <span class="val f-pulses-v"></span></label>
+        <input type="range" class="f-pulses" min="1" max="32" />
+      </div>
+      <div class="field">
+        <label>Offset <span class="val f-offset-v"></span></label>
+        <input type="range" class="f-offset" min="0" max="31" />
+      </div>
+      <div class="field">
+        <label>Probability <span class="val f-prob-v"></span></label>
+        <input type="range" class="f-prob" min="0" max="100" />
+      </div>
+      <div class="field">
+        <label>Mode</label>
+        <select class="f-mode">
+          <option value="note">note</option>
+          <option value="cc">cc</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Channel</label>
+        <select class="f-channel"></select>
+      </div>
+      <div class="field note-only">
+        <label>Note <span class="val f-note-v"></span></label>
+        <input type="range" class="f-note" min="0" max="127" />
+      </div>
+      <div class="field note-only">
+        <label>Velocity <span class="val f-vel-v"></span></label>
+        <input type="range" class="f-vel" min="1" max="127" />
+      </div>
+      <div class="field note-only">
+        <label>Note length</label>
+        <select class="f-notelen">
+          <option value="1/16">1/16</option>
+          <option value="1/8">1/8</option>
+          <option value="1/4">1/4</option>
+          <option value="gate">gate</option>
+        </select>
+      </div>
+      <div class="field cc-only">
+        <label>CC number <span class="val f-cc-v"></span></label>
+        <input type="range" class="f-cc" min="0" max="127" />
+      </div>
+      <div class="field cc-only">
+        <label>CC high <span class="val f-cchigh-v"></span></label>
+        <input type="range" class="f-cchigh" min="0" max="127" />
+      </div>
+      <div class="field cc-only">
+        <label>CC low <span class="val f-cclow-v"></span></label>
+        <input type="range" class="f-cclow" min="0" max="127" />
+      </div>
+    </div>
+  `;
+  voiceGrid.appendChild(el);
+
+  // Channel options.
+  const chSel = el.querySelector('.f-channel');
+  for (let c = 1; c <= 16; c++) {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c; chSel.appendChild(o);
+  }
+
+  const canvas = el.querySelector('canvas');
+  const rec = { el, canvas, currentStep: -1, firedStep: -1 };
+  voiceEls.set(id, rec);
+
+  // --- bind fields to engine ---
+  const set = (partial) => { euclid.updateVoice(id, partial); refreshVoiceMeta(id); drawRing(id); scheduleSave(); };
+
+  el.querySelector('.f-label').value = v.label;
+  el.querySelector('.f-label').addEventListener('input', (e) => set({ label: e.target.value }));
+
+  const stepsR = el.querySelector('.f-steps');
+  const pulsesR = el.querySelector('.f-pulses');
+  const offsetR = el.querySelector('.f-offset');
+  stepsR.value = v.steps; pulsesR.value = v.pulses; offsetR.value = v.offset;
+
+  const syncStepLimits = () => {
+    const steps = parseInt(stepsR.value, 10);
+    pulsesR.max = steps;
+    offsetR.max = steps - 1;
+    if (parseInt(pulsesR.value, 10) > steps) pulsesR.value = steps;
+    if (parseInt(offsetR.value, 10) > steps - 1) offsetR.value = steps - 1;
+  };
+  syncStepLimits();
+
+  stepsR.addEventListener('input', () => { syncStepLimits(); set({ steps: +stepsR.value, pulses: +pulsesR.value, offset: +offsetR.value }); });
+  pulsesR.addEventListener('input', () => set({ pulses: +pulsesR.value }));
+  offsetR.addEventListener('input', () => set({ offset: +offsetR.value }));
+
+  const probR = el.querySelector('.f-prob');
+  probR.value = Math.round(v.probability * 100);
+  probR.addEventListener('input', () => set({ probability: (+probR.value) / 100 }));
+
+  const modeSel = el.querySelector('.f-mode');
+  modeSel.value = v.mode;
+  const applyModeVisibility = () => {
+    const isNote = modeSel.value === 'note';
+    el.querySelectorAll('.note-only').forEach((n) => n.style.display = isNote ? '' : 'none');
+    el.querySelectorAll('.cc-only').forEach((n) => n.style.display = isNote ? 'none' : '');
+  };
+  modeSel.addEventListener('change', () => { set({ mode: modeSel.value }); applyModeVisibility(); });
+
+  chSel.value = v.channel;
+  chSel.addEventListener('change', () => set({ channel: +chSel.value }));
+
+  const noteR = el.querySelector('.f-note'); noteR.value = v.note;
+  noteR.addEventListener('input', () => set({ note: +noteR.value }));
+  const velR = el.querySelector('.f-vel'); velR.value = v.velocity;
+  velR.addEventListener('input', () => set({ velocity: +velR.value }));
+  const noteLenSel = el.querySelector('.f-notelen'); noteLenSel.value = v.noteLength;
+  noteLenSel.addEventListener('change', () => set({ noteLength: noteLenSel.value }));
+
+  const ccR = el.querySelector('.f-cc'); ccR.value = v.ccNumber;
+  ccR.addEventListener('input', () => set({ ccNumber: +ccR.value }));
+  const cchighR = el.querySelector('.f-cchigh'); cchighR.value = v.ccHigh;
+  cchighR.addEventListener('input', () => set({ ccHigh: +cchighR.value }));
+  const cclowR = el.querySelector('.f-cclow'); cclowR.value = v.ccLow;
+  cclowR.addEventListener('input', () => set({ ccLow: +cclowR.value }));
+
+  el.querySelector('.vtoggle').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const newState = !euclid.voices.get(id).active;
+    euclid.setActive(id, newState);
+    el.classList.toggle('inactive', !newState);
+    scheduleSave();
+  });
+
+  el.querySelector('.vremove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    euclid.removeVoice(id);
+    el.remove();
+    voiceEls.delete(id);
+    updateAddVoiceBtn();
+    scheduleSave();
+  });
+
+  el.querySelector('.voice-top').addEventListener('click', () => el.classList.toggle('open'));
+
+  // step event → visual feedback
+  euclid.onStep(id, (info) => {
+    const r = voiceEls.get(id);
+    if (!r) return;
+    r.currentStep = info.step;
+    if (info.fired) r.firedStep = info.step;
+    drawRing(id);
+  });
+
+  applyModeVisibility();
+  el.classList.toggle('inactive', !v.active);
+  refreshVoiceMeta(id);
+  drawRing(id);
+  updateAddVoiceBtn();
+  return id;
+}
+
+function refreshVoiceMeta(id) {
+  const rec = voiceEls.get(id);
+  const v = euclid.voices.get(id);
+  if (!rec || !v) return;
+  const el = rec.el;
+  el.querySelector('.vlabel').textContent = v.label;
+  const tgt = v.mode === 'note' ? `note ${midiNoteName(v.note)}` : `CC ${v.ccNumber}`;
+  el.querySelector('.vinfo').textContent = `E(${v.pulses},${v.steps}) · ch${v.channel} · ${tgt}`;
+  // value labels
+  const setv = (cls, val) => { const n = el.querySelector(cls); if (n) n.textContent = val; };
+  setv('.f-steps-v', v.steps);
+  setv('.f-pulses-v', v.pulses);
+  setv('.f-offset-v', v.offset);
+  setv('.f-prob-v', Math.round(v.probability * 100) + '%');
+  setv('.f-note-v', midiNoteName(v.note));
+  setv('.f-vel-v', v.velocity);
+  setv('.f-cc-v', v.ccNumber);
+  setv('.f-cchigh-v', v.ccHigh);
+  setv('.f-cclow-v', v.ccLow);
+}
+
+function drawRing(id) {
+  const rec = voiceEls.get(id);
+  const v = euclid.voices.get(id);
+  if (!rec || !v) return;
+  const ctx = rec.canvas.getContext('2d');
+  const W = rec.canvas.width, H = rec.canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, R = W / 2 - 16;
+  const pattern = v._pattern;
+  const n = pattern.length;
+  const amber = '#e0a44a';
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + Math.cos(ang) * R;
+    const y = cy + Math.sin(ang) * R;
+    const active = pattern[i];
+    let r = active ? 7 : 4;
+    let fill = active ? amber : '#352d40';
+    if (i === rec.currentStep) {
+      fill = '#7ee081';
+      r = active ? 9 : 6;
+    }
+    if (i === rec.firedStep && i === rec.currentStep) {
+      fill = '#ffffff';
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    if (active && i !== rec.currentStep) {
+      ctx.strokeStyle = amber;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+  // decay fired highlight
+  if (rec.firedStep !== -1 && rec.firedStep !== rec.currentStep) rec.firedStep = -1;
+}
+
+function updateAddVoiceBtn() {
+  $('addVoice').disabled = euclid.voices.size >= MAX_VOICES;
+}
+
+// =====================================================================
+//  LFO UI
+// =====================================================================
+
+const lfoGrid = $('lfoGrid');
+const MAX_LFOS = 4;
+const lfoEls = new Map();
+const LFO_SHAPES = ['sine', 'triangle', 'sawtooth', 'ramp', 'square', 'random', 's&h'];
+const LFO_RATES = ['4/1', '2/1', '1/1', '1/2', '1/4', '1/8', '1/16', '1/4t', '1/8t'];
+
+function defaultLfoConfig(n) {
+  return {
+    label: 'LFO ' + n, shape: 'sine', rate: '1/4',
+    depth: 64, center: 64, channel: 1, ccNumber: 80, phase: 0, active: true,
+  };
+}
+
+function addLfoUI(config) {
+  if (lfo.lfos.size >= MAX_LFOS) return null;
+  const id = lfo.addLFO(config || defaultLfoConfig(lfo.lfos.size + 1));
+  const l = lfo.lfos.get(id);
+
+  const el = document.createElement('div');
+  el.className = 'lfo';
+  el.dataset.id = id;
+  el.innerHTML = `
+    <div class="lfo-head">
+      <span class="llabel"></span>
+      <span class="spacer" style="flex:1"></span>
+      <button class="teal-btn ltoggle" title="active">●</button>
+      <button class="lremove" title="remove">✕</button>
+    </div>
+    <canvas width="360" height="80"></canvas>
+    <div class="lfo-body">
+      <div class="field full">
+        <label>Label</label>
+        <input type="text" class="lf-label" />
+      </div>
+      <div class="field">
+        <label>Shape</label>
+        <select class="lf-shape"></select>
+      </div>
+      <div class="field">
+        <label>Rate</label>
+        <select class="lf-rate"></select>
+      </div>
+      <div class="field">
+        <label>Depth <span class="val lf-depth-v"></span></label>
+        <input type="range" class="lf-depth" min="0" max="127" />
+      </div>
+      <div class="field">
+        <label>Center <span class="val lf-center-v"></span></label>
+        <input type="range" class="lf-center" min="0" max="127" />
+      </div>
+      <div class="field">
+        <label>Channel</label>
+        <select class="lf-channel"></select>
+      </div>
+      <div class="field">
+        <label>CC <span class="val lf-cc-v"></span></label>
+        <input type="range" class="lf-cc" min="0" max="127" />
+      </div>
+    </div>
+  `;
+  lfoGrid.appendChild(el);
+
+  const shapeSel = el.querySelector('.lf-shape');
+  LFO_SHAPES.forEach((s) => { const o = document.createElement('option'); o.value = s; o.textContent = s; shapeSel.appendChild(o); });
+  const rateSel = el.querySelector('.lf-rate');
+  LFO_RATES.forEach((r) => { const o = document.createElement('option'); o.value = r; o.textContent = r; rateSel.appendChild(o); });
+  const chSel = el.querySelector('.lf-channel');
+  for (let c = 1; c <= 16; c++) { const o = document.createElement('option'); o.value = c; o.textContent = c; chSel.appendChild(o); }
+
+  const canvas = el.querySelector('canvas');
+  lfoEls.set(id, { el, canvas });
+
+  const set = (partial) => { lfo.updateLFO(id, partial); refreshLfoMeta(id); scheduleSave(); };
+
+  el.querySelector('.lf-label').value = l.label;
+  el.querySelector('.lf-label').addEventListener('input', (e) => set({ label: e.target.value }));
+  shapeSel.value = l.shape; shapeSel.addEventListener('change', () => set({ shape: shapeSel.value }));
+  rateSel.value = l.rate; rateSel.addEventListener('change', () => set({ rate: rateSel.value }));
+  const depthR = el.querySelector('.lf-depth'); depthR.value = l.depth;
+  depthR.addEventListener('input', () => set({ depth: +depthR.value }));
+  const centerR = el.querySelector('.lf-center'); centerR.value = l.center;
+  centerR.addEventListener('input', () => set({ center: +centerR.value }));
+  chSel.value = l.channel; chSel.addEventListener('change', () => set({ channel: +chSel.value }));
+  const ccR = el.querySelector('.lf-cc'); ccR.value = l.ccNumber;
+  ccR.addEventListener('input', () => set({ ccNumber: +ccR.value }));
+
+  el.querySelector('.ltoggle').addEventListener('click', () => {
+    const ns = !lfo.lfos.get(id).active;
+    lfo.setActive(id, ns);
+    el.classList.toggle('inactive', !ns);
+    scheduleSave();
+  });
+  el.querySelector('.lremove').addEventListener('click', () => {
+    lfo.removeLFO(id); el.remove(); lfoEls.delete(id); updateAddLfoBtn(); scheduleSave();
+  });
+
+  el.classList.toggle('inactive', !l.active);
+  refreshLfoMeta(id);
+  updateAddLfoBtn();
+  return id;
+}
+
+function refreshLfoMeta(id) {
+  const rec = lfoEls.get(id);
+  const l = lfo.lfos.get(id);
+  if (!rec || !l) return;
+  rec.el.querySelector('.llabel').textContent = l.label;
+  const setv = (cls, val) => { const n = rec.el.querySelector(cls); if (n) n.textContent = val; };
+  setv('.lf-depth-v', l.depth);
+  setv('.lf-center-v', l.center);
+  setv('.lf-cc-v', l.ccNumber);
+}
+
+function drawLfoWave(id) {
+  const rec = lfoEls.get(id);
+  const l = lfo.lfos.get(id);
+  if (!rec || !l) return;
+  const ctx = rec.canvas.getContext('2d');
+  const W = rec.canvas.width, H = rec.canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#4ec5c1';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let x = 0; x <= W; x++) {
+    const pos = x / W;
+    const v = LFOEngine.previewShape(l.shape, pos);
+    const y = H - v * (H - 6) - 3;
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Position cursor based on current live value mapped back to 0..1.
+  if (clock.isRunning() && l.active) {
+    const cur = lfo.getCurrentValue(id);
+    // Map cursor X by phase position derived from the clock tick.
+    const pos = lfoCursorPos(l);
+    const cx = pos * W;
+    ctx.strokeStyle = 'rgba(126,224,129,0.9)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, H);
+    ctx.stroke();
+    // Live value label
+    ctx.fillStyle = '#8a8194';
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.fillText(String(cur), 4, 12);
+  }
+}
+
+function lfoCursorPos(l) {
+  // Recompute normalized cycle position from the clock for cursor display.
+  const RATE_QUARTERS = { '4/1':16,'2/1':8,'1/1':4,'1/2':2,'1/4':1,'1/8':0.5,'1/16':0.25,'1/4t':2/3,'1/8t':1/3 };
+  const q = RATE_QUARTERS[l.rate] || 1;
+  const ticksPerCycle = q * 24;
+  const pos = clock._tick % ticksPerCycle / ticksPerCycle;
+  return ((pos + l.phase) % 1 + 1) % 1;
+}
+
+function updateAddLfoBtn() {
+  $('addLfo').disabled = lfo.lfos.size >= MAX_LFOS;
+}
+
+// =====================================================================
+//  HARMONY UI
+// =====================================================================
+
+function wireHarmony() {
+  const chSel = $('harmCh');
+  for (let c = 1; c <= 16; c++) { const o = document.createElement('option'); o.value = c; o.textContent = c; chSel.appendChild(o); }
+  chSel.value = harmony.channel;
+  chSel.addEventListener('change', () => { harmony.setChannel(+chSel.value); scheduleSave(); });
+
+  $('harmVoices').addEventListener('change', (e) => { harmony.setVoiceCount(+e.target.value); refreshHarmonyDisplay(); scheduleSave(); });
+  $('harmOct').addEventListener('change', (e) => { harmony.setOctave(+e.target.value); refreshHarmonyDisplay(); scheduleSave(); });
+  $('harmInv').addEventListener('change', (e) => { harmony.setInversion(+e.target.value); refreshHarmonyDisplay(); scheduleSave(); });
+
+  // Keys CH selector: 0 = any (omni), 1-16 specific.
+  const keysChSel = $('harmKeysCh');
+  const anyOpt = document.createElement('option');
+  anyOpt.value = '0'; anyOpt.textContent = 'any'; keysChSel.appendChild(anyOpt);
+  for (let c = 1; c <= 16; c++) { const o = document.createElement('option'); o.value = c; o.textContent = c; keysChSel.appendChild(o); }
+  keysChSel.value = harmony.followChannel;
+  keysChSel.addEventListener('change', () => { harmony.setFollowChannel(+keysChSel.value); scheduleSave(); });
+
+  $('harmMode').querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      applyHarmonyMode(btn.dataset.mode);
+      scheduleSave();
+    });
+  });
+  $('harmNext').style.visibility = 'hidden';
+  $('harmNext').addEventListener('click', () => {
+    harmony.jumpToStep(harmony._stepIndex + 1);
+  });
+
+  harmony.onFollowChordChange((c) => refreshFollowDisplay(c));
+
+  $('progStart').addEventListener('click', () => { harmony.startProgression(); scheduleSave(); });
+  $('progStop').addEventListener('click', () => { harmony.stopProgression(); refreshHarmonyDisplay(); scheduleSave(); });
+  $('progReset').addEventListener('click', () => { harmony.jumpToStep(0); scheduleSave(); });
+
+  harmony.onStepChange(() => refreshHarmonyDisplay());
+  harmony.onBarsRemaining(() => refreshBarDots());
+
+  buildProgressionGrid();
+  wireStepModal();
+  refreshHarmonyDisplay();
+}
+
+function buildProgressionGrid() {
+  const grid = $('progGrid');
+  grid.innerHTML = '';
+  const prog = harmony.getProgression();
+  for (let i = 0; i < 8; i++) {
+    const step = prog[i];
+    const cell = document.createElement('div');
+    cell.className = 'prog-step' + (step ? '' : ' empty');
+    cell.dataset.index = i;
+    cell.innerHTML = `
+      <span class="num">${i + 1}</span>
+      <span class="chord">${step ? chordName(step.root, step.quality) : '–'}</span>
+      <span class="bars">${step ? step.bars + 'b' : ''}</span>
+    `;
+    cell.addEventListener('click', () => openStepModal(i));
+    grid.appendChild(cell);
+  }
+  highlightCurrentStep();
+}
+
+function highlightCurrentStep() {
+  const cells = $('progGrid').querySelectorAll('.prog-step');
+  const cur = harmony.getCurrentStep();
+  const next = harmony.getNextStep();
+  cells.forEach((c) => c.classList.remove('current', 'next'));
+  if (harmony.isRunning() && cur) {
+    const cc = cells[cur.index]; if (cc) cc.classList.add('current');
+    if (next) { const nc = cells[next.index]; if (nc) nc.classList.add('next'); }
+  }
+}
+
+function refreshHarmonyDisplay() {
+  const cur = harmony.getCurrentStep();
+  const next = harmony.getNextStep();
+  if (cur && harmony.progression.length) {
+    $('nowChord').textContent = chordName(cur.root, cur.quality);
+    const notes = harmony.getActiveNotes();
+    $('nowNotes').textContent = notes.length ? notes.map(midiNoteName).join(' · ') : harmony.computeNotes(cur.root, cur.quality).map(midiNoteName).join(' · ');
+  } else {
+    $('nowChord').textContent = '—';
+    $('nowNotes').textContent = '';
+  }
+  $('nextChord').textContent = next ? chordName(next.root, next.quality) : '—';
+  refreshBarDots();
+  highlightCurrentStep();
+}
+
+function refreshBarDots() {
+  const box = $('barDots');
+  // Clear all but the remaining label.
+  box.querySelectorAll('.bar-dot').forEach((d) => d.remove());
+  const cur = harmony.getCurrentStep();
+  const label = $('barRemaining');
+  if (!cur || !harmony.isRunning()) { label.textContent = ''; return; }
+  const total = cur.bars;
+  const remaining = harmony._barsRemaining;
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    d.className = 'bar-dot' + (i < remaining ? ' filled' : '');
+    frag.appendChild(d);
+  }
+  box.insertBefore(frag, label);
+  label.textContent = `${remaining} bar${remaining === 1 ? '' : 's'} remaining`;
+}
+
+// Apply a harmony mode: update engine, button states, and panel visibility.
+function applyHarmonyMode(mode) {
+  $('harmMode').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+  harmony.setMode(mode);
+
+  const isFollow = mode === 'follow';
+  $('followBox').style.display = isFollow ? '' : 'none';
+  $('keysChGrp').style.display = isFollow ? '' : 'none';
+  // Hide progression UI in follow mode (progression is paused, not shown).
+  const nowBox = document.querySelector('.now-box');
+  const progControls = document.querySelector('.prog-controls');
+  const progGrid = $('progGrid');
+  [nowBox, progControls, progGrid].forEach((el) => { if (el) el.style.display = isFollow ? 'none' : ''; });
+  $('harmNext').style.visibility = mode === 'manual' ? 'visible' : 'hidden';
+
+  if (isFollow) refreshFollowDisplay();
+  else refreshHarmonyDisplay();
+}
+
+function refreshFollowDisplay() {
+  const st = harmony.getFollowState();
+  if (!st) return;
+  $('followHeld').textContent = st.pitchClasses.length
+    ? st.pitchClasses.map((p) => NOTE_NAMES[p]).join(' · ')
+    : '—';
+  const det = st.detectedChord;
+  const chordEl = $('followChord');
+  const dot = $('followConf');
+  if (det) {
+    chordEl.textContent = chordName(det.root, det.quality);
+    // Confidence: dim = uncertain, bright = clear (no percentage shown).
+    const bright = 0.35 + 0.65 * det.confidence;
+    chordEl.style.opacity = String(bright);
+    dot.style.opacity = String(bright);
+  } else {
+    chordEl.textContent = '—';
+    chordEl.style.opacity = '0.5';
+    dot.style.opacity = '0.25';
+  }
+  const notes = harmony.getActiveNotes();
+  $('followOut').textContent = notes.length ? notes.map(midiNoteName).join(' · ') : '—';
+  $('followResumeHint').textContent =
+    '⟳ back to AUTO resumes progression from step ' + (harmony._stepIndex + 1);
+}
+
+// ---- Step editor modal ----
+let editingStepIndex = -1;
+function wireStepModal() {
+  const rootSel = $('stepRoot');
+  NOTE_NAMES.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; rootSel.appendChild(o); });
+  const qualSel = $('stepQuality');
+  Object.keys(CHORD_QUALITIES).forEach((q) => { const o = document.createElement('option'); o.value = q; o.textContent = q; qualSel.appendChild(o); });
+
+  $('stepCancel').addEventListener('click', closeStepModal);
+  $('stepSave').addEventListener('click', () => {
+    const prog = harmony._editPaddedProg || harmony.getProgression();
+    const newStep = { root: +$('stepRoot').value, quality: $('stepQuality').value, bars: Math.max(1, Math.min(8, +$('stepBars').value || 1)) };
+    prog[editingStepIndex] = newStep;
+    harmony.setProgression(compactProgression(prog));
+    buildProgressionGrid();
+    refreshHarmonyDisplay();
+    scheduleSave();
+    closeStepModal();
+  });
+  $('stepClear').addEventListener('click', () => {
+    const prog = harmony._editPaddedProg || harmony.getProgression();
+    prog[editingStepIndex] = null;
+    harmony.setProgression(compactProgression(prog));
+    buildProgressionGrid();
+    refreshHarmonyDisplay();
+    scheduleSave();
+    closeStepModal();
+  });
+  $('stepModal').addEventListener('click', (e) => { if (e.target === $('stepModal')) closeStepModal(); });
+}
+
+// Remove null holes but preserve order; trailing nulls dropped.
+function compactProgression(prog) {
+  return prog.filter((s) => s != null);
+}
+
+function openStepModal(index) {
+  editingStepIndex = index;
+  const prog = harmony.getProgression();
+  // Ensure array is long enough so we can edit an empty slot.
+  while (prog.length <= index) prog.push(null);
+  const step = prog[index];
+  $('stepModalNum').textContent = index + 1;
+  $('stepRoot').value = step ? step.root : 0;
+  $('stepQuality').value = step ? step.quality : 'maj';
+  $('stepBars').value = step ? step.bars : 2;
+  // stash padded prog so save uses the right index even for empty tail slots
+  harmony._editPaddedProg = prog;
+  $('stepModal').classList.add('open');
+}
+
+function closeStepModal() {
+  $('stepModal').classList.remove('open');
+  editingStepIndex = -1;
+  harmony._editPaddedProg = null;
+}
+
+// =====================================================================
+//  ANIMATION LOOP (canvas redraws)
+// =====================================================================
+
+function animate() {
+  voiceEls.forEach((_, id) => drawRing(id));
+  lfoEls.forEach((_, id) => drawLfoWave(id));
+  // Keep the follow readout live as keys are pressed/released.
+  if (harmony.mode === 'follow') refreshFollowDisplay();
+  requestAnimationFrame(animate);
+}
+
+// =====================================================================
+//  BOOT
+// =====================================================================
+
+async function boot() {
+  const state = loadState();
+
+  wireTransport();
+  wireHarmony();
+
+  if (state) {
+    // Clock
+    clock.setBPM(state.clock.bpm);
+    clock.setSubdivision(state.clock.subdivision);
+    clock.setMode(state.clock.mode);
+    $('bpm').value = state.clock.bpm;
+    $('subdivision').value = state.clock.subdivision;
+    $('clockMode').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.mode === state.clock.mode));
+
+    // Harmony config
+    harmony.setChannel(state.harmony.channel);
+    harmony.setVoiceCount(state.harmony.voiceCount);
+    harmony.setOctave(state.harmony.octave);
+    if (state.harmony.inversion != null) harmony.setInversion(state.harmony.inversion);
+    if (state.harmony.followChannel != null) harmony.setFollowChannel(state.harmony.followChannel);
+    harmony.setProgression(state.harmony.progression || []);
+    $('harmCh').value = state.harmony.channel;
+    $('harmVoices').value = state.harmony.voiceCount;
+    $('harmOct').value = state.harmony.octave;
+    $('harmInv').value = state.harmony.inversion || 0;
+    $('harmKeysCh').value = state.harmony.followChannel || 0;
+    buildProgressionGrid();
+    applyHarmonyMode(state.harmony.mode || 'auto');
+
+    // Euclidean voices
+    (state.euclidean.voices || []).forEach((vc) => addVoiceUI(vc));
+
+    // LFOs
+    (state.lfo.lfos || []).forEach((lc) => addLfoUI(lc));
+  } else {
+    // Seed a default progression and one of each, so the UI isn't empty.
+    harmony.setProgression([
+      { root: 0, quality: 'min', bars: 2 },
+      { root: 5, quality: 'min', bars: 2 },
+      { root: 10, quality: 'maj', bars: 2 },
+      { root: 3, quality: 'maj', bars: 2 },
+    ]);
+    buildProgressionGrid();
+    refreshHarmonyDisplay();
+    addVoiceUI();
+    addLfoUI();
+  }
+
+  $('addVoice').addEventListener('click', () => addVoiceUI());
+  $('addLfo').addEventListener('click', () => addLfoUI());
+
+  await initMidi();
+
+  // Restore selected ports after enumeration; auto-detect anything not saved.
+  if (midi.isAvailable()) {
+    const guess = midi.detectDefaultPorts();
+    const sm = (state && state.midi) || {};
+    const outId = sm.outputPortId || guess.out;
+    const clkId = sm.clockInputPortId || guess.clockIn;
+    const keysId = sm.keyboardInputPortId || guess.keysIn;
+    if (outId) { midi.setOutputPort(outId); $('outPort').value = outId; }
+    if (clkId) { midi.setClockInputPort(clkId); $('clockInPort').value = clkId; }
+    if (keysId) { midi.setKeyboardInputPort(keysId); $('keysInPort').value = keysId; }
+  }
+
+  // Slave-mode disables BPM input.
+  if (clock.mode === 'slave') { $('bpm').disabled = true; $('tap').disabled = true; }
+
+  requestAnimationFrame(animate);
+}
+
+boot();
+
+})();
+
+</script>
+</body>
+</html>
