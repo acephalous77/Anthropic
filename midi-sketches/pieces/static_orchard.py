@@ -147,7 +147,8 @@ def produce(result, bass_channel, melody_channel):
 
     hats = [e for e in result["drums"] if e.note == CHH]
     other = [e for e in result["drums"] if e.note != CHH]
-    swung_hats = humanize.swing(hats, STEP_TICKS, amount_ticks=STEP_TICKS // 5)
+    # 58% = Logic's "16C" -- loosens the 16ths without reading as full triplet swing
+    swung_hats = humanize.swing(hats, STEP_TICKS, swing_pct=58, eighth_ticks=STEP_TICKS * 2)
     drums = other + swung_hats
 
     bass = humanize.jitter(result["bass"], timing_ticks=14, vel_amount=8, seed=3)

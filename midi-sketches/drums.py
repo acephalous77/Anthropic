@@ -31,3 +31,20 @@ AGOGO_HI = 67
 AGOGO_LO = 68
 CABASA = 69
 CLAVES = 75
+
+
+def choke_hihats(events, closed=CHH, pedal=PHH, open_=OHH):
+    """A closed/pedal hi-hat hit should cut off a still-ringing open hi-hat --
+    GM doesn't do this automatically (channel 10 notes don't voice-steal by
+    default), so shorten any open-hat note that a later closed/pedal hit lands
+    inside of."""
+    chokes = sorted(e.start for e in events if e.note in (closed, pedal))
+    out = []
+    for e in events:
+        if e.note == open_:
+            end = e.start + e.dur
+            cut = next((c for c in chokes if e.start < c < end), None)
+            if cut is not None:
+                e = e._replace(dur=cut - e.start)
+        out.append(e)
+    return out

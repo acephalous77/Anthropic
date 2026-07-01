@@ -40,20 +40,48 @@ choices (key, tempo, density, contour, section lengths) every time:
   hi-hats, an n-against-4 phased melodic cell (n is randomly 3, 5, or 7).
 
 **How the generation is constrained ("smart," not random noise):** `palette.py`
-holds the actual generative logic --
+holds the actual generative logic, tuned against a research pass on melodic
+random-walk design, groove/microtiming practice, and polyrhythm perception --
 
-- `bass_phrase` / `duration_partition` — a lopsided rhythmic partition of the
-  bar plus a scale-degree random walk (mostly stepwise, occasional leap,
-  pulled back toward the root) instead of picking pitches/durations
-  independently at each step.
-- `motif` / `render_motif` — a short relative-degree melodic idea, reused and
-  transposed across a section (e.g. sequenced upward through a "build")
-  rather than a new unrelated phrase every bar.
-- `phase_melody` — generalizes `glass_repeater`'s fixed 5-step cell to a
-  random 3/5/7-step cell tiled against the 16-step bar.
+- `scale_walk` — a scale-degree random walk targeting ~65-80% stepwise
+  motion; any leap triggers a forced *post-leap reversal* (a step back the
+  other way next move, Narmour-style) instead of wandering; an occasional
+  pull back to the starting degree keeps it from drifting off forever.
+- `bass_phrase` / `duration_partition` — `scale_walk` over a lopsided
+  rhythmic partition of the bar, strong on the downbeat.
+- `motif` / `motif_scored` / `render_motif` — a short relative-degree idea,
+  generated as several candidates and kept only if it has real melodic
+  motion and a smooth `interval_score` (small steps/3rds reward, 7ths and
+  leaps beyond an octave penalized) — never a frozen single-pitch motif.
+- `motif_invert` / `motif_retrograde` / `motif_augment` / `motif_diminish` /
+  `motif_fragment` — thematic-development operators so a repeated section
+  (e.g. a "build") varies the motif (inversion, stretched durations, ...)
+  instead of transposing the identical shape every bar.
+- `resolve_consonance` — a lightweight two-voice filter: where a melody note
+  lands on a strong beat against a sounding bass note, nudge it (staying
+  in-scale) to the nearest consonant interval if the raw pitch clashes.
+- `phase_melody` / `additive_phase_melody` — two ways to generalize
+  `glass_repeater`'s fixed 5-step cell: tiling a random 3/5/7-step cell
+  against the 16-step bar (drifts out of phase every repeat), or a
+  Glass/Reich-style *additive process* where the cell grows by one note each
+  repeat. Both respect `min_safe_chunk_steps`, which keeps the fastest
+  implied onset spacing above ~100ms — finer than that crosses the
+  documented cognitive limit for grouping and reads as texture, not groove.
 - `kick_pattern` / `hats_pattern` — Euclidean-rhythm kicks (via `rhythm.py`'s
   Bjorklund implementation) and hi-hat density/glitch patterns, rather than
   fully free-form step-by-step coin flips.
+
+**Groove/production details**, in `humanize.py` and `drums.py`:
+
+- `humanize.swing()` takes a practitioner swing *percentage* (Roger Linn/MPC
+  convention: 50 = straight, 54-62 = "loose but not swung," 66 = perfect
+  triplet swing) and converts it to ticks via `(pct/100 - 0.5) * eighth_ticks`,
+  rather than a guessed tick offset.
+- `drums.choke_hihats()` shortens a still-ringing open hi-hat when a later
+  closed/pedal hit lands inside it — GM channel 10 doesn't voice-steal this
+  automatically, so every rendered drum track gets choked before writing.
+- Ghost-note velocities sit in the ~15-35 range (audible but clearly
+  subordinate), not just "quieter."
 
 `generator.generate()` also runs a lightweight **QC pass** after rendering
 (`generator._qc`) — checking for an empty part, a melody/bassline stuck on

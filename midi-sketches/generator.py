@@ -19,15 +19,15 @@ import random
 import palette
 import humanize as hz
 from arrange import render_piece, section_span, STEP_TICKS
-from midiwriter import cc_ramp
+from midiwriter import cc_ramp, CC_EXPRESSION, CC_REVERB_SEND, CC_BRIGHTNESS
 from rhythm import grid_from_hits
 from theory import NOTE_NAMES, note_in_range
-from drums import KICK, SNARE, CLAP, RIM, CHH, OHH, HTOM, MTOM2, LTOM2, SHAKER
+from drums import KICK, SNARE, CLAP, RIM, CHH, OHH, HTOM, MTOM2, LTOM2, SHAKER, choke_hihats
 
 DRUM_BANK = {
     "kick": (KICK, 106, 122),
     "snare": (SNARE, 100, 118),
-    "ghost_snare": (SNARE, 38, 46),
+    "ghost_snare": (SNARE, 22, 32),  # ghost-note velocity: audible but clearly subordinate (~15-35 range)
     "clap": (CLAP, 92, 114),
     "rim": (RIM, 62, 86),
     "chh": (CHH, 58, 86),
@@ -57,10 +57,12 @@ def _clip_to_bar(notes, steps):
 
 
 def _default_produce(rng, bass_timing=6, bass_vel=6, mel_timing=10, mel_vel=8,
-                      swell_section=None, release_section=None, swing_hats=False):
-    """A reusable production hook: bass/melody jitter, optional hat swing, and an
-    expression (CC11) swell/release keyed to named sections. Seeds are drawn once
-    here (not inside the closure) so the result is still reproducible."""
+                      swell_section=None, release_section=None, swing_pct=None, reverb_swell=False):
+    """A reusable production hook: bass/melody jitter, optional practitioner-style
+    hat swing (Roger Linn/MPC percentage, not a raw tick guess), and an
+    expression (CC11) swell/release keyed to named sections, optionally paired
+    with a CC91 reverb-send swell for a gated-reverb-style build. Seeds are
+    drawn once here (not inside the closure) so the result is still reproducible."""
     bass_seed = rng.randint(0, 1_000_000)
     mel_seed = rng.randint(0, 1_000_000)
 
@@ -68,21 +70,27 @@ def _default_produce(rng, bass_timing=6, bass_vel=6, mel_timing=10, mel_vel=8,
         bass = hz.jitter(result["bass"], timing_ticks=bass_timing, vel_amount=bass_vel, seed=bass_seed)
         melody = hz.jitter(result["melody"], timing_ticks=mel_timing, vel_amount=mel_vel, seed=mel_seed)
         drums = result["drums"]
-        if swing_hats:
+        if swing_pct:
             hats = [e for e in drums if e.note == CHH]
             other = [e for e in drums if e.note != CHH]
-            drums = other + hz.swing(hats, STEP_TICKS, STEP_TICKS // 5)
+            drums = other + hz.swing(hats, STEP_TICKS, swing_pct=swing_pct, eighth_ticks=STEP_TICKS * 2)
 
         cc = {"drums": [], "bass": [], "melody": []}
         bounds = result["section_bounds"]
         if swell_section:
             s, e = section_span(bounds, swell_section)
-            cc["bass"] += cc_ramp(bass_channel, 11, s, e, 90, 126)
-            cc["melody"] += cc_ramp(melody_channel, 11, s, e, 90, 126)
+            cc["bass"] += cc_ramp(bass_channel, CC_EXPRESSION, s, e, 90, 126)
+            cc["melody"] += cc_ramp(melody_channel, CC_EXPRESSION, s, e, 90, 126)
+            if reverb_swell:
+                cc["bass"] += cc_ramp(bass_channel, CC_REVERB_SEND, s, e, 30, 90)
+                cc["melody"] += cc_ramp(melody_channel, CC_REVERB_SEND, s, e, 30, 90)
         if release_section:
             s, e = section_span(bounds, release_section)
-            cc["bass"] += cc_ramp(bass_channel, 11, s, e, 126, 88)
-            cc["melody"] += cc_ramp(melody_channel, 11, s, e, 126, 88)
+            cc["bass"] += cc_ramp(bass_channel, CC_EXPRESSION, s, e, 126, 88)
+            cc["melody"] += cc_ramp(melody_channel, CC_EXPRESSION, s, e, 126, 88)
+            if reverb_swell:
+                cc["bass"] += cc_ramp(bass_channel, CC_REVERB_SEND, s, e, 90, 40)
+                cc["melody"] += cc_ramp(melody_channel, CC_REVERB_SEND, s, e, 90, 40)
         return {"drums": drums, "bass": bass, "melody": melody, "cc": cc}
 
     return produce
@@ -104,8 +112,9 @@ def halftime_drone(rng, root=None, scale=None, bpm=None):
     snare_pos = 8
     ghost_pos = rng.choice([11, 13, 14])
     bass = palette.bass_phrase(rng, bass_root, scale, 16, register=(24, 55))
-    call_motif = palette.motif(rng, rng.choice([3, 4]))
+    call_motif = palette.motif_scored(rng, rng.choice([3, 4]), mel_root, scale)
     pickup = rng.choice([1, 2, 3])
+    strong_steps = {0, 8}
 
     def drum_bar(fill=False, ghost=False, busy=False):
         out = {
@@ -134,20 +143,28 @@ def halftime_drone(rng, root=None, scale=None, bpm=None):
         is_answer = i % 2 == 1
         ghost = not is_answer
         drums = drum_bar(fill=(is_answer and i == n_verse - 1), ghost=ghost)
-        melody = _clip_to_bar(palette.render_motif(rng, call_motif, mel_root, scale, pickup,
-                                                    register=(58, 80), vel_base=90), 16) if is_answer else []
+        if is_answer:
+            melody = _clip_to_bar(palette.render_motif(rng, call_motif, mel_root, scale, pickup,
+                                                        register=(58, 80), vel_base=90), 16)
+            melody = palette.resolve_consonance(bass, melody, bass_root, scale, strong_steps)
+        else:
+            melody = []
         verse_bars.append({"drums": drums, "bass": bass, "melody": melody})
     sections.append({"name": "verse", "time_sig": (4, 4), "bpm": bpm, "bars": verse_bars})
 
     n_build = rng.randint(3, 5)
     build_bars = []
     shift = 0
+    inverted_motif = palette.motif_invert(call_motif)
     for i in range(n_build):
         shift += rng.choice([1, 1, 2])
         drums = drum_bar(busy=True)
         bass_t = bass if i < n_build // 2 else [(s, d, n + 12, v) for s, d, n, v in bass]
-        melody = _clip_to_bar(palette.render_motif(rng, call_motif, mel_root, scale, 0, degree_shift=shift,
+        # alternate the climbing sequence with its inversion for varied repetition, not a loop
+        source_motif = inverted_motif if i % 2 == 1 else call_motif
+        melody = _clip_to_bar(palette.render_motif(rng, source_motif, mel_root, scale, 0, degree_shift=shift,
                                                     register=(60, 84), vel_base=94 + i), 16)
+        melody = palette.resolve_consonance(bass_t, melody, bass_root, scale, strong_steps)
         build_bars.append({"drums": drums, "bass": bass_t, "melody": melody})
     sections.append({"name": "build", "time_sig": (4, 4), "bpm": bpm, "bars": build_bars})
 
@@ -186,9 +203,10 @@ def broken_meter(rng, root=None, scale=None, bpm=None):
 
     bass_a = [(0, 16, bass_root, 84)]
     bass_b = palette.bass_phrase(rng, bass_root, scale, 14, register=(26, 55))
-    cry = palette.motif(rng, rng.choice([2, 3]))
+    cry = palette.motif_scored(rng, rng.choice([2, 3]), mel_root, scale)
     cry_notes = _clip_to_bar(
         palette.render_motif(rng, cry, mel_root, scale, rng.choice([1, 2]), register=(60, 82), vel_base=92), 14)
+    cry_notes = palette.resolve_consonance(bass_b, cry_notes, bass_root, scale, {0, 8})
     answer_note = [(0, 4, mel_root, 86)]
 
     def bar_a(broken=False, busy=False):
@@ -249,7 +267,7 @@ def broken_meter(rng, root=None, scale=None, bpm=None):
     sections += flatten([sparse_pair() for _ in range(2)], "outro")
 
     produce = _default_produce(rng, bass_timing=14, bass_vel=8, mel_timing=16, mel_vel=10,
-                                swell_section="build", swing_hats=True)
+                                swell_section="build", swing_pct=rng.choice([54, 58, 62]), reverb_swell=True)
 
     return {"title": _title(rng, "orchard"), "bpm": bpm, "root": root_name, "scale": scale,
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
@@ -267,8 +285,12 @@ def four_floor_glitch(rng, root=None, scale=None, bpm=None):
     n_verse1 = rng.randint(6, 8)
     n_break = rng.randint(2, 4)
     n_verse2 = rng.randint(3, 5)
-    phase1 = palette.phase_melody(rng, mel_root, scale, n_verse1)
-    phase2 = palette.phase_melody(rng, mel_root, scale, n_verse2)
+    phase1 = palette.phase_melody(rng, mel_root, scale, n_verse1, bpm=bpm)
+    # verse2 occasionally swaps in the Glass/Reich-style additive process (growing
+    # cell) instead of the fixed n-against-4 phase cell, for a second flavour of
+    # "melody against the bar" within the same archetype
+    phase2 = (palette.additive_phase_melody(rng, mel_root, scale, n_verse2) if rng.random() < 0.4
+              else palette.phase_melody(rng, mel_root, scale, n_verse2, bpm=bpm))
 
     def pulse_bar(glitch=False):
         hats = palette.hats_pattern(rng, 16, density="busy", glitch_prob=1.0 if glitch else 0.0)
@@ -312,9 +334,9 @@ def four_floor_glitch(rng, root=None, scale=None, bpm=None):
 
         def sweep(channel):
             lo, mid, hi = rng.randint(32, 48), rng.randint(96, 118), rng.randint(40, 56)
-            return (cc_ramp(channel, 74, v1s, v1e, lo, mid)
-                    + cc_ramp(channel, 74, bs, be, mid, hi)
-                    + cc_ramp(channel, 74, v2s, v2e, hi, rng.randint(108, 124)))
+            return (cc_ramp(channel, CC_BRIGHTNESS, v1s, v1e, lo, mid)
+                    + cc_ramp(channel, CC_BRIGHTNESS, bs, be, mid, hi)
+                    + cc_ramp(channel, CC_BRIGHTNESS, v2s, v2e, hi, rng.randint(108, 124)))
 
         return {"drums": result["drums"], "bass": result["bass"], "melody": result["melody"],
                 "cc": {"drums": [], "bass": sweep(bass_channel), "melody": sweep(melody_channel)}}
@@ -372,6 +394,7 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, max_att
         result = render_piece(spec["sections"], spec["drum_notes"])
         produced = spec["produce"](result, bass_channel=0, melody_channel=1)
         result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
+        result["drums"] = choke_hihats(result["drums"])
         cc = produced.get("cc", {"drums": [], "bass": [], "melody": []})
 
         problems = _qc(result)

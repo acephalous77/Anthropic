@@ -11,6 +11,7 @@ import os
 import sys
 
 from arrange import render_piece
+from drums import choke_hihats
 import midiwriter
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
@@ -36,6 +37,7 @@ def render(piece_name):
         produced = mod.produce(result, bass_channel=BASS_CHANNEL, melody_channel=MELODY_CHANNEL)
         result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
         cc.update(produced.get("cc", {}))
+    result["drums"] = choke_hihats(result["drums"])
 
     out_dir = os.path.join(OUTPUT_DIR, piece_name)
     os.makedirs(out_dir, exist_ok=True)

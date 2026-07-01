@@ -19,7 +19,7 @@ D_MEL_ROOT = note("D", 4)      # 62
 DRUM_NOTES = {
     "kick": (KICK, 106, 122),
     "snare": (SNARE, 100, 118),
-    "ghost_snare": (SNARE, 38, 46),   # same drum, quieter hits -- a live-feel ghost note
+    "ghost_snare": (SNARE, 22, 32),   # same drum, quieter hits -- a live-feel ghost note (~15-35 range)
     "chh": (CHH, 58, 84),
     "ohh": (OHH, 68, 90),
     "shaker": (SHAKER, 46, 66),

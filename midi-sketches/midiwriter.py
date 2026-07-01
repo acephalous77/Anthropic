@@ -13,6 +13,19 @@ Event = namedtuple("Event", "start dur note vel channel")
 # CCEvent.tick is absolute ticks; controller is the CC number (11=expression, 74=brightness/cutoff, ...).
 CCEvent = namedtuple("CCEvent", "tick controller value channel")
 
+# Standard MIDI CC numbers used for automation in this project (GM/GM2 conventions).
+CC_MOD = 1           # modulation wheel -- vibrato/intensity
+CC_VOLUME = 7        # channel volume -- fixed level, ride CC_EXPRESSION on top for swells
+CC_PAN = 10
+CC_EXPRESSION = 11   # dynamic swells/fades on top of CC_VOLUME
+CC_SUSTAIN = 64      # >=64 on
+CC_RESONANCE = 71    # filter resonance/emphasis
+CC_RELEASE = 72
+CC_ATTACK = 73
+CC_BRIGHTNESS = 74   # de-facto filter cutoff
+CC_REVERB_SEND = 91
+CC_CHORUS_SEND = 93
+
 
 def cc_ramp(channel, controller, start_tick, end_tick, start_val, end_val, step_ticks=PPQ // 8):
     """Linearly interpolated CC automation from start_val to end_val across [start_tick, end_tick)."""
