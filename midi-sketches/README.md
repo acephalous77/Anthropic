@@ -122,12 +122,15 @@ literature, which overturned an assumption from the first pass:
   rather than scattering independently) with a target standard deviation of
   ~8-18ms depending on part/archetype. Velocity variation is left as
   independent jitter -- the groove finding was specifically about timing.
-- **Swing is now a tempo-dependent curve, not a fixed percentage.**
-  `humanize.bur_swing_pct(bpm)` derives a beat-upbeat ratio from tempo
-  (Friberg & Sundström 2002: ~2.5-3.5:1 at slow tempos, trending toward 1:1
-  by ~250-300 BPM -- the exact interpolation is this project's inference,
-  not a reported curve) and converts it to the practitioner swing-percentage
-  convention.
+- **Swing is a tempo-dependent curve, not a fixed percentage.**
+  `humanize.sixteenth_swing_pct(bpm)` gives a gentle 16th-note swing that
+  loosens at slow tempos (~62%) and straightens toward 50% as tempo rises,
+  which is the grid `humanize.swing()` actually shuffles. A separate
+  `bur_swing_pct(bpm)` encodes Friberg & Sundström's (2002) *eighth*-note
+  beat-upbeat ratio (~2.5-3.5:1 slow, toward 1:1 by ~250-300 BPM); the two
+  are kept distinct on purpose -- feeding the eighth-note BUR straight into a
+  sixteenth-note swing overstates the shuffle by a whole metric level (a
+  regression that briefly slipped in and was caught in review).
 - `drums.choke_hihats()` shortens a still-ringing open hi-hat when a later
   closed/pedal hit lands inside it — GM channel 10 doesn't voice-steal this
   automatically, so every rendered drum track gets choked before writing.

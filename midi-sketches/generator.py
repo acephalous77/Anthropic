@@ -280,7 +280,7 @@ def broken_meter(rng, root=None, scale=None, bpm=None):
     sections += flatten([sparse_pair() for _ in range(2)], "outro")
 
     produce = _default_produce(rng, bpm, bass_sd_ms=15, bass_vel=8, mel_sd_ms=18, mel_vel=10,
-                                swell_section="build", swing_pct=hz.bur_swing_pct(bpm), reverb_swell=True)
+                                swell_section="build", swing_pct=hz.sixteenth_swing_pct(bpm), reverb_swell=True)
 
     return {"title": _title(rng, "orchard"), "bpm": bpm, "root": root_name, "scale": scale,
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}

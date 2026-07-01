@@ -100,10 +100,29 @@ def bur_for_tempo(bpm):
 
 
 def bur_swing_pct(bpm):
-    """Convert a tempo's beat-upbeat ratio to Roger Linn/MPC swing percentage:
-    swing% = 100 * BUR / (1 + BUR) -- e.g. BUR 2:1 -> 66.7% (perfect triplet swing)."""
+    """Convert a tempo's beat-upbeat ratio to a long-short *percentage* (the share
+    of a pair given to the first note): pct = 100 * BUR / (1 + BUR) -- e.g. BUR
+    2:1 -> 66.7%. NOTE: BUR is measured on *eighth*-note pairs (jazz ride feel).
+    Do not feed this straight into `swing()`, which swings the *sixteenth* grid --
+    use `sixteenth_swing_pct()` for that (see its docstring)."""
     bur = bur_for_tempo(bpm)
     return 100 * bur / (1 + bur)
+
+
+def sixteenth_swing_pct(bpm, slow=62.0, fast=50.0, slow_bpm=80, fast_bpm=140):
+    """Tempo-dependent swing percentage for the *sixteenth*-note grid that
+    `swing()` operates on -- distinct from `bur_swing_pct()`, which is an
+    eighth-note ratio. Feeding an eighth-note BUR (up to ~78%) into a 16th-note
+    swing overstates the shuffle by a whole metric level (a 3:1 eighth ratio is
+    an extreme, past-triplet 16th shuffle), so this stays in the practitioner
+    16th-swing band: gentle at slow tempos, straightening toward 50% as tempo
+    rises. Defaults span Logic's 16C-ish (~58-62%) down to straight."""
+    if bpm <= slow_bpm:
+        return slow
+    if bpm >= fast_bpm:
+        return fast
+    frac = (bpm - slow_bpm) / (fast_bpm - slow_bpm)
+    return slow + frac * (fast - slow)
 
 
 def swing_ticks(swing_pct, eighth_ticks):
