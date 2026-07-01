@@ -21,7 +21,7 @@ import humanize as hz
 from arrange import render_piece, section_span, STEP_TICKS
 from midiwriter import cc_ramp, CC_EXPRESSION, CC_REVERB_SEND, CC_BRIGHTNESS
 from rhythm import grid_from_hits
-from theory import NOTE_NAMES, note_in_range
+from theory import NOTE_NAMES, note_in_range, scale_degree
 from drums import KICK, SNARE, CLAP, RIM, CHH, OHH, HTOM, MTOM2, LTOM2, SHAKER, choke_hihats
 
 DRUM_BANK = {
@@ -345,10 +345,122 @@ def four_floor_glitch(rng, root=None, scale=None, bpm=None):
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
 
 
+def gated_drama(rng, root=None, scale=None, bpm=None):
+    """A deliberately *narrow* blend, not a 3-way average: Kate Bush's tom-heavy,
+    no-hats/no-cymbals gated-reverb groove plus Fever Ray's static drone-bass
+    harmony -- Radiohead's glitch hats are left out on purpose (they'd fight
+    the toms-instead-of-cymbals aesthetic), and Bush's dramatic wide vocal
+    leaps are reserved for one structural bridge (in 3/2, with a relative-major
+    lift) rather than blended through the whole clip, so the drama reads as an
+    event instead of a constant clash with the verse's narrow, chant-like line.
+    """
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or "aeolian"
+    bpm = bpm or rng.randint(107, 140)
+    bass_root = note_in_range(root_name, 28, 48)
+    mel_root = note_in_range(root_name, 62, 78)
+    fifth = palette.clamp_register(scale_degree(bass_root, scale, 4), bass_root - 6, bass_root + 6)
+
+    def groove_bar(steps=16, delay_hit=True):
+        kick_pos = {0, steps // 2}
+        snare_pos = {steps // 4, steps * 3 // 4}
+        toms = set(range(2, steps, 4)) - kick_pos - snare_pos
+        out = {
+            "kick": grid_from_hits(steps, kick_pos, accents=kick_pos),
+            "snare": grid_from_hits(steps, snare_pos, accents=snare_pos),
+            "htom": grid_from_hits(steps, toms),
+        }
+        if delay_hit:
+            out["rim"] = grid_from_hits(steps, {max(0, steps // 2 - 1)})
+        return out
+
+    def sparse_bar(steps=16):
+        return {"kick": grid_from_hits(steps, {0}), "rim": grid_from_hits(steps, {steps // 2})}
+
+    def bass_pulse(steps, root_pitch, alt_pitch):
+        half = steps // 2
+        second = alt_pitch if rng.random() < 0.4 else root_pitch
+        return [(0, half, root_pitch, rng.randint(78, 92)), (half, steps - half, second, rng.randint(80, 96))]
+
+    chant = palette.motif(rng, rng.choice([2, 3]), leap_prob=0.05, root_pull=0.4, max_leap=2)
+    drama = palette.motif(rng, rng.choice([3, 4]), leap_prob=0.45, root_pull=0.05, max_leap=8)
+    rel_bass_root, rel_mel_root = bass_root + 3, mel_root + 3  # relative-major lift for the bridge
+
+    def flat(bars, name):
+        out = []
+        for bar in bars:
+            ts, bp = bar.pop("time_sig"), bar.pop("bpm")
+            out.append({"name": name, "time_sig": ts, "bpm": bp, "bars": [bar]})
+        return out
+
+    sections = []
+    sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": sparse_bar(), "bass": [(0, 16, bass_root, 76)], "melody": []}
+        for _ in range(rng.randint(2, 3))
+    ]})
+
+    n_verse = rng.randint(6, 8)
+    verse_bars = []
+    for i in range(n_verse):
+        extend = (i == n_verse - 2)  # one bar occasionally stretched to 6/4 to extend the phrase
+        steps = 24 if extend else 16
+        ts = (6, 4) if extend else (4, 4)
+        melody = _clip_to_bar(palette.render_motif(rng, chant, mel_root, scale, 2,
+                                                    register=(58, 76), vel_base=68), steps) if i % 3 == 2 else []
+        bass = bass_pulse(steps, bass_root, fifth)
+        melody = palette.resolve_consonance(bass, melody, bass_root, scale, {0, steps // 2})
+        verse_bars.append({"time_sig": ts, "bpm": bpm,
+                            "drums": groove_bar(steps=steps), "bass": bass, "melody": melody})
+    sections += flat(verse_bars, "verse")
+
+    bridge_bars = []
+    for i in range(2):
+        steps = 24
+        bass = bass_pulse(steps, rel_bass_root, palette.clamp_register(
+            scale_degree(rel_bass_root, "major", 4), rel_bass_root - 6, rel_bass_root + 6))
+        melody = _clip_to_bar(palette.render_motif(rng, drama, rel_mel_root, "major", 0,
+                                                    register=(62, 86), vel_base=100 + i * 4), steps)
+        melody = palette.resolve_consonance(bass, melody, rel_bass_root, "major", {0, 8, 16})
+        bridge_bars.append({"time_sig": (3, 2), "bpm": bpm,
+                             "drums": groove_bar(steps=steps, delay_hit=False), "bass": bass, "melody": melody})
+    sections += flat(bridge_bars, "bridge")
+
+    n_verse2 = rng.randint(3, 4)
+    verse2_bars = []
+    for i in range(n_verse2):
+        melody = _clip_to_bar(palette.render_motif(rng, chant, mel_root, scale, 1,
+                                                     register=(58, 76), vel_base=72), 16) if i % 2 == 1 else []
+        bass = bass_pulse(16, bass_root, fifth)
+        melody = palette.resolve_consonance(bass, melody, bass_root, scale, {0, 8})
+        verse2_bars.append({"drums": groove_bar(), "bass": bass, "melody": melody})
+    sections.append({"name": "verse2", "time_sig": (4, 4), "bpm": bpm, "bars": verse2_bars})
+
+    sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": sparse_bar(), "bass": [(0, 16, bass_root, 68)], "melody": []}
+        for _ in range(2)
+    ]})
+
+    def produce(result, bass_channel, melody_channel):
+        bass = hz.jitter(result["bass"], timing_ticks=8, vel_amount=6, seed=rng.randint(0, 1_000_000))
+        melody = hz.jitter(result["melody"], timing_ticks=10, vel_amount=8, seed=rng.randint(0, 1_000_000))
+        bounds = result["section_bounds"]
+        bs, be = section_span(bounds, "bridge")
+        cc = {"drums": [], "bass": [], "melody": []}
+        cc["bass"] += cc_ramp(bass_channel, CC_REVERB_SEND, bs, be, 40, 110)
+        cc["melody"] += cc_ramp(melody_channel, CC_REVERB_SEND, bs, be, 40, 110)
+        cc["bass"] += cc_ramp(bass_channel, CC_EXPRESSION, bs, be, 95, 127)
+        cc["melody"] += cc_ramp(melody_channel, CC_EXPRESSION, bs, be, 95, 127)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, "drama"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
     "four_floor_glitch": four_floor_glitch,
+    "gated_drama": gated_drama,
 }
 
 

@@ -57,7 +57,7 @@ def scale_walk(rng, start_degree, n, leap_prob=0.15, root_pull=0.2, max_leap=5):
             continue
         if rng.random() < leap_prob:
             direction = rng.choice([-1, 1])
-            size = rng.randint(3, max_leap)
+            size = max_leap if max_leap < 3 else rng.randint(3, max_leap)
             degrees.append(degrees[-1] + direction * size)
             force_reversal = -direction
         else:
@@ -90,10 +90,12 @@ def bass_phrase(rng, root, scale, steps, register, vel_range=(82, 100)):
     return notes
 
 
-def motif(rng, n_notes, dur_choices=(1, 2, 3, 4)):
+def motif(rng, n_notes, dur_choices=(1, 2, 3, 4), leap_prob=0.25, root_pull=0.15, max_leap=5):
     """A short melodic idea as (relative scale-degree offset, duration) pairs,
-    independent of any particular root/register -- render with `render_motif`."""
-    offsets = scale_walk(rng, 0, n_notes, leap_prob=0.25, root_pull=0.15)
+    independent of any particular root/register -- render with `render_motif`.
+    Tune `leap_prob`/`max_leap` down for a narrow, chant-like character or up
+    for wide, dramatic leaps."""
+    offsets = scale_walk(rng, 0, n_notes, leap_prob=leap_prob, root_pull=root_pull, max_leap=max_leap)
     durs = [rng.choice(dur_choices) for _ in range(n_notes)]
     return list(zip(offsets, durs))
 

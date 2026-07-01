@@ -28,7 +28,7 @@ Each run writes `drums.mid` / `bass.mid` / `melody.mid` / `all.mid` to
 tempo, section count/length) since there's no audio backend here to preview
 with.
 
-Three **archetypes** carry the composed pieces' techniques as generators
+Four **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -38,6 +38,35 @@ choices (key, tempo, density, contour, section lengths) every time:
   broken-beat drums, a melodic cry that crosses the bar line.
 - `four_floor_glitch` (~ `glass_repeater`) — four-on-the-floor pulse, glitchy
   hi-hats, an n-against-4 phased melodic cell (n is randomly 3, 5, or 7).
+- `gated_drama` — Kate Bush's tom-heavy, no-hats/no-cymbals gated-reverb
+  groove plus Fever Ray's static drone-bass harmony. See "workable blends"
+  below for why this one is deliberately narrower than the other three.
+
+### Workable blends, not an average
+
+Averaging all three artists' traits into every clip risks incoherence — some
+traits reinforce each other, some actively fight. `gated_drama` exists to
+demonstrate picking a *coherent* subset instead of blending everything at
+once:
+
+- **Compatible:** Fever Ray's static/drone harmony pairs naturally with
+  Radiohead's non-functional, pedal-point harmony (`halftime_drone` and
+  `broken_meter` already lean on this) — both favor harmony that *sits*
+  rather than progresses. Kate Bush's tom-and-gated-reverb groove pairs with
+  Fever Ray's dark, static bass for the same reason (mood over motion).
+- **In tension:** Kate Bush's signature groove drops hi-hats/cymbals entirely
+  (toms carry the rhythm); Radiohead's IDM glitch is *built* from hi-hat
+  detail. Layering both into one groove just cancels Bush's whole point, so
+  `gated_drama` uses toms-only, no hats at all — the same reason
+  `four_floor_glitch` doesn't reach for toms.
+- **Sequenced, not layered:** Bush's dramatic, wide vocal-leap melodies and
+  Fever Ray's narrow, chant-like repetition are close to opposite melodic
+  philosophies. Rather than average them into a medium-wide, medium-repetitive
+  mush, `gated_drama` keeps a narrow chant (`leap_prob=0.05`) through the
+  verse and saves the wide leaps (`leap_prob=0.45`) for one structural bridge
+  — in 3/2, with a relative-major lift (Bush's own device, e.g. "Cloudbusting")
+  — so the drama reads as an *event* the arrangement builds to, not a
+  constant clash with the verse.
 
 **How the generation is constrained ("smart," not random noise):** `palette.py`
 holds the actual generative logic, tuned against a research pass on melodic
