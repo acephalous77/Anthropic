@@ -28,6 +28,27 @@ Each run writes `drums.mid` / `bass.mid` / `melody.mid` / `all.mid` to
 tempo, section count/length) since there's no audio backend here to preview
 with.
 
+## Playing on the Roland MC-707
+
+```
+python generate.py --archetype groove --mode motorik --drum-map mc707 --loops 4,8,16
+```
+
+- **Import the per-track stems, one per 707 track** — `drums.mid` onto a
+  drum-kit track, `bass.mid` / `melody.mid` onto tone tracks — not `all.mid`.
+  The 707 picks its own tone per track, so the GM program numbers are ignored;
+  only the notes matter.
+- **`--drum-map mc707`** folds every drum note into the 707's 16-pad range
+  (MIDI 36–51). The core voices already match the TR kits (kick 36, snare 38,
+  clap 39, hats 42/46, toms 41–50); the extended hand-percussion the ambient
+  archetypes use (congas/claves/cabasa/shaker/cowbell at 54–75, which would
+  trigger no pad) is rehomed onto sensible pads. The exact targets are in
+  `mc707.py` (`MC707_DRUM_MAP`) — verify against your loaded kit and adjust.
+- **`--loops 4,8,16`** also writes loop-length clips (the given bar counts,
+  re-based to bar 1) under `loops/<section>_<N>bar/`, for triggering and
+  sequencing on the 707's clip grid — alongside the full arrangement. It
+  auto-picks the meatiest 4/4 section, or use `--loop-section <name>`.
+
 Nine **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:

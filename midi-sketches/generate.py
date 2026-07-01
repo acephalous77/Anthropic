@@ -16,6 +16,7 @@ import sys
 
 import generator
 import midiwriter
+import mc707
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output", "generated")
 
@@ -25,28 +26,23 @@ MELODY_CHANNEL = 1
 MELODY_PROGRAM = 81  # GM: Lead 2 (sawtooth)
 
 
-def write_clip(spec, out_dir):
-    result = spec["result"]
-    cc = spec["cc"]
-    # a spec may override the GM program (e.g. spoken_word uses a warm pad, not a lead)
-    bass_prog = spec.get("bass_program") or BASS_PROGRAM
-    mel_prog = spec.get("melody_program") or MELODY_PROGRAM
+def write_parts(result, cc, out_dir, title, bass_prog, mel_prog):
+    """Write drums/bass/melody stems + a combined all.mid for a rendered result."""
     os.makedirs(out_dir, exist_ok=True)
-
     midiwriter.write_track(
         os.path.join(out_dir, "drums.mid"), result["drums"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=midiwriter.DRUM_CHANNEL, track_name=f"{spec['title']} - drums", cc_events=cc["drums"],
+        channel=midiwriter.DRUM_CHANNEL, track_name=f"{title} - drums", cc_events=cc["drums"],
     )
     midiwriter.write_track(
         os.path.join(out_dir, "bass.mid"), result["bass"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=BASS_CHANNEL, program=bass_prog, track_name=f"{spec['title']} - bass", cc_events=cc["bass"],
+        channel=BASS_CHANNEL, program=bass_prog, track_name=f"{title} - bass", cc_events=cc["bass"],
     )
     midiwriter.write_track(
         os.path.join(out_dir, "melody.mid"), result["melody"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=MELODY_CHANNEL, program=mel_prog, track_name=f"{spec['title']} - melody", cc_events=cc["melody"],
+        channel=MELODY_CHANNEL, program=mel_prog, track_name=f"{title} - melody", cc_events=cc["melody"],
     )
     midiwriter.write_combined(
         os.path.join(out_dir, "all.mid"),
@@ -59,6 +55,13 @@ def write_clip(spec, out_dir):
         ],
         result["bpm_changes"], result["time_sig_changes"],
     )
+
+
+def write_clip(spec, out_dir):
+    # a spec may override the GM program (e.g. spoken_word uses a warm pad, not a lead)
+    bass_prog = spec.get("bass_program") or BASS_PROGRAM
+    mel_prog = spec.get("melody_program") or MELODY_PROGRAM
+    write_parts(spec["result"], spec["cc"], out_dir, spec["title"], bass_prog, mel_prog)
 
 
 def spec_card(spec, out_dir):
@@ -100,8 +103,17 @@ def main():
     ap.add_argument("--bass-program", type=int, default=None, dest="bass_program",
                      help="GM program (0-127) for the bass track, e.g. 35 fretless, 33 finger, 38 synth bass")
     ap.add_argument("--count", type=int, default=1, help="generate this many clips (each gets its own seed)")
+    ap.add_argument("--drum-map", default="gm", choices=list(mc707.DRUM_MAPS), dest="drum_map",
+                     help="'mc707' folds drum notes into the 16-pad 36-51 range for the MC-707; 'gm' leaves them")
+    ap.add_argument("--loops", default=None,
+                     help="also export loop-length clips: comma-separated bar counts, e.g. '4,8,16'")
+    ap.add_argument("--loop-section", default=None, dest="loop_section",
+                     help="which section to loop from (default: auto-pick the meatiest 4/4 groove)")
     ap.add_argument("--out", default=OUTPUT_DIR, help="output root directory")
     args = ap.parse_args()
+
+    loop_bars = [int(b) for b in args.loops.split(",")] if args.loops else []
+    drum_mapping = mc707.DRUM_MAPS[args.drum_map]
 
     for i in range(args.count):
         seed = args.seed if (args.seed is not None and args.count == 1) else (
@@ -119,9 +131,26 @@ def main():
         if args.bass_program is not None:
             spec["bass_program"] = args.bass_program
 
+        # fold drums into the MC-707 pad range if requested (applies to full clip + loops)
+        if drum_mapping:
+            spec["result"]["drums"] = mc707.remap_drum_events(spec["result"]["drums"], drum_mapping)
+
         out_dir = os.path.join(args.out, f"seed{spec['seed']}_{spec['archetype']}")
         write_clip(spec, out_dir)
         spec_card(spec, out_dir)
+        if args.drum_map != "gm":
+            print(f"  drums remapped for {args.drum_map} (folded into pads 36-51)")
+
+        # loop-length clips for triggering/sequencing on the 707's clip grid
+        if loop_bars:
+            bass_prog = spec.get("bass_program") or BASS_PROGRAM
+            mel_prog = spec.get("melody_program") or MELODY_PROGRAM
+            section = args.loop_section or mc707.auto_loop_section(spec["result"])
+            for nb in loop_bars:
+                loop, loop_cc = mc707.slice_loop(spec["result"], spec["cc"], midiwriter.PPQ, section, nb)
+                loop_dir = os.path.join(out_dir, "loops", f"{section}_{nb}bar")
+                write_parts(loop, loop_cc, loop_dir, f"{spec['title']} {section} {nb}bar", bass_prog, mel_prog)
+            print(f"  loops from '{section}': {', '.join(str(b) + 'bar' for b in loop_bars)} -> {out_dir}/loops/")
 
 
 if __name__ == "__main__":
