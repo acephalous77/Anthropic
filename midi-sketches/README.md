@@ -28,7 +28,7 @@ Each run writes `drums.mid` / `bass.mid` / `melody.mid` / `all.mid` to
 tempo, section count/length) since there's no audio backend here to preview
 with.
 
-Eight **archetypes** carry the composed pieces' techniques as generators
+Nine **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -68,6 +68,13 @@ choices (key, tempo, density, contour, section lengths) every time:
   `--phases 1–12` sets the length (phases 6 ≈ 8 min, 9 ≈ 13 min, 12 ≈ 20 min);
   some float sections are pure drone, others carry the faint pulse. Renders on
   a warm pad by default (override with `--melody-program` / `--bass-program`).
+- `groove` — steady, hypnotic grooves for longer mixes, in an extended-mix
+  structure (beat-only intro to mix in over → evolving groove sections →
+  breakdown → peak → beat-only outro to mix out of), with a DJ-style filter
+  sweep opening over the intro and dipping through the breakdown. Three
+  `--mode`s: `motorik` (krautrock forward-drive), `fourfloor` (dark modal
+  deep-house pulse), `downtempo` (trip-hop head-nod, swung). `--phases 2–6`
+  sets how many groove sections (~3–6 min).
 
 ### Workable blends, not an average
 

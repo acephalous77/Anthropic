@@ -1073,6 +1073,177 @@ def meditative(rng, root=None, scale=None, bpm=None, phases=3):
             "melody_program": 89, "bass_program": 89}   # warm pad for both -- a deep drone voice
 
 
+def groove(rng, root=None, scale=None, bpm=None, mode=None, phases=3):
+    """Steady, hypnotic grooves built for longer mixes -- something to ride and
+    beatmatch, with a DJ-friendly extended structure: a beat-only intro to mix
+    IN over, evolving groove sections, a breakdown (drums drop, harmony swells,
+    then a fill rebuilds), a peak, and a beat-only outro to mix OUT of. Three
+    `--mode`s:
+      - 'motorik'    -> krautrock forward-drive (Neu!/Can): relentless straight
+                        8ths, pushing kick + backbeat, a pulsing bass ostinato.
+      - 'fourfloor'  -> a dark modal deep-house pulse: four-on-the-floor kick,
+                        offbeat open hat, backbeat clap, a rolling offbeat bass.
+      - 'downtempo'  -> trip-hop head-nod (Portishead/Massive Attack): heavy
+                        half-time kick+snare, swung dusty hats, a syncopated bass.
+    Dark/modal throughout; a short rhythmic melodic hook repeats and shifts.
+    `phases` (2-6) sets how many groove sections, and thus length (~3-6 min).
+    """
+    phases = max(2, min(6, phases))
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or rng.choice(["aeolian", "dorian", "phrygian"])
+    mode = mode or rng.choice(["motorik", "fourfloor", "downtempo"])
+    bass_root = note_in_range(root_name, 33, 47)
+    mel_root = note_in_range(root_name, 60, 74)
+    fifth = scale_degree(bass_root, scale, 4)
+    b7 = scale_degree(bass_root, scale, 6)
+    hook = palette.motif_scored(rng, rng.choice([3, 4]), mel_root, scale, leap_prob=0.22, root_pull=0.15)
+    swing_pct = None
+
+    def hats(dense):
+        return palette.hats_pattern(rng, 16, density=dense, glitch_prob=0.0)
+
+    if mode == "motorik":
+        bpm = bpm or rng.randint(122, 140)
+
+        def d_intro():
+            return {"kick": grid_from_hits(16, {0, 8}, accents={0}), "chh": hats("med")}
+
+        def d_main(dn):
+            out = {"kick": grid_from_hits(16, {0, 6, 8, 14}, accents={0, 8}),
+                   "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
+                   "chh": grid_from_hits(16, set(range(0, 16, 2)), accents={0, 4, 8, 12})}
+            if dn >= 1:
+                out["ohh"] = grid_from_hits(16, {2, 10})
+            if dn >= 2:
+                out["shaker"] = grid_from_hits(16, set(range(16)))
+            if dn >= 3:
+                out["ltom"] = grid_from_hits(16, {13, 15})
+            return out
+
+        def bassline(oct=0):
+            return [(p, 2, (bass_root if p != 8 else bass_root + 12) + 12 * oct, rng.randint(92, 104))
+                    for p in range(0, 16, 2)]              # driving straight-8th pulse
+    elif mode == "fourfloor":
+        bpm = bpm or rng.randint(118, 126)
+
+        def d_intro():
+            return {"kick": grid_from_hits(16, {0, 4, 8, 12}, accents={0, 8}), "chh": hats("med")}
+
+        def d_main(dn):
+            out = {"kick": grid_from_hits(16, {0, 4, 8, 12}, accents={0, 8}),
+                   "clap": grid_from_hits(16, {4, 12}, accents={4, 12}),
+                   "chh": grid_from_hits(16, set(range(0, 16, 2)))}
+            if dn >= 1:
+                out["ohh"] = grid_from_hits(16, {2, 6, 10, 14})
+            if dn >= 2:
+                out["shaker"] = grid_from_hits(16, set(range(16)))
+            if dn >= 3:
+                out["ltom"] = grid_from_hits(16, {14})
+            return out
+
+        def bassline(oct=0):
+            return [(2, 2, bass_root + 12 * oct, 98), (6, 2, bass_root + 12 * oct, 92),
+                    (10, 2, fifth + 12 * oct, 96), (14, 2, b7 + 12 * oct, 92)]   # rolling offbeat
+    else:  # downtempo
+        bpm = bpm or rng.randint(84, 98)
+        swing_pct = None  # set in produce via curve
+
+        def d_intro():
+            return {"kick": grid_from_hits(16, {0, 10}, accents={0}), "chh": hats("sparse"),
+                    "shaker": grid_from_hits(16, set(range(0, 16, 2)))}
+
+        def d_main(dn):
+            out = {"kick": grid_from_hits(16, {0, 10} | ({6} if dn >= 2 else set()), accents={0}),
+                   "snare": grid_from_hits(16, {8}, accents={8}),
+                   "chh": grid_from_hits(16, set(range(0, 16, 2)), accents={0, 8}),
+                   "shaker": grid_from_hits(16, set(range(16)))}
+            if dn >= 1:
+                out["rim"] = grid_from_hits(16, {14})
+            if dn >= 2:
+                out["ghost_snare"] = grid_from_hits(16, {11})
+            if dn >= 3:
+                out["ohh"] = grid_from_hits(16, {6})
+            return out
+
+        def bassline(oct=0):
+            return [(0, 4, bass_root + 12 * oct, 100), (6, 2, b7 + 12 * oct, 90),
+                    (10, 3, bass_root + 12 * oct, 96), (14, 2, fifth + 12 * oct, 90)]  # head-nod syncopation
+
+    def hook_bars(n, phase):
+        bars = []
+        dn = min(phase + 1, 3)
+        for i in range(n):
+            rest = (i % 4 == 3)            # a bar of groove space every 4
+            if rest:
+                mel = []
+            else:
+                mel = _clip_to_bar(palette.render_motif(rng, hook, mel_root, scale, rng.choice([0, 2]),
+                                                        degree_shift=phase % 3, register=(58, 78),
+                                                        vel_base=88), 16)
+                mel = palette.resolve_consonance(bassline(), mel, bass_root, scale, {0, 8})
+            bars.append({"drums": d_main(dn), "bass": bassline(), "melody": mel})
+        return bars
+
+    sections = []
+    # beat-only intro to mix in over
+    sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": d_intro(), "bass": bassline() if i >= 8 else [], "melody": []} for i in range(16)]})
+
+    for p in range(phases):
+        sections.append({"name": f"groove{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": hook_bars(16, p)})
+
+    # breakdown: drums drop to a soft pulse, a sustained chord swells, a tom fill rebuilds
+    chord = [scale_degree(mel_root, scale, d) for d in (0, 2, 4, 6)]
+    brk = []
+    for i in range(8):
+        drums = {"shaker": grid_from_hits(16, set(range(0, 16, 2)))} if i < 6 else \
+                {"ltom": grid_from_hits(16, {8, 10, 12, 14}), "kick": grid_from_hits(16, {0})}
+        mel = [(0, 16, n, 70) for n in chord] if i % 2 == 0 and i < 6 else []
+        brk.append({"drums": drums, "bass": [(0, 16, bass_root, 78)], "melody": mel})
+    sections.append({"name": "breakdown", "time_sig": (4, 4), "bpm": bpm, "bars": brk})
+
+    # peak: fullest groove, bass up an octave
+    sections.append({"name": "peak", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": d_main(3),
+         "bass": bassline(oct=1 if i >= 8 else 0),
+         "melody": _clip_to_bar(palette.render_motif(rng, hook, mel_root, scale, 0, degree_shift=2,
+                                                     register=(60, 80), vel_base=96), 16)}
+        for i in range(16)]})
+
+    # beat-only outro to mix out of
+    sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": d_intro() if i < 12 else {"kick": grid_from_hits(16, {0, 8})},
+         "bass": bassline() if i < 8 else [], "melody": []} for i in range(16)]})
+
+    bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+    do_swing = (mode == "downtempo")
+
+    def produce(result, bass_channel, melody_channel):
+        # electronic grooves stay tight; downtempo gets swung dusty hats + a little more rubato
+        sd_b, sd_m = (12, 14) if do_swing else (5, 7)
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=sd_b, seed=bass_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=sd_m, seed=mel_seed)
+        drums = result["drums"]
+        if do_swing:
+            hh = [e for e in drums if e.note == CHH]
+            other = [e for e in drums if e.note != CHH]
+            drums = other + hz.swing(hh, STEP_TICKS, swing_pct=hz.sixteenth_swing_pct(bpm), eighth_ticks=STEP_TICKS * 2)
+        bounds = result["section_bounds"]
+        g1s, _ = section_span(bounds, "groove1")
+        bs, be = section_span(bounds, "breakdown")
+        ps, pe = section_span(bounds, "peak")
+        cc = {"drums": [], "bass": [], "melody": []}
+        for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, 0, g1s, 40, 100)     # filter opens over the intro (DJ move)
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, bs, be, 100, 55)     # breakdown filter dip
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, be, pe, 55, 118)     # reopen into the peak
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, ps, pe, 100, 122)
+        return {"drums": drums, "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, f"groove_{mode}"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
@@ -1082,6 +1253,7 @@ ARCHETYPES = {
     "radiohead_kida": radiohead_kida,
     "spoken_word": spoken_word,
     "meditative": meditative,
+    "groove": groove,
 }
 
 
