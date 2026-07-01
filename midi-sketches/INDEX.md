@@ -1,6 +1,6 @@
 # Clip index — named by pace / tone / mood
 
-136 generated clips. Names are evocative labels derived from each clip's own tempo, meter, register, major/minor lean, and density — grouped below by pace. Every clip lives at `output/generated/<folder>/` with `drums`/`bass`/`melody`/`all` MIDI; reproduce any from its seed.
+146 generated clips. Names are evocative labels derived from each clip's own tempo, meter, register, major/minor lean, and density — grouped below by pace. Every clip lives at `output/generated/<folder>/` with `drums`/`bass`/`melody`/`all` MIDI; reproduce any from its seed.
 
 ## Glacial (≤56)
 
@@ -109,6 +109,7 @@
 | **Amber Strut** | groove | E minor-ish | 4/4 | 90 | 6:01 | `seed80005_groove` |
 | **Copper Saunter** | groove | B minor-ish | 4/4 | 94 | 6:26 | `seed80007_groove` |
 | **Subterranean Current** | halftime_drone | C# major-ish | 4/4 | 90 | 0:48 | `seed404_halftime_drone` |
+| **Iron Circuit** | kate_bush | C minor-ish | 4/4 | 100 | 1:47 | `seed90004_kate_bush` |
 | **Cinder Stagger** | radiohead_kida | F# phrygian-ish | 5/4 | 95 | 1:00 | `seed11012_radiohead_kida` |
 | **Smoke Wend** | radiohead_kida | C minor-ish | 5/4 | 98 | 0:58 | `seed11001_radiohead_kida` |
 | **Tar Lilt** | radiohead_kida | G phrygian-ish | 5/4 | 98 | 1:10 | `seed30005_radiohead_kida` |
@@ -120,6 +121,9 @@
 |---|---|---|---|---|---|---|
 | **Iron Cross-step** | broken_meter | G# minor-ish | 4/4 | 105 | 0:50 | `seed5002_broken_meter` |
 | **Shadow Stagger** | broken_meter | B minor-ish | 4/4 | 106 | 0:50 | `seed1002_broken_meter` |
+| **Obsidian Engine** | fever_radiohead | G phrygian-ish | 4/4 | 108 | 1:55 | `seed95004_fever_radiohead` |
+| **Smoke Current** | fever_radiohead | A minor-ish | 4/4 | 112 | 1:34 | `seed95001_fever_radiohead` |
+| **Nightshade Motor** | fever_radiohead | E phrygian-ish | 4/4 | 118 | 1:45 | `seed95002_fever_radiohead` |
 | **Nightshade Fault** | four_floor_glitch | E phrygian-ish | 4/4 | 114 | 0:40 | `seed3003_four_floor_glitch` |
 | **Arctic Flicker** | four_floor_glitch | C# modal | 4/4 | 115 | 0:37 | `seed4003_four_floor_glitch` |
 | **Steel Signal** | four_floor_glitch | G modal | 4/4 | 115 | 0:35 | `seed5003_four_floor_glitch` |
@@ -132,6 +136,9 @@
 | **Ash Surge** | gated_drama | B minor-ish | 4/4 | 117 | 0:37 | `seed1004_gated_drama` |
 | **Slate Surge** | gated_drama | A minor-ish | 4/4 | 118 | 0:39 | `seed30013_gated_drama` |
 | **Shadow Surge** | gated_drama | F minor-ish | 4/4 | 120 | 0:36 | `seed11010_gated_drama` |
+| **Umbral Engine** | kate_bush | F phrygian-ish | 4/4 | 108 | 1:38 | `seed90001_kate_bush` |
+| **Dusk Current** | kate_bush | E minor-ish | 4/4 | 112 | 1:34 | `seed90005_kate_bush` |
+| **Cinder Current** | kate_bush | A phrygian-ish | 4/4 | 120 | 1:28 | `seed90002_kate_bush` |
 | **Shadow Cross-step** | radiohead_kida | G minor-ish | 10/4 | 120 | 1:44 | `seed10002_radiohead_kida` |
 | **Nightshade Wend** | radiohead_kida | C phrygian-ish | 10/4 | 120 | 1:44 | `seed10006_radiohead_kida` |
 
@@ -139,6 +146,7 @@
 
 | Name | Feel | Key | Meter | BPM | Length | Seed / folder |
 |---|---|---|---|---|---|---|
+| **Tar Engine** | fever_radiohead | C phrygian-ish | 4/4 | 122 | 1:26 | `seed95003_fever_radiohead` |
 | **Steel Fracture** | four_floor_glitch | E modal | 4/4 | 122 | 0:39 | `seed2003_four_floor_glitch` |
 | **Steel Fault** | four_floor_glitch | C# modal | 4/4 | 122 | 0:31 | `seed30011_four_floor_glitch` |
 | **Charcoal Flicker** | four_floor_glitch | F# phrygian-ish | 4/4 | 122 | 0:37 | `seed303_four_floor_glitch` |
@@ -157,6 +165,8 @@
 | **Frost Motor** | groove | C minor-ish | 4/4 | 124 | 3:51 | `seed80004_groove` |
 | **Winter Current** | groove | A phrygian-ish | 4/4 | 126 | 3:47 | `seed80002_groove` |
 | **Pale Circuit** | groove | D minor-ish | 4/4 | 132 | 4:06 | `seed80001_groove` |
+| **Ash Current** | kate_bush | G minor-ish | 4/4 | 122 | 1:21 | `seed90008_kate_bush` |
+| **Charcoal Engine** | kate_bush | D phrygian-ish | 4/4 | 132 | 1:20 | `seed90003_kate_bush` |
 | **Dusk Stagger** | radiohead_kida | C minor-ish | 10/4 | 121 | 1:44 | `seed30004_radiohead_kida` |
 | **Charcoal Wend** | radiohead_kida | G phrygian-ish | 10/4 | 125 | 1:26 | `seed11013_radiohead_kida` |
 | **Slate Tilt** | radiohead_kida | E minor-ish | 10/4 | 128 | 1:19 | `seed11004_radiohead_kida` |
