@@ -1,0 +1,33 @@
+"""General MIDI percussion map (channel 10 / index 9)."""
+
+KICK = 36
+KICK_ALT = 35
+RIM = 37
+SNARE = 38
+CLAP = 39
+SNARE_ALT = 40
+LTOM2 = 41   # low tom (lowest)
+CHH = 42     # closed hi-hat
+LTOM = 43
+PHH = 44     # pedal hi-hat
+MTOM = 45
+OHH = 46     # open hi-hat
+MTOM2 = 47
+HTOM = 48
+CRASH = 49
+HTOM2 = 50
+RIDE = 51
+CHINA = 52
+RIDE_BELL = 53
+TAMBOURINE = 54
+CRASH2 = 57
+COWBELL = 56
+SHAKER = 70
+CONGA_HI = 63
+CONGA_LO = 64
+TIMBALE_HI = 65
+TIMBALE_LO = 66
+AGOGO_HI = 67
+AGOGO_LO = 68
+CABASA = 69
+CLAVES = 75
