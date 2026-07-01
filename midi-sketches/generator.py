@@ -14,6 +14,7 @@ quality-control pass, and regenerates (from a derived sub-seed) if the result
 looks degenerate -- e.g. an empty or single-note melody.
 """
 
+import inspect
 import random
 
 import palette
@@ -493,7 +494,7 @@ def gated_drama(rng, root=None, scale=None, bpm=None):
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
 
 
-def fever_ray(rng, root=None, scale=None, bpm=None):
+def fever_ray(rng, root=None, scale=None, bpm=None, phases=2):
     """Fever Ray, first-album flavour (~'If I Had a Heart', 'When I Grow Up',
     'Keep the Streets Empty for Me'): a very slow half-time feel, a deep pulsing
     pedal-tone sub-bass that barely moves, sparse-but-detailed *tribal/hand*
@@ -501,7 +502,13 @@ def fever_ray(rng, root=None, scale=None, bpm=None):
     a dark minor/phrygian mode, and a low, narrow, chant-like melody that
     repeats obsessively rather than developing. 'Tone over rhythm', heavy
     reverb, lots of space.
+
+    `phases` (2 or 3) sets how many growth stages the arrangement moves through
+    before its peak: each phase keeps the same chant DNA but varies it (transpose
+    up a scale step, then invert the contour) and thickens the tribal percussion,
+    so a long clip grows in slow, hypnotic waves rather than looping one groove.
     """
+    phases = max(1, min(3, phases))
     root_name = root or rng.choice(NOTE_NAMES)
     scale = scale or rng.choice(["aeolian", "aeolian", "phrygian"])  # mostly natural minor, sometimes darker
     bpm = bpm or rng.randint(68, 92)
@@ -525,73 +532,83 @@ def fever_ray(rng, root=None, scale=None, bpm=None):
             notes.append((p, end - p, pitch, rng.randint(86, 102)))
         return notes
 
-    def perc_bar(kind="verse"):
-        if kind == "intro":
-            return {"shaker": grid_from_hits(16, set(range(16)), accents={0, 8}),
-                    "claves": grid_from_hits(16, {0}),
-                    "kick": grid_from_hits(16, {0})}
-        if kind == "build":
-            return {
-                "kick": grid_from_hits(16, {0, 6, 10}, accents={0}),
-                "clap": grid_from_hits(16, {8}, accents={8}),
-                "claves": grid_from_hits(16, {3, 6, 11, 14}),
-                "conga_lo": grid_from_hits(16, {4, 12}, accents={4}),
-                "conga_hi": grid_from_hits(16, {7, 13, 15}),
-                "ltom": grid_from_hits(16, {2, 10}),
-                "cowbell": grid_from_hits(16, {0, 8}),
-                "shaker": grid_from_hits(16, set(range(16)), accents={0, 4, 8, 12}),
-                "cabasa": grid_from_hits(16, {2, 6, 10, 14}),
-                "tamb": grid_from_hits(16, {12}),
-            }
-        if kind == "outro":
+    def perc_bar(density=0):
+        """Tribal half-time groove whose layers accrue with `density` (0 sparse ->
+        3 full peak): deep kick + offbeat claves + backbeat clap first, then hand
+        drums + cabasa, then cowbell/toms/tambourine."""
+        if density < 0:  # intro/outro texture: just shaker + a clave
             return {"shaker": grid_from_hits(16, set(range(0, 16, 2)), accents={0}),
                     "claves": grid_from_hits(16, {0, 10})}
-        # verse: sparse tribal half-time -- deep kick, offbeat claves, hand drums, steady shaker
-        return {
-            "kick": grid_from_hits(16, {0, 10}, accents={0}),
+        out = {
+            "kick": grid_from_hits(16, {0, 6, 10} if density >= 3 else {0, 10}, accents={0}),
             "clap": grid_from_hits(16, {8}, accents={8}),
             "claves": grid_from_hits(16, {3, 6, 11, 14}),
-            "conga_lo": grid_from_hits(16, {4, 12}),
-            "conga_hi": grid_from_hits(16, {7, 15}),
             "shaker": grid_from_hits(16, set(range(16)), accents={0, 8}),
-            "cabasa": grid_from_hits(16, {2, 6, 10, 14}),
         }
+        if density >= 1:
+            out["conga_lo"] = grid_from_hits(16, {4, 12})
+            out["conga_hi"] = grid_from_hits(16, {7, 15})
+            out["cabasa"] = grid_from_hits(16, {2, 6, 10, 14})
+        if density >= 2:
+            out["cowbell"] = grid_from_hits(16, {0, 8})
+            out["ltom"] = grid_from_hits(16, {2, 10})
+        if density >= 3:
+            out["conga_hi"] = grid_from_hits(16, {7, 13, 15})
+            out["tamb"] = grid_from_hits(16, {12})
+            out["shaker"] = grid_from_hits(16, set(range(16)), accents={0, 4, 8, 12})
+        return out
+
+    def phase_material(p):
+        """The chant variation + percussion density + register for growth stage `p`.
+        Same chant DNA throughout -- transposed up a step in phase 1, contour
+        inverted in phase 2 -- so it reads as one idea evolving, not new phrases."""
+        if p == 0:
+            return chant, 0, 0, (53, 69)          # base chant, sparse, low
+        if p == 1:
+            return chant, 1, 1, (55, 71)          # up a scale step, mid density
+        return palette.motif_invert(chant), 0, 2, (55, 72)  # inverted contour, fuller
 
     sections = []
     sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
-        {"drums": perc_bar("intro"), "bass": drone_pulse(sparse=True), "melody": []}
-        for _ in range(rng.randint(2, 4))
+        {"drums": perc_bar(-1), "bass": drone_pulse(sparse=True), "melody": []}
+        for _ in range(rng.randint(3, 4))
     ]})
 
-    n_verse = rng.choice([8, 10])
-    verse_bars = []
-    for i in range(n_verse):
-        # obsessive repetition: the SAME chant nearly every bar, resting only occasionally to breathe
-        rest = (i % 4 == 3)
-        if rest:
-            melody = []
-        else:
-            melody = _clip_to_bar(palette.render_motif(rng, chant, mel_root, scale, chant_pickup,
-                                                        register=(53, 69), vel_base=74, vel_spread=6), 16)
-            melody = palette.resolve_consonance(drone_pulse(), melody, bass_root, scale, {0, 8})
-        verse_bars.append({"drums": perc_bar("verse"), "bass": drone_pulse(), "melody": melody})
-    sections.append({"name": "verse", "time_sig": (4, 4), "bpm": bpm, "bars": verse_bars})
+    verse_len = rng.choice([8, 10])
+    for p in range(phases):
+        motif_p, dshift, density, reg = phase_material(p)
+        vbase = 72 + p * 6
+        stage_bars = []
+        for i in range(verse_len):
+            # obsessive repetition; a resting bar every 4th only in the first phase (it fills in as it grows)
+            rest = (i % 4 == 3) and p == 0
+            if rest:
+                melody = []
+            else:
+                melody = _clip_to_bar(palette.render_motif(rng, motif_p, mel_root, scale, chant_pickup,
+                                                            degree_shift=dshift, register=reg,
+                                                            vel_base=vbase, vel_spread=6), 16)
+                melody = palette.resolve_consonance(drone_pulse(), melody, bass_root, scale, {0, 8})
+            stage_bars.append({"drums": perc_bar(density), "bass": drone_pulse(), "melody": melody})
+        sections.append({"name": f"phase{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": stage_bars})
 
-    n_build = rng.randint(4, 6)
+    # peak: full percussion, bass lifts an octave halfway, chant at its highest/loudest
+    n_build = rng.randint(6, 8)
+    peak_motif, peak_shift, _, _ = phase_material(phases - 1)
     build_bars = []
     for i in range(n_build):
-        # bass lifts an octave halfway; chant doubles up (answers on the off-bars it rested before)
         octave = 1 if i >= n_build // 2 else 0
-        melody = _clip_to_bar(palette.render_motif(rng, chant, mel_root, scale, chant_pickup,
-                                                    register=(55, 72), vel_base=84 + i, vel_spread=6), 16)
+        melody = _clip_to_bar(palette.render_motif(rng, peak_motif, mel_root, scale, chant_pickup,
+                                                    degree_shift=peak_shift, register=(55, 74),
+                                                    vel_base=90 + min(i, 6), vel_spread=6), 16)
         melody = palette.resolve_consonance(drone_pulse(octave), melody, bass_root, scale, {0, 8})
-        build_bars.append({"drums": perc_bar("build"), "bass": drone_pulse(octave), "melody": melody})
+        build_bars.append({"drums": perc_bar(3), "bass": drone_pulse(octave), "melody": melody})
     sections.append({"name": "build", "time_sig": (4, 4), "bpm": bpm, "bars": build_bars})
 
     outro_bars = []
-    for i in range(rng.randint(2, 3)):
+    for i in range(rng.randint(3, 4)):
         melody = [(0, 16, mel_root, 66)] if i == 0 else []
-        outro_bars.append({"drums": perc_bar("outro"), "bass": drone_pulse(sparse=True), "melody": melody})
+        outro_bars.append({"drums": perc_bar(-1), "bass": drone_pulse(sparse=True), "melody": melody})
     sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": outro_bars})
 
     # Heavy reverb send throughout (the cavernous first-album space), swelling into the build;
@@ -660,9 +677,10 @@ def _qc(result):
     return problems
 
 
-def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, max_attempts=5):
+def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=None, max_attempts=5):
     """Build, render, and QC one clip. Returns a dict with the rendered result
-    plus the metadata (seed/archetype/title/bpm/root/scale) needed to label it."""
+    plus the metadata (seed/archetype/title/bpm/root/scale) needed to label it.
+    `phases` is passed through only to archetypes that accept it (e.g. fever_ray)."""
     if seed is None:
         seed = random.SystemRandom().randrange(2 ** 31)
 
@@ -670,10 +688,15 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, max_att
     if archetype_name not in ARCHETYPES:
         raise KeyError(f"unknown archetype {archetype_name!r}, choices: {list(ARCHETYPES)}")
 
+    fn = ARCHETYPES[archetype_name]
+    extra = {}
+    if phases is not None and "phases" in inspect.signature(fn).parameters:
+        extra["phases"] = phases
+
     problems = []
     for attempt in range(max_attempts):
         rng = random.Random(seed * 1000 + attempt)
-        spec = ARCHETYPES[archetype_name](rng, root=root, scale=scale, bpm=bpm)
+        spec = fn(rng, root=root, scale=scale, bpm=bpm, **extra)
         result = render_piece(spec["sections"], spec["drum_notes"])
         produced = spec["produce"](result, bass_channel=0, melody_channel=1)
         result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
