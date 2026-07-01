@@ -49,7 +49,7 @@ python generate.py --archetype groove --mode motorik --drum-map mc707 --loops 4,
   sequencing on the 707's clip grid — alongside the full arrangement. It
   auto-picks the meatiest 4/4 section, or use `--loop-section <name>`.
 
-Nine **archetypes** carry the composed pieces' techniques as generators
+Ten **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -96,6 +96,19 @@ choices (key, tempo, density, contour, section lengths) every time:
   `--mode`s: `motorik` (krautrock forward-drive), `fourfloor` (dark modal
   deep-house pulse), `downtempo` (trip-hop head-nod, swung). `--phases 2–6`
   sets how many groove sections (~3–6 min).
+- `kate_bush` — the "song" archetype: built for **contrast and a hook**, not a
+  hypnotic texture. A dark aeolian, tom-driven verse (LinnDrum kick 1&3 / snare
+  2&4, no hats/cymbals; a Fairlight-style ostinato riff) that **lifts to a
+  bright relative-major chorus** (higher, fuller, driving) — tone + modal
+  contrast — with a **catchy antecedent/consequent vocal hook** (arch to an
+  accented peak, octave-doubled) that returns each chorus, and a stripped
+  phrygian/dorian bridge. The bass/chords **move** through a progression
+  (i-VI-VII verse → vi-IV-I-V chorus) rather than sitting on a pedal.
+
+**The hook engine** (`palette.hook_phrase` / `ostinato_cell` / `harmonize`)
+builds singable phrases — a syncopated rhythm, a contour that arcs to an
+accented peak, chord-tone landings, and question→answer repetition — and is
+the reusable core for making any archetype catchier.
 
 ### Workable blends, not an average
 

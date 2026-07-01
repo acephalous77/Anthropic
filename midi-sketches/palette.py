@@ -190,6 +190,112 @@ def render_motif(rng, m, root, scale, start_step, degree_shift=0, register=None,
     return notes
 
 
+def harmonize(notes, interval, vel_scale=0.75):
+    """Return a parallel voice of `notes` shifted by `interval` semitones -- e.g.
+    -12 for an octave-below 'shadow', +12 for an octave-above 'high character'
+    (the Fever Ray doubled/pitch-shifted voice), +7 for a fifth. The caller
+    concatenates it with the original to thicken/stack. Out-of-range notes drop."""
+    out = []
+    for (s, d, n, v) in notes:
+        nn = n + interval
+        if 0 <= nn <= 127:
+            out.append((s, d, nn, max(1, int(v * vel_scale))))
+    return out
+
+
+def antiphon(rng, call_motif, response_motif, root, scale, n_bars, bar_steps,
+             call_reg, resp_reg, vel_base=88, degree_shift=0):
+    """Two-voice call-and-response: odd bars answer the even bars' call, in a
+    different register -- a dialogue between two 'characters' rather than one
+    line. Returns a list of per-bar note lists."""
+    bars = []
+    for i in range(n_bars):
+        if i % 2 == 0:
+            notes = render_motif(rng, call_motif, root, scale, rng.choice([0, 2]),
+                                 degree_shift=degree_shift, register=call_reg, vel_base=vel_base)
+        else:
+            notes = render_motif(rng, response_motif, root, scale, rng.choice([1, 3]),
+                                 degree_shift=degree_shift + 2, register=resp_reg, vel_base=vel_base - 4)
+        bars.append([(s, d, n, v) for (s, d, n, v) in notes if s < bar_steps])
+    return bars
+
+
+# --- hook engine: catchy, singable melodic phrases (not wandering walks) -----
+# Syncopated onset templates over a 16-step bar, each ending on a held "landing"
+# note. Real hooks have a memorable *rhythm*, not even eighths.
+HOOK_RHYTHMS = [
+    [0, 4, 6, 8, 12],
+    [0, 2, 4, 8, 12],
+    [2, 4, 6, 8, 12],       # pickup / anacrusis feel
+    [0, 3, 6, 8, 11],
+    [0, 4, 7, 8, 12],
+    [0, 2, 6, 8, 10, 12],
+    [0, 6, 8, 10, 12],
+]
+_HOOK_TONES = [0, 2, 4, 5, 7, 9, 11]   # chord/stable scale-degree steps (root,3rd,5th,6th,oct,...)
+
+
+def _arch(n, start, peak, land):
+    """A contour that rises to a peak then falls to a landing, snapped to stable
+    (chord) tones -- the memorable shape ear-worms are built on."""
+    if n == 1:
+        return [land]
+    up = max(n // 2, 1)
+    degs = []
+    for i in range(n):
+        if i <= up:
+            d = start + (peak - start) * (i / up)
+        else:
+            d = peak + (land - peak) * ((i - up) / max(n - 1 - up, 1))
+        degs.append(min(_HOOK_TONES, key=lambda c: abs(c - d)))
+    degs[-1] = land
+    return degs
+
+
+def hook_phrase(rng, root, scale, register, vel_base=94):
+    """A catchy antecedent/consequent hook (two 16-step bars sharing one rhythm):
+    the antecedent poses a question (lands on the 5th/octave, unresolved), the
+    consequent answers it (same rhythm, resolves to the root). The peak note is
+    accented. Repeat this across a section and it becomes the earworm."""
+    onsets = sorted(set(o for o in rng.choice(HOOK_RHYTHMS) if o < 16))
+    durs = [onsets[i + 1] - onsets[i] for i in range(len(onsets) - 1)] + [16 - onsets[-1]]
+    start_deg = rng.choice([0, 2])
+    peak = rng.choice([4, 5, 7, 7, 9])          # bias to 5th / octave / higher for a clear peak
+
+    def make(land):
+        degs = _arch(len(onsets), start_deg, peak, land)
+        out = []
+        for o, dr, dg in zip(onsets, durs, degs):
+            pitch = clamp_register(scale_degree(root, scale, dg), *register)
+            vel = vel_base + (10 if dg == peak else 0) + rng.randint(-4, 4)
+            out.append((o, dr, pitch, max(1, min(127, vel))))
+        return out
+
+    return make(rng.choice([4, 7])), make(0)   # (antecedent question, consequent answer)
+
+
+def ostinato_cell(rng, root, scale, register, vel_base=88):
+    """A short fixed riff (Fairlight/Reich-style) -- a rhythmic, chord-tone-heavy
+    one-bar cell meant to repeat *identically* as an instrumental hook."""
+    onsets = sorted(set(o for o in rng.choice(HOOK_RHYTHMS) if o < 16))
+    durs = [onsets[i + 1] - onsets[i] for i in range(len(onsets) - 1)] + [16 - onsets[-1]]
+    degs = [rng.choice([0, 2, 4, 0, 4, 5, 7]) for _ in onsets]   # chord-tone-weighted, memorable
+    cell = []
+    for o, dr, dg in zip(onsets, durs, degs):
+        pitch = clamp_register(scale_degree(root, scale, dg), *register)
+        cell.append((o, dr, pitch, vel_base + rng.randint(-4, 4)))
+    return cell
+
+
+def euclid_cross(rng, steps, specs):
+    """Coprime Euclidean layers for polyrhythmic hand percussion: `specs` is a
+    list of (voice, pulses, rotate). Returns {voice: grid_string}. Using
+    different pulse counts over the same step-grid produces real cross-rhythm
+    (e.g. 3-against-5-against-7 congas), not aligned hits."""
+    from rhythm import euclid_grid
+    return {voice: euclid_grid(pulses, steps, rotate) for voice, pulses, rotate in specs}
+
+
 def _is_consonant(semitones):
     return abs(semitones) % 12 in (0, 3, 4, 5, 7, 8, 9)
 

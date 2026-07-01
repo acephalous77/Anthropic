@@ -1244,6 +1244,153 @@ def groove(rng, root=None, scale=None, bpm=None, mode=None, phases=3):
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
 
 
+def kate_bush(rng, root=None, scale=None, bpm=None):
+    """Kate Bush -- a *song* with real contrast and a hook, not a hypnotic texture.
+    Built to fix the three things the drones lack:
+      - TONE contrast: a dark aeolian verse (low, tom-driven) that LIFTS to a
+        bright relative-major chorus (higher, fuller) -- and a modal bridge.
+      - BEAT/RHYTHM contrast: LinnDrum tom-gallop verse (kick 1&3, snare 2&4,
+        no hats/cymbals) vs a driving, clap-reinforced chorus vs a stripped
+        bridge. Each section is a different groove.
+      - MODALITY: the bass/chords MOVE through a progression (i-VI-VII in the
+        verse, a vi-IV-I-V pop lift in the chorus's relative major, a darker
+        phrygian bridge) instead of sitting on a pedal.
+    Over that, a catchy antecedent/consequent vocal HOOK lands in the chorus,
+    octave-doubled (the Fever-Ray-ish/Bush vocal stack) and RETURNS each chorus;
+    a Fairlight-style ostinato riff is the verse's instrumental hook.
+    """
+    root_name = root or rng.choice(NOTE_NAMES)
+    bpm = bpm or rng.randint(104, 140)
+    v_bass = note_in_range(root_name, 33, 45)
+    v_mel = note_in_range(root_name, 60, 71)
+    lift = 3                                    # semitones up to the relative major
+    c_bass, c_mel = v_bass + lift, v_mel + lift
+    bridge_scale = rng.choice(["phrygian", "dorian"])
+
+    # fixed hooks (generated once, so they RETURN identically -- that's the earworm)
+    ostinato = palette.ostinato_cell(rng, v_mel, "aeolian", (58, 72))          # verse instrumental hook
+    hook_q, hook_a = palette.hook_phrase(rng, c_mel, "major", (62, 79))         # chorus vocal hook
+
+    def chord_root(section_bass, sc, deg):
+        return scale_degree(section_bass, sc, deg)
+
+    def bass_bar(rootp, feel):
+        frozen = [(0, 16, rootp - 12, 66)]      # the "frozen chord" sustain underneath
+        fifth = rootp + 7
+        if feel == "chorus":
+            pulse = [(p, 2, rootp if (p // 4) % 2 == 0 else fifth, 96) for p in range(0, 16, 4)]
+        elif feel == "bridge":
+            pulse = [(0, 8, rootp, 88), (8, 8, fifth, 84)]
+        else:                                   # verse: Del Palmer pulse locked to the kick
+            pulse = [(0, 4, rootp, 92), (8, 4, rootp, 88), (12, 3, fifth, 86)]
+        return frozen + pulse
+
+    def linn(feel, fill=False):
+        if feel == "chorus":
+            out = {"kick": grid_from_hits(16, {0, 4, 8, 12}, accents={0, 8}),
+                   "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
+                   "clap": grid_from_hits(16, {4, 12}),
+                   "htom": grid_from_hits(16, {14, 15} if fill else {6, 14}),
+                   "mtom": grid_from_hits(16, {2, 10})}
+            return out
+        if feel == "bridge":
+            return {"kick": grid_from_hits(16, {0}, accents={0}),
+                    "rim": grid_from_hits(16, {4, 8, 12}),
+                    "ltom": grid_from_hits(16, {0, 12})}
+        if feel == "intro":
+            return {"rim": grid_from_hits(16, {0, 8}), "ltom": grid_from_hits(16, {12})}
+        # verse: LinnDrum tom gallop, kick 1&3, snare 2&4, a delayed hit before beat 3, NO hats
+        return {"kick": grid_from_hits(16, {0, 8}, accents={0}),
+                "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
+                "htom": grid_from_hits(16, {2, 6, 10, 14}),
+                "rim": grid_from_hits(16, {7})}
+
+    def render_cell(cell, at_root, sc, register, vel_base, harm=None):
+        notes = []
+        for o, dr, pitch, v in cell:
+            # cell pitches are relative to their generation root; move to `at_root`
+            notes.append((o, dr, pitch, v))
+        if harm is not None:
+            notes = notes + palette.harmonize(notes, harm, 0.7)
+        return notes
+
+    sections = []
+
+    # intro: frozen drone + the ostinato hook creeping in, sparse
+    sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": linn("intro"), "bass": bass_bar(chord_root(v_bass, "aeolian", 0), "verse"),
+         "melody": ostinato if i >= 2 else []} for i in range(4)]})
+
+    verse_prog = [0, 5, 6, 0]      # i - VI - VII - i  (aeolian, moving)
+
+    def verse(nbars):
+        bars = []
+        for i in range(nbars):
+            deg = verse_prog[i % len(verse_prog)]
+            rp = chord_root(v_bass, "aeolian", deg)
+            bars.append({"drums": linn("verse", fill=(i % 4 == 3)),
+                         "bass": bass_bar(rp, "verse"),
+                         "melody": ostinato})   # the Fairlight riff hook, repeating
+        return bars
+
+    chorus_prog = [5, 3, 0, 4]     # vi - IV - I - V  in the relative major (bright, pop, moving)
+
+    def chorus(nbars):
+        bars = []
+        for i in range(nbars):
+            deg = chorus_prog[i % len(chorus_prog)]
+            rp = chord_root(c_bass, "major", deg)
+            # the vocal hook: antecedent then consequent, octave-doubled, RETURNS every chorus
+            phrase = hook_q if i % 2 == 0 else hook_a
+            mel = phrase + palette.harmonize(phrase, -12, 0.65)   # add the low 'shadow' voice
+            bars.append({"drums": linn("chorus", fill=(i % 4 == 3)),
+                         "bass": bass_bar(rp, "chorus"), "melody": mel})
+        return bars
+
+    bridge_prog = [0, 1, 6, 0]     # dark modal movement
+
+    def bridge(nbars):
+        bars = []
+        for i in range(nbars):
+            deg = bridge_prog[i % len(bridge_prog)]
+            rp = chord_root(v_bass, bridge_scale, deg)
+            mel = _clip_to_bar(palette.render_motif(
+                rng, palette.motif(rng, 3, leap_prob=0.4, root_pull=0.1, max_leap=8),
+                v_mel, bridge_scale, 2, register=(58, 74), vel_base=88), 16) if i % 2 == 1 else []
+            bars.append({"drums": linn("bridge"), "bass": bass_bar(rp, "bridge"), "melody": mel})
+        return bars
+
+    sections.append({"name": "verse", "time_sig": (4, 4), "bpm": bpm, "bars": verse(8)})
+    sections.append({"name": "chorus", "time_sig": (4, 4), "bpm": bpm, "bars": chorus(8)})
+    sections.append({"name": "verse2", "time_sig": (4, 4), "bpm": bpm, "bars": verse(4)})
+    sections.append({"name": "bridge", "time_sig": (4, 4), "bpm": bpm, "bars": bridge(6)})
+    sections.append({"name": "chorus2", "time_sig": (4, 4), "bpm": bpm, "bars": chorus(8)})
+    sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": linn("intro"), "bass": bass_bar(chord_root(v_bass, "aeolian", 0), "verse"),
+         "melody": ostinato if i == 0 else []} for i in range(4)]})
+
+    bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
+    def produce(result, bass_channel, melody_channel):
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=7, seed=bass_seed)
+        bass = hz.jitter(bass, vel_amount=6, seed=bass_seed + 1)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=9, seed=mel_seed)
+        melody = hz.jitter(melody, vel_amount=7, seed=mel_seed + 1)
+        bounds = result["section_bounds"]
+        cc = {"drums": [], "bass": [], "melody": []}
+        # lift the chorus (brighter + louder), settle the verses -- reinforces the contrast
+        for name, hi in (("chorus", 122), ("chorus2", 127)):
+            s, e = section_span(bounds, name)
+            for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
+                cc[key] += cc_ramp(ch, CC_BRIGHTNESS, s, e, 95, hi)
+                cc[key] += cc_ramp(ch, CC_EXPRESSION, s, e, 108, 124)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, "kate"), "bpm": bpm, "root": root_name, "scale": "aeolian",
+            "sections": sections, "drum_notes": DRUM_BANK, "produce": produce,
+            "melody_program": 48, "bass_program": 33}   # strings (Fairlight-ish) + finger bass
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
@@ -1254,6 +1401,7 @@ ARCHETYPES = {
     "spoken_word": spoken_word,
     "meditative": meditative,
     "groove": groove,
+    "kate_bush": kate_bush,
 }
 
 
