@@ -28,6 +28,9 @@ MELODY_PROGRAM = 81  # GM: Lead 2 (sawtooth)
 def write_clip(spec, out_dir):
     result = spec["result"]
     cc = spec["cc"]
+    # a spec may override the GM program (e.g. spoken_word uses a warm pad, not a lead)
+    bass_prog = spec.get("bass_program") or BASS_PROGRAM
+    mel_prog = spec.get("melody_program") or MELODY_PROGRAM
     os.makedirs(out_dir, exist_ok=True)
 
     midiwriter.write_track(
@@ -38,20 +41,20 @@ def write_clip(spec, out_dir):
     midiwriter.write_track(
         os.path.join(out_dir, "bass.mid"), result["bass"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=BASS_CHANNEL, program=BASS_PROGRAM, track_name=f"{spec['title']} - bass", cc_events=cc["bass"],
+        channel=BASS_CHANNEL, program=bass_prog, track_name=f"{spec['title']} - bass", cc_events=cc["bass"],
     )
     midiwriter.write_track(
         os.path.join(out_dir, "melody.mid"), result["melody"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=MELODY_CHANNEL, program=MELODY_PROGRAM, track_name=f"{spec['title']} - melody", cc_events=cc["melody"],
+        channel=MELODY_CHANNEL, program=mel_prog, track_name=f"{spec['title']} - melody", cc_events=cc["melody"],
     )
     midiwriter.write_combined(
         os.path.join(out_dir, "all.mid"),
         [
             {"events": result["drums"], "channel": midiwriter.DRUM_CHANNEL, "name": "drums", "cc_events": cc["drums"]},
-            {"events": result["bass"], "channel": BASS_CHANNEL, "program": BASS_PROGRAM, "name": "bass",
+            {"events": result["bass"], "channel": BASS_CHANNEL, "program": bass_prog, "name": "bass",
              "cc_events": cc["bass"]},
-            {"events": result["melody"], "channel": MELODY_CHANNEL, "program": MELODY_PROGRAM, "name": "melody",
+            {"events": result["melody"], "channel": MELODY_CHANNEL, "program": mel_prog, "name": "melody",
              "cc_events": cc["melody"]},
         ],
         result["bpm_changes"], result["time_sig_changes"],

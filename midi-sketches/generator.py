@@ -831,6 +831,116 @@ def radiohead_kida(rng, root=None, scale=None, bpm=None, mode=None):
             "sections": sections, "drum_notes": RADIOHEAD_DRUMS, "produce": produce}
 
 
+def spoken_word(rng, root=None, scale=None, bpm=None, phases=2):
+    """A backing *bed* for spoken word, mixing all three inspirations for a
+    specific function: hold a hypnotic, spacious groove and leave the midrange
+    open for a voice. Fever Ray's deep drone/pedal bass and soft tribal-hand
+    percussion; Radiohead's pedal-point modal harmony (no chord changes to pull
+    focus); Kate Bush's sustained-atmosphere pad instead of a lead line. The
+    'melody' here is NOT a tune -- it's slow sustained pad tones (root / 5th /
+    b7 / b3) that change every few bars with lots of rests, so nothing competes
+    with the words. Slow-to-mid, dark, low dynamics, heavy reverb.
+
+    `phases` (2 or 3) sets how many bed stages it moves through, and thus length
+    -- a longer bed to underscore a longer reading. It swells gently rather than
+    climaxing (a bed should support, not steal the scene).
+    """
+    phases = max(1, min(3, phases))
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or rng.choice(["aeolian", "dorian", "phrygian"])
+    bpm = bpm or rng.randint(70, 96)
+    bass_root = note_in_range(root_name, 28, 42)          # deep drone
+    pad_root = note_in_range(root_name, 52, 64)           # low-mid pad, under the voice
+    b7 = scale_degree(bass_root, scale, 6, octave_shift=-1)
+    fifth = scale_degree(bass_root, scale, 4)
+
+    def pedal_bass(octave=0):
+        # a drone: root held most of the bar, occasionally a b7 or 5th tail -- no real movement
+        if rng.random() < 0.35:
+            seq = [(0, 12, bass_root), (12, 4, rng.choice([b7, fifth]))]
+        else:
+            seq = [(0, 16, bass_root)]
+        return [(s, d, p + 12 * octave, rng.randint(80, 92)) for s, d, p in seq]
+
+    def groove(density=0):
+        # soft, spacious, half-time-ish; no busy hats (keep sibilance range clear for the voice)
+        out = {
+            "kick": grid_from_hits(16, {0} if density == 0 else {0, 10}, accents={0}),
+            "rim": grid_from_hits(16, {6, 14}),
+            "shaker": grid_from_hits(16, set(range(0, 16, 2)), accents={0, 8}),
+        }
+        if density >= 1:
+            out["cabasa"] = grid_from_hits(16, {4, 12})
+            out["conga_lo"] = grid_from_hits(16, {8})
+        if density >= 2:
+            out["clap"] = grid_from_hits(16, {8}, accents={8})
+            out["claves"] = grid_from_hits(16, {3, 11})
+        return out
+
+    # the pad's slow harmonic rotation -- pedal-ish scale tones, changing every couple of bars
+    pad_cycle = rng.choice([[0, 6, 4, 2], [0, 4, 0, 6], [0, 2, 6, 4]])
+
+    def pad_note(idx, register, vel):
+        deg = pad_cycle[idx % len(pad_cycle)]
+        note = palette.clamp_register(scale_degree(pad_root, scale, deg), *register)
+        return [(0, 16, note, vel + rng.randint(-4, 4))]
+
+    sections = []
+    sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {"shaker": grid_from_hits(16, set(range(0, 16, 2)), accents={0})},
+         "bass": pedal_bass(), "melody": []} for _ in range(rng.randint(3, 4))]})
+
+    pad_idx = 0
+    for p in range(phases):
+        density = min(p, 2)
+        reg = (50, 63) if p == 0 else (52, 66)
+        vel = 56 + p * 4
+        stage = []
+        for i in range(8):
+            # pad changes every 2 bars, rests every 3rd bar for space
+            if i % 3 == 2:
+                melody = []
+            else:
+                if i % 2 == 0:
+                    pad_idx += 1
+                melody = pad_note(pad_idx, reg, vel)
+            stage.append({"drums": groove(density), "bass": pedal_bass(), "melody": melody})
+        sections.append({"name": f"bed{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": stage})
+
+    # gentle lift (not a climax): a touch more percussion + a higher airy pad tone, then settle
+    lift = []
+    for i in range(6):
+        pad_idx += 1
+        high = palette.clamp_register(scale_degree(pad_root, scale, pad_cycle[pad_idx % len(pad_cycle)] + 7),
+                                       67, 84)
+        melody = pad_note(pad_idx, (54, 67), 64) + ([(8, 8, high, 58)] if i % 2 == 1 else [])
+        lift.append({"drums": groove(2), "bass": pedal_bass(1 if i >= 3 else 0), "melody": melody})
+    sections.append({"name": "lift", "time_sig": (4, 4), "bpm": bpm, "bars": lift})
+
+    sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {"shaker": grid_from_hits(16, {0, 8})}, "bass": pedal_bass(),
+         "melody": [(0, 16, pad_root, 54)] if i == 0 else []} for i in range(rng.randint(3, 4))]})
+
+    reverb_base = rng.randint(70, 90)   # cavernous bed
+    bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
+    def produce(result, bass_channel, melody_channel):
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=9, seed=bass_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=12, seed=mel_seed)
+        bounds = result["section_bounds"]
+        ls, le = section_span(bounds, "lift")
+        cc = {"drums": [], "bass": [], "melody": []}
+        for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
+            cc[key] += cc_ramp(ch, CC_REVERB_SEND, 0, ls, reverb_base, reverb_base)
+            cc[key] += cc_ramp(ch, CC_REVERB_SEND, ls, le, reverb_base, 118)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, ls, le, 96, 118)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, "spokenbed"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": FEVER_DRUMS, "produce": produce,
+            "melody_program": 89, "bass_program": 38}  # 89 = Pad 2 (warm), for a sustained bed voice
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
@@ -838,6 +948,7 @@ ARCHETYPES = {
     "gated_drama": gated_drama,
     "fever_ray": fever_ray,
     "radiohead_kida": radiohead_kida,
+    "spoken_word": spoken_word,
 }
 
 
@@ -910,6 +1021,7 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=
                 "seed": seed, "attempt": attempt, "archetype": archetype_name,
                 "title": spec["title"], "bpm": spec["bpm"], "root": spec["root"], "scale": spec["scale"],
                 "result": result, "cc": cc, "zipf_slope": slope, "zipf_r2": r2,
+                "melody_program": spec.get("melody_program"), "bass_program": spec.get("bass_program"),
             }
 
     raise RuntimeError(f"seed {seed} ({archetype_name}) failed QC after {max_attempts} attempts: {problems}")

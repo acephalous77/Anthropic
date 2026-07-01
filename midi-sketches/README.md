@@ -28,7 +28,7 @@ Each run writes `drums.mid` / `bass.mid` / `melody.mid` / `all.mid` to
 tempo, section count/length) since there's no audio backend here to preview
 with.
 
-Six **archetypes** carry the composed pieces' techniques as generators
+Seven **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -51,6 +51,13 @@ choices (key, tempo, density, contour, section lengths) every time:
   melody + stuttering glitch drums), `pyramid` (Pyramid Song's 3+3+4+3+3, a
   16/8 bar). Modal/pedal-point, and a *terminally-climactic form* — it ends
   on new climactic material rather than recapitulating the opening.
+- `spoken_word` — a purpose-built *bed* for spoken word, mixing all three: a
+  Fever Ray drone/tribal pulse, Radiohead pedal-point modal harmony (no chord
+  changes to pull focus), and — instead of a lead line — Kate Bush-style
+  slow sustained pad tones (on a warm pad patch, GM program 89) that change
+  every few bars with lots of rests, leaving the midrange open for a voice.
+  Slow, dark, low-dynamic, heavy reverb; swells gently rather than climaxing.
+  `--phases 2|3` sets the length (a longer bed for a longer reading).
 
 ### Workable blends, not an average
 
