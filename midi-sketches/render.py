@@ -28,30 +28,41 @@ def render(piece_name):
     sections = mod.build()
     result = render_piece(sections, mod.DRUM_NOTES, bass_channel=BASS_CHANNEL, melody_channel=MELODY_CHANNEL)
 
+    # Optional per-piece production pass: humanization/swing/CC automation.
+    # `produce(result)` may override drums/bass/melody event lists and supply
+    # cc_events per instrument; a piece with no such needs can skip it entirely.
+    cc = {"drums": [], "bass": [], "melody": []}
+    if hasattr(mod, "produce"):
+        produced = mod.produce(result, bass_channel=BASS_CHANNEL, melody_channel=MELODY_CHANNEL)
+        result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
+        cc.update(produced.get("cc", {}))
+
     out_dir = os.path.join(OUTPUT_DIR, piece_name)
     os.makedirs(out_dir, exist_ok=True)
 
     midiwriter.write_track(
         os.path.join(out_dir, "drums.mid"), result["drums"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=midiwriter.DRUM_CHANNEL, track_name=f"{mod.TITLE} - drums",
+        channel=midiwriter.DRUM_CHANNEL, track_name=f"{mod.TITLE} - drums", cc_events=cc["drums"],
     )
     midiwriter.write_track(
         os.path.join(out_dir, "bass.mid"), result["bass"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=BASS_CHANNEL, program=BASS_PROGRAM, track_name=f"{mod.TITLE} - bass",
+        channel=BASS_CHANNEL, program=BASS_PROGRAM, track_name=f"{mod.TITLE} - bass", cc_events=cc["bass"],
     )
     midiwriter.write_track(
         os.path.join(out_dir, "melody.mid"), result["melody"],
         result["bpm_changes"], result["time_sig_changes"],
-        channel=MELODY_CHANNEL, program=MELODY_PROGRAM, track_name=f"{mod.TITLE} - melody",
+        channel=MELODY_CHANNEL, program=MELODY_PROGRAM, track_name=f"{mod.TITLE} - melody", cc_events=cc["melody"],
     )
     midiwriter.write_combined(
         os.path.join(out_dir, "all.mid"),
         [
-            {"events": result["drums"], "channel": midiwriter.DRUM_CHANNEL, "name": "drums"},
-            {"events": result["bass"], "channel": BASS_CHANNEL, "program": BASS_PROGRAM, "name": "bass"},
-            {"events": result["melody"], "channel": MELODY_CHANNEL, "program": MELODY_PROGRAM, "name": "melody"},
+            {"events": result["drums"], "channel": midiwriter.DRUM_CHANNEL, "name": "drums", "cc_events": cc["drums"]},
+            {"events": result["bass"], "channel": BASS_CHANNEL, "program": BASS_PROGRAM, "name": "bass",
+             "cc_events": cc["bass"]},
+            {"events": result["melody"], "channel": MELODY_CHANNEL, "program": MELODY_PROGRAM, "name": "melody",
+             "cc_events": cc["melody"]},
         ],
         result["bpm_changes"], result["time_sig_changes"],
     )

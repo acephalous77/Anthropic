@@ -114,23 +114,53 @@ def _sparse_pair(i):
     )
 
 
-def _flatten_pairs(pairs):
+def _flatten_pairs(pairs, name="pair"):
     """Turn a list of (bar_a, bar_b) into the two per-time-sig section lists arrange.py expects,
     preserving order via one section per bar (time signature changes every bar here)."""
     sections = []
     for bar in [b for pair in pairs for b in pair]:
         ts = bar.pop("time_sig")
         bpm = bar.pop("bpm")
-        sections.append({"name": "pair", "time_sig": ts, "bpm": bpm, "bars": [bar]})
+        sections.append({"name": name, "time_sig": ts, "bpm": bpm, "bars": [bar]})
     return sections
 
 
 def build():
     sections = []
 
-    sections.extend(_flatten_pairs([_sparse_pair(i) for i in range(2)]))
-    sections.extend(_flatten_pairs([_pair(i, 4, energy="verse") for i in range(4)]))
-    sections.extend(_flatten_pairs([_pair(i, 2, energy="build") for i in range(2)]))
-    sections.extend(_flatten_pairs([_sparse_pair(i) for i in range(2)]))
+    sections.extend(_flatten_pairs([_sparse_pair(i) for i in range(2)], name="intro"))
+    sections.extend(_flatten_pairs([_pair(i, 4, energy="verse") for i in range(4)], name="verse"))
+    sections.extend(_flatten_pairs([_pair(i, 2, energy="build") for i in range(2)], name="build"))
+    sections.extend(_flatten_pairs([_sparse_pair(i) for i in range(2)], name="outro"))
 
     return sections
+
+
+def produce(result, bass_channel, melody_channel):
+    """Swing the hats for a lilting, not-quite-straight feel; give bass/melody
+    the most rubato of the three pieces (Bush-style push-pull); swell expression
+    through the build pair."""
+    import humanize
+    from arrange import STEP_TICKS, section_span
+    from midiwriter import cc_ramp
+    from drums import CHH
+
+    hats = [e for e in result["drums"] if e.note == CHH]
+    other = [e for e in result["drums"] if e.note != CHH]
+    swung_hats = humanize.swing(hats, STEP_TICKS, amount_ticks=STEP_TICKS // 5)
+    drums = other + swung_hats
+
+    bass = humanize.jitter(result["bass"], timing_ticks=14, vel_amount=8, seed=3)
+    melody = humanize.jitter(result["melody"], timing_ticks=16, vel_amount=10, seed=4)
+
+    bounds = result["section_bounds"]
+    build_start, build_end = section_span(bounds, "build")
+    cc_bass = cc_ramp(bass_channel, 11, build_start, build_end, 88, 122)
+    cc_melody = cc_ramp(melody_channel, 11, build_start, build_end, 88, 122)
+
+    return {
+        "drums": drums,
+        "bass": bass,
+        "melody": melody,
+        "cc": {"bass": cc_bass, "melody": cc_melody},
+    }

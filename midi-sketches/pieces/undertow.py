@@ -19,6 +19,7 @@ D_MEL_ROOT = note("D", 4)      # 62
 DRUM_NOTES = {
     "kick": (KICK, 106, 122),
     "snare": (SNARE, 100, 118),
+    "ghost_snare": (SNARE, 38, 46),   # same drum, quieter hits -- a live-feel ghost note
     "chh": (CHH, 58, 84),
     "ohh": (OHH, 68, 90),
     "shaker": (SHAKER, 46, 66),
@@ -49,9 +50,9 @@ MELODY_CALL = [
 MELODY_CALL_FILL = MELODY_CALL + [(15, 1, D_MEL_ROOT, 70)]       # tiny extra pickup into next bar's downbeat
 
 
-def _groove_bar(fill=False, busy_hats=False):
+def _groove_bar(fill=False, busy_hats=False, ghost_steps=frozenset()):
     kick_hits = {0, 6, 11} if not fill else {0, 6, 9, 11}
-    return {
+    out = {
         "kick": grid_from_hits(16, kick_hits),
         "snare": grid_from_hits(16, {8}, accents={8}),
         "chh": grid_from_hits(16, set(range(0, 16, 2)) if not busy_hats else set(range(16)),
@@ -59,6 +60,9 @@ def _groove_bar(fill=False, busy_hats=False):
         "shaker": grid_from_hits(16, set(range(16)), accents={0, 4, 8, 12}),
         "htom": grid_from_hits(16, {15} if fill else set()),
     }
+    if ghost_steps:
+        out["ghost_snare"] = grid_from_hits(16, set(ghost_steps))
+    return out
 
 
 def _sparse_bar():
@@ -97,7 +101,9 @@ def build():
     verse_bars = []
     for i in range(8):
         is_last_pair_bar = i in (3, 7)
-        drums = _groove_bar(fill=is_last_pair_bar)
+        # melody rests on even bars ("response" bars) -- a quiet ghost snare fills that space instead
+        ghost = {13} if i % 2 == 0 else set()
+        drums = _groove_bar(fill=is_last_pair_bar, ghost_steps=ghost)
         bass = BASS_PHRASE
         melody = (MELODY_CALL_FILL if is_last_pair_bar else MELODY_CALL) if i % 2 == 1 else []
         verse_bars.append({"drums": drums, "bass": bass, "melody": melody})
@@ -132,3 +138,30 @@ def build():
     sections.append({"name": "outro", "time_sig": TS, "bpm": BPM, "bars": outro_bars})
 
     return sections
+
+
+def produce(result, bass_channel, melody_channel):
+    """Drums stay machine-tight; bass and melody get subtle human timing/dynamics,
+    plus an expression swell through the build and a release back down in the outro."""
+    import humanize
+    from arrange import section_span
+    from midiwriter import cc_ramp
+
+    bass = humanize.jitter(result["bass"], timing_ticks=6, vel_amount=6, seed=1)
+    melody = humanize.jitter(result["melody"], timing_ticks=10, vel_amount=8, seed=2)
+
+    bounds = result["section_bounds"]
+    build_start, build_end = section_span(bounds, "build")
+    outro_start, outro_end = section_span(bounds, "outro")
+
+    cc_bass = (cc_ramp(bass_channel, 11, build_start, build_end, 92, 127)
+               + cc_ramp(bass_channel, 11, outro_start, outro_end, 127, 88))
+    cc_melody = (cc_ramp(melody_channel, 11, build_start, build_end, 92, 127)
+                 + cc_ramp(melody_channel, 11, outro_start, outro_end, 127, 88))
+
+    return {
+        "drums": result["drums"],
+        "bass": bass,
+        "melody": melody,
+        "cc": {"bass": cc_bass, "melody": cc_melody},
+    }

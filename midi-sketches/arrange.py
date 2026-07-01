@@ -35,6 +35,7 @@ def render_piece(sections, drum_notes, bass_channel=0, melody_channel=1):
     bar_start = 0
     bpm_changes = []
     time_sig_changes = []
+    section_bounds = []
     drum_events, bass_events, melody_events = [], [], []
     last_bpm, last_ts = None, None
 
@@ -42,6 +43,7 @@ def render_piece(sections, drum_notes, bass_channel=0, melody_channel=1):
         ts = section["time_sig"]
         bpm = section["bpm"]
         steps = bar_steps(ts)
+        section_start = bar_start
         for bar in section["bars"]:
             if bpm != last_bpm:
                 bpm_changes.append((bar_start, bpm))
@@ -76,11 +78,34 @@ def render_piece(sections, drum_notes, bass_channel=0, melody_channel=1):
 
             bar_start += bar_ticks(ts)
 
+        section_bounds.append({"name": section["name"], "start": section_start, "end": bar_start})
+
     return {
         "drums": drum_events,
         "bass": bass_events,
         "melody": melody_events,
         "bpm_changes": bpm_changes,
         "time_sig_changes": time_sig_changes,
+        "section_bounds": merge_section_bounds(section_bounds),
         "total_ticks": bar_start,
     }
+
+
+def merge_section_bounds(bounds):
+    """Collapse consecutive entries that share a name into a single (start, end) span --
+    useful when a section is emitted one bar at a time (e.g. alternating time signatures)."""
+    merged = []
+    for b in bounds:
+        if merged and merged[-1]["name"] == b["name"] and merged[-1]["end"] == b["start"]:
+            merged[-1]["end"] = b["end"]
+        else:
+            merged.append(dict(b))
+    return merged
+
+
+def section_span(bounds, name):
+    """Return (start, end) for the first section bounds entry matching `name`."""
+    for b in bounds:
+        if b["name"] == name:
+            return b["start"], b["end"]
+    raise KeyError(f"no section named {name!r} in bounds {bounds}")

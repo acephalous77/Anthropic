@@ -49,6 +49,48 @@ it drifts a step out of phase with the beat every bar instead of looping in
 place: a controlled 5-against-4 polymeter, in the spirit of Kate Bush's
 obsessive melodic repetition.
 
+## Production layer
+
+Each piece's `pieces/<name>.py` defines an optional `produce(result, ...)`
+hook — called by `render.py` after `arrange.render_piece()` — that shapes the
+raw quantized events into something less machine-flat. What each piece does
+is a deliberate, per-piece choice, not a blanket effect:
+
+- **`undertow`** — drums stay machine-tight (the Fever Ray precision), but
+  bass/melody get subtle timing + velocity jitter (`humanize.jitter`), plus
+  a CC11 (expression) swell through the "build" section and a release back
+  down through the outro.
+- **`static_orchard`** — the hi-hats are swung (`humanize.swing`, delaying
+  every other 16th step) for a lilting, not-quite-straight feel; bass/melody
+  get the most rubato of the three (Bush-style push-pull); expression swells
+  through the "build" pair.
+- **`glass_repeater`** — nothing is humanized (the mechanical pulse and the
+  exact 5-against-4 phase drift depend on precise tick placement); instead a
+  CC74 (brightness/cutoff) sweep opens and closes across
+  verse → break → verse2, the classic "the machine is breathing" move.
+
+`undertow`'s verse also alternates a quiet ghost snare into the bars where
+the melody rests, so the groove has something happening even during the
+call-and-response silences.
+
+## Visualizing without an audio backend
+
+`visualize.py` prints an ASCII step-grid (drums) / event list (bass,
+melody) for a piece so you can eyeball the arrangement — note density,
+gaps, and whether a section looks like what it's supposed to be — without
+needing a synth or DAW to hit play:
+
+```
+python visualize.py undertow --section verse --voice drums
+python visualize.py glass_repeater
+```
+
+It's a dev tool, not part of the render pipeline. Note: because it buckets
+events into fixed 16th-note columns, a note that `humanize.jitter` nudged a
+few ticks earlier than a section boundary can appear to spill into the
+previous section's printout — that's a display rounding artifact, not an
+error in the actual MIDI (the real tick position is unaffected).
+
 ## How it's built
 
 - `theory.py` — note names → MIDI numbers, scale/mode tables (aeolian,
@@ -62,9 +104,13 @@ obsessive melodic repetition.
   steps and a 7/8 bar is 14 steps.
 - `drums.py` — GM percussion note-number constants.
 - `midiwriter.py` — writes the resulting event lists out as standard MIDI
-  files via `mido` (tempo/time-signature meta events, GM program changes).
+  files via `mido` (tempo/time-signature meta events, GM program changes,
+  CC automation via `cc_ramp`).
+- `humanize.py` — deterministic (seeded) timing/velocity jitter and 16th-note
+  swing, used by the per-piece `produce()` hooks below.
 - `pieces/*.py` — the actual composed content: drum cells, basslines, and
-  melodic phrases for each piece, assembled into `build()`.
+  melodic phrases for each piece, assembled into `build()`, plus an optional
+  `produce()` for piece-specific humanization/CC automation.
 
 ## GM drum map reference (used in `drums.py`)
 

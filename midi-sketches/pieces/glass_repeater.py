@@ -144,3 +144,31 @@ def build():
     })
 
     return sections
+
+
+def produce(result, bass_channel, melody_channel):
+    """Everything stays machine-quantized -- the point is the mechanical pulse and
+    the exact 5-against-4 phase drift -- but a CC74 (brightness/cutoff) sweep opens
+    and closes the filter across verse -> break -> verse2, the classic "the machine
+    is breathing" IDM production move."""
+    from arrange import section_span
+    from midiwriter import cc_ramp
+
+    bounds = result["section_bounds"]
+    v1_start, v1_end = section_span(bounds, "verse")
+    b_start, b_end = section_span(bounds, "break")
+    v2_start, v2_end = section_span(bounds, "verse2")
+
+    def sweep(channel):
+        return (
+            cc_ramp(channel, 74, v1_start, v1_end, 40, 112)
+            + cc_ramp(channel, 74, b_start, b_end, 112, 46)
+            + cc_ramp(channel, 74, v2_start, v2_end, 46, 118)
+        )
+
+    return {
+        "drums": result["drums"],
+        "bass": result["bass"],
+        "melody": result["melody"],
+        "cc": {"bass": sweep(bass_channel), "melody": sweep(melody_channel)},
+    }
