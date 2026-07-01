@@ -97,9 +97,14 @@ def _value_at(changes, tick, default):
     return val
 
 
-def slice_loop(result, cc, ppq, section, n_bars):
+def slice_loop(result, cc, ppq, section, n_bars, quantize=True):
     """Extract the first `n_bars` of `section`, re-based to tick 0, as a self-
     contained loop. Returns (loop_result, loop_cc) shaped like render output.
+
+    For clean clip playback: grabs notes humanized just before the bar-1
+    downbeat (a tolerance window) so the downbeat is never lost to a leading
+    rest, and (quantize=True) snaps every onset/length to the 16th grid so the
+    loop starts immediately on beat 1 and repeats seamlessly -- no dead space.
     Only meaningful for constant-metre sections (skips odd-metre ones upstream).
     """
     bounds = {b["name"]: b for b in result["section_bounds"]}
@@ -110,17 +115,25 @@ def slice_loop(result, cc, ppq, section, n_bars):
     bpm = _value_at(result["bpm_changes"], s, 120)
     bar = ppq * 4 * num // den
     win = min(n_bars * bar, e - s)
+    step = ppq // 4
+    tol = step   # recover a downbeat note nudged just before the boundary
 
     def take(events):
         out = []
         for ev in events:
-            if s <= ev.start < s + win:
-                st = ev.start - s
-                out.append(ev._replace(start=st, dur=min(ev.dur, win - st)))
+            if s - tol <= ev.start < s + win:
+                st = max(0, ev.start - s)
+                dur = ev.dur
+                if quantize:
+                    st = round(st / step) * step
+                    dur = max(step, round(dur / step) * step)
+                dur = min(dur, win - st)
+                if dur > 0:
+                    out.append(ev._replace(start=st, dur=dur))
         return out
 
     def take_cc(ccs):
-        return [c._replace(tick=c.tick - s) for c in ccs if s <= c.tick < s + win]
+        return [c._replace(tick=max(0, c.tick - s)) for c in ccs if s - tol <= c.tick < s + win]
 
     loop = {
         "drums": take(result["drums"]),
