@@ -95,6 +95,10 @@ def main():
     ap.add_argument("--mode", default=None,
                      help="sub-mode for archetypes that support it (radiohead_kida: "
                           "odd5 / pedal10 / idioteque / pyramid)")
+    ap.add_argument("--melody-program", type=int, default=None, dest="melody_program",
+                     help="GM program (0-127) for the melody track, e.g. 11 vibraphone, 52 choir, 4 e.piano")
+    ap.add_argument("--bass-program", type=int, default=None, dest="bass_program",
+                     help="GM program (0-127) for the bass track, e.g. 35 fretless, 33 finger, 38 synth bass")
     ap.add_argument("--count", type=int, default=1, help="generate this many clips (each gets its own seed)")
     ap.add_argument("--out", default=OUTPUT_DIR, help="output root directory")
     args = ap.parse_args()
@@ -108,6 +112,12 @@ def main():
         except RuntimeError as exc:
             print(f"generation failed: {exc}", file=sys.stderr)
             sys.exit(1)
+
+        # CLI instrument overrides win over any per-spec default
+        if args.melody_program is not None:
+            spec["melody_program"] = args.melody_program
+        if args.bass_program is not None:
+            spec["bass_program"] = args.bass_program
 
         out_dir = os.path.join(args.out, f"seed{spec['seed']}_{spec['archetype']}")
         write_clip(spec, out_dir)
