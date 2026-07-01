@@ -62,6 +62,30 @@ def remap_drum_events(events, mapping):
     return [e._replace(note=mapping.get(e.note, e.note)) for e in events]
 
 
+def remap_drum_file(src, dst, mapping=MC707_DRUM_MAP):
+    """Read an existing drum .mid, fold every channel-10 note into the 707 pad
+    range, and save to `dst` (leaves other channels untouched)."""
+    import mido
+    mid = mido.MidiFile(src)
+    for track in mid.tracks:
+        for msg in track:
+            if msg.type in ("note_on", "note_off") and getattr(msg, "channel", None) == 9:
+                msg.note = mapping.get(msg.note, msg.note)
+    mid.save(dst)
+
+
+_KEY_SUFFIX = {"phrygian": "phr", "major": "maj", "minor": "m", "modal": "mod"}
+
+
+def key_tag(key_desc):
+    """Compress a 'F minor-ish' / 'E phrygian-ish' description to a short filename tag
+    like 'Fm' / 'Ephr' / 'Cmaj' / 'Dmod'."""
+    parts = key_desc.replace("-ish", "").split()
+    root = parts[0].replace("#", "s") if parts else "X"
+    quality = _KEY_SUFFIX.get(parts[1], "") if len(parts) > 1 else ""
+    return f"{root}{quality}"
+
+
 def _value_at(changes, tick, default):
     """The value of a (tick, value) change-list that is in effect at `tick`."""
     val = default

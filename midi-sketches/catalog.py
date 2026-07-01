@@ -148,10 +148,12 @@ def fmt_len(sec):
     return f"{int(sec // 60)}:{int(sec % 60):02d}"
 
 
-def main():
+def build_catalog(root=GEN):
+    """Analyse every clip under `root` and return rows with unique mood names.
+    Shared by INDEX.md (here) and the MC-707 export, so filenames match the index."""
     rows = []
     used_names = set()
-    for d in sorted(glob.glob(os.path.join(GEN, "*"))):
+    for d in sorted(glob.glob(os.path.join(root, "*"))):
         allmid = os.path.join(d, "all.mid")
         if not os.path.exists(allmid):
             continue
@@ -170,8 +172,13 @@ def main():
         rows.append({
             "name": name, "archetype": archetype, "key": key_desc,
             "meter": f"{num}/{den}", "bpm": a["bpm"], "len": fmt_len(a["length"]),
-            "seed": seed, "folder": folder,
+            "seed": seed, "folder": folder, "dir": d,
         })
+    return rows
+
+
+def main():
+    rows = build_catalog()
 
     order = ["Glacial (≤56)", "Slow / drifting (57–72)", "Loping (73–88)",
              "Walking / steady (89–104)", "Pulsing (105–120)", "Driving (121–135)", "Urgent (136+)"]
