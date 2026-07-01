@@ -982,15 +982,16 @@ def meditative(rng, root=None, scale=None, bpm=None, phases=3):
     modal colour chord) with no build or climax -- it just breathes.
 
     Voiced in open fifths (little/no third) so it reads modeless and serene.
-    `phases` (1-5) sets how many long 'float' sections it drifts through, and
-    thus length; each float can run a couple of minutes at these tempos.
+    `phases` (1-12) sets how many long 'float' sections it drifts through, and
+    thus length -- each float runs 1.5-2.5 min at these tempos, so a high phase
+    count gives a 10-15+ minute sit.
     """
-    phases = max(1, min(5, phases))
+    phases = max(1, min(12, phases))
     root_name = root or rng.choice(NOTE_NAMES)
     scale = scale or rng.choice(["aeolian", "dorian", "phrygian", "major"])
-    bpm = bpm or rng.randint(52, 64)
-    bass_root = note_in_range(root_name, 24, 38)     # deep sub
-    drone_root = note_in_range(root_name, 45, 57)    # low-mid pad
+    bpm = bpm or rng.randint(46, 58)                 # deeper/slower
+    bass_root = note_in_range(root_name, 22, 34)     # deep sub
+    drone_root = note_in_range(root_name, 43, 55)    # low pad
 
     def open_chord(deg, register, vel, add_third=False):
         # an open fifth (+ octave), optionally a third; whole voicing octave-shifted into register
@@ -1007,38 +1008,38 @@ def meditative(rng, root=None, scale=None, bpm=None, phases=3):
 
     def deep_drone(deg, vel=66):
         p = scale_degree(bass_root, scale, deg)
-        while p < 22:
+        while p < 20:
             p += 12
-        while p > 41:
+        while p > 38:
             p -= 12
         return [(0, 16, p, vel)]
 
     def bowl(deg, vel=52):
-        p = palette.clamp_register(scale_degree(drone_root, scale, deg) + 12, 66, 84)
+        p = palette.clamp_register(scale_degree(drone_root, scale, deg) + 12, 64, 82)
         start = rng.choice([2, 4, 6, 8])
         dur = min(rng.choice([8, 10, 12]), 16 - start)   # keep the shimmer inside the bar
         return [(start, dur, p, max(1, vel + rng.randint(-4, 4)))]
 
     # slow harmonic drift: grounded on tonic, opening on a colour tone, occasional shifts.
     # prog[0] != 0 guarantees the bass takes >=2 pitches (clears the near-static QC guard).
-    prog = [5, 0, 0, 3, 0, 6]
+    prog = [5, 0, 0, 3, 0, 6, 0, 2, 0]
 
     sections = []
     sections.append({"name": "settle", "time_sig": (4, 4), "bpm": bpm, "bars": [
         {"drums": {}, "bass": deep_drone(0, 62),
-         "melody": open_chord(0, (48, 60), 50) if i % 2 == 0 else []} for i in range(rng.randint(4, 6))]})
+         "melody": open_chord(0, (44, 58), 50) if i % 2 == 0 else []} for i in range(rng.randint(4, 6))]})
 
     for p in range(phases):
         deg = prog[p % len(prog)]
-        n = rng.choice([8, 10, 12])
+        n = rng.choice([12, 16, 20])   # longer floats
         heartbeat = (p % 2 == 0)      # even floats carry the soft pulse, odd ones are pure drone
                                        # (keeps phase 0 grounded so a 1-phase track still has a beat)
         add_third = (p >= 2)
         bars = []
         for i in range(n):
-            mel = open_chord(deg, (48, 62), 54 + p * 2, add_third=add_third) if i % 2 == 0 else []
-            if i % 4 == 1:
-                mel = mel + bowl(rng.choice([0, 2, 4, 6]), 50 + p)
+            mel = open_chord(deg, (44, 60), 52 + min(p, 6) * 2, add_third=add_third) if i % 2 == 0 else []
+            if i % 6 == 1:   # sparser shimmer for longer stillness
+                mel = mel + bowl(rng.choice([0, 2, 4, 6]), 50 + min(p, 8))
             drums = {}
             if heartbeat and i % 2 == 0:
                 drums["heart"] = grid_from_hits(16, {0})
@@ -1048,8 +1049,8 @@ def meditative(rng, root=None, scale=None, bpm=None, phases=3):
         sections.append({"name": f"float{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": bars})
 
     sections.append({"name": "dissolve", "time_sig": (4, 4), "bpm": bpm, "bars": [
-        {"drums": {}, "bass": deep_drone(0, max(40, 60 - i * 8)),
-         "melody": open_chord(0, (48, 60), 48) if i == 0 else []} for i in range(rng.randint(4, 6))]})
+        {"drums": {}, "bass": deep_drone(0, max(38, 58 - i * 6)),
+         "melody": open_chord(0, (44, 58), 46) if i == 0 else []} for i in range(rng.randint(5, 7))]})
 
     reverb_base = rng.randint(100, 120)   # very cavernous
     bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)

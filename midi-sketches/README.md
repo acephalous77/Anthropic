@@ -64,10 +64,10 @@ choices (key, tempo, density, contour, section lengths) every time:
   is the sparsest: a continuous deep sub-drone, sustained open-fifth pad
   chords struck every couple of bars (ringing through the gaps), occasional
   high singing-bowl shimmer tones, an optional barely-there heartbeat, very
-  slow tempo (52–64), and slow modal drift with no build — it just breathes.
-  `--phases 1–5` sets the length (phases 4–5 run ~4 min); some float sections
-  are pure drone, others carry the faint pulse. Renders on a warm pad by
-  default (override with `--melody-program` / `--bass-program`).
+  slow tempo (46–58), and slow modal drift with no build — it just breathes.
+  `--phases 1–12` sets the length (phases 6 ≈ 8 min, 9 ≈ 13 min, 12 ≈ 20 min);
+  some float sections are pure drone, others carry the faint pulse. Renders on
+  a warm pad by default (override with `--melody-program` / `--bass-program`).
 
 ### Workable blends, not an average
 
