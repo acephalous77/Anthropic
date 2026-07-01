@@ -54,6 +54,35 @@ def euclid_grid(pulses, steps, rotate=0):
     return "".join("x" if v else "." for v in pattern)
 
 
+# Named (pulses, steps) presets documented by Toussaint (2005, "The Euclidean
+# Algorithm Generates Traditional Musical Rhythms") as real-world rhythms --
+# useful ostinato starting points rather than an arbitrary pulse count.
+EUCLIDEAN_PRESETS = {
+    "tresillo": (3, 8),      # Cuban tresillo / Habanera, also bluegrass banjo
+    "cinquillo": (5, 8),     # Cuban cinquillo / West African bell pattern
+    "bossa": (5, 16),        # Brazilian bossa nova bass pattern
+    "fume_fume": (5, 12),    # Ghanaian fume-fume / soukous
+    "west_african_12": (7, 12),
+    "samba": (7, 16),
+    "reich": (8, 12),        # a Steve Reich signature rhythm
+    "central_african_5": (2, 5),
+}
+
+
+def euclidean_preset(name, rotate=0):
+    """A named Euclidean pattern (see EUCLIDEAN_PRESETS) as a grid string."""
+    pulses, steps = EUCLIDEAN_PRESETS[name]
+    return euclid_grid(pulses, steps, rotate)
+
+
+def euclidean_preset_tiled(name, target_steps, rotate=0):
+    """A named preset repeated (and truncated) to exactly fill `target_steps` --
+    e.g. the 8-step tresillo tiled twice to fit a 16-step bar."""
+    grid = euclidean_preset(name, rotate)
+    reps = -(-target_steps // len(grid))  # ceil division
+    return (grid * reps)[:target_steps]
+
+
 def grid_from_hits(length, hits, accents=None):
     """Build a grid string from step indices, e.g. grid_from_hits(16, {0, 7, 11}, accents={0})."""
     accents = accents or set()

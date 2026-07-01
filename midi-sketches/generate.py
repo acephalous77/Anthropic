@@ -73,6 +73,9 @@ def spec_card(spec, out_dir):
     print(f"{spec['title']}  [seed {spec['seed']}, {spec['archetype']}]")
     print(f"  key: {spec['root']} {spec['scale']}   tempo: {spec['bpm']} BPM   "
           f"~{seconds:.1f}s over {len(result['section_bounds'])} sections{retry_note}")
+    if spec.get("zipf_slope") is not None:
+        print(f"  zipf rank-frequency slope: {spec['zipf_slope']:.2f} (R^2={spec['zipf_r2']:.2f}) -- "
+              f"aesthetically-typical music clusters near -1 (Manaris et al. 2005), informational only")
     print(f"  -> {out_dir}")
 
 

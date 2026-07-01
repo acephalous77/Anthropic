@@ -141,14 +141,18 @@ def build():
 
 
 def produce(result, bass_channel, melody_channel):
-    """Drums stay machine-tight; bass and melody get subtle human timing/dynamics,
-    plus an expression swell through the build and a release back down in the outro."""
+    """Drums stay machine-tight; bass and melody get 1/f-correlated timing
+    deviation (not independent jitter -- see humanize.py) plus subtle velocity
+    variation, and an expression swell through the build with a release back
+    down in the outro."""
     import humanize
     from arrange import section_span
-    from midiwriter import cc_ramp
+    from midiwriter import cc_ramp, PPQ
 
-    bass = humanize.jitter(result["bass"], timing_ticks=6, vel_amount=6, seed=1)
-    melody = humanize.jitter(result["melody"], timing_ticks=10, vel_amount=8, seed=2)
+    bass = humanize.pink_jitter(result["bass"], BPM, PPQ, sd_ms=8, seed=1)
+    bass = humanize.jitter(bass, vel_amount=6, seed=11)
+    melody = humanize.pink_jitter(result["melody"], BPM, PPQ, sd_ms=13, seed=2)
+    melody = humanize.jitter(melody, vel_amount=8, seed=12)
 
     bounds = result["section_bounds"]
     build_start, build_end = section_span(bounds, "build")

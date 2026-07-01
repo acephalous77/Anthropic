@@ -137,22 +137,25 @@ def build():
 
 
 def produce(result, bass_channel, melody_channel):
-    """Swing the hats for a lilting, not-quite-straight feel; give bass/melody
-    the most rubato of the three pieces (Bush-style push-pull); swell expression
+    """Swing the hats for a lilting, not-quite-straight feel (using a
+    tempo-dependent beat-upbeat ratio, not a fixed percentage -- Friberg &
+    Sundstrom 2002); give bass/melody the most rubato of the three pieces
+    (Bush-style push-pull) via 1/f-correlated timing; swell expression
     through the build pair."""
     import humanize
     from arrange import STEP_TICKS, section_span
-    from midiwriter import cc_ramp
+    from midiwriter import cc_ramp, PPQ
     from drums import CHH
 
     hats = [e for e in result["drums"] if e.note == CHH]
     other = [e for e in result["drums"] if e.note != CHH]
-    # 58% = Logic's "16C" -- loosens the 16ths without reading as full triplet swing
-    swung_hats = humanize.swing(hats, STEP_TICKS, swing_pct=58, eighth_ticks=STEP_TICKS * 2)
+    swung_hats = humanize.swing(hats, STEP_TICKS, swing_pct=humanize.bur_swing_pct(BPM), eighth_ticks=STEP_TICKS * 2)
     drums = other + swung_hats
 
-    bass = humanize.jitter(result["bass"], timing_ticks=14, vel_amount=8, seed=3)
-    melody = humanize.jitter(result["melody"], timing_ticks=16, vel_amount=10, seed=4)
+    bass = humanize.pink_jitter(result["bass"], BPM, PPQ, sd_ms=16, seed=3)
+    bass = humanize.jitter(bass, vel_amount=8, seed=13)
+    melody = humanize.pink_jitter(result["melody"], BPM, PPQ, sd_ms=18, seed=4)
+    melody = humanize.jitter(melody, vel_amount=10, seed=14)
 
     bounds = result["section_bounds"]
     build_start, build_end = section_span(bounds, "build")

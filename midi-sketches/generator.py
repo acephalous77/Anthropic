@@ -18,8 +18,10 @@ import random
 
 import palette
 import humanize as hz
+import rhythm
+from analysis import shannon_entropy, melodic_intervals, zipf_slope
 from arrange import render_piece, section_span, STEP_TICKS
-from midiwriter import cc_ramp, CC_EXPRESSION, CC_REVERB_SEND, CC_BRIGHTNESS
+from midiwriter import cc_ramp, CC_EXPRESSION, CC_REVERB_SEND, CC_BRIGHTNESS, PPQ
 from rhythm import grid_from_hits
 from theory import NOTE_NAMES, note_in_range, scale_degree
 from drums import KICK, SNARE, CLAP, RIM, CHH, OHH, HTOM, MTOM2, LTOM2, SHAKER, choke_hihats
@@ -56,19 +58,25 @@ def _clip_to_bar(notes, steps):
     return out
 
 
-def _default_produce(rng, bass_timing=6, bass_vel=6, mel_timing=10, mel_vel=8,
+def _default_produce(rng, bpm, bass_sd_ms=8, bass_vel=6, mel_sd_ms=12, mel_vel=8,
                       swell_section=None, release_section=None, swing_pct=None, reverb_swell=False):
-    """A reusable production hook: bass/melody jitter, optional practitioner-style
-    hat swing (Roger Linn/MPC percentage, not a raw tick guess), and an
-    expression (CC11) swell/release keyed to named sections, optionally paired
-    with a CC91 reverb-send swell for a gated-reverb-style build. Seeds are
-    drawn once here (not inside the closure) so the result is still reproducible."""
+    """A reusable production hook: bass/melody timing gets 1/f-correlated deviation
+    (see humanize.py -- not independent jitter, per the groove-perception research)
+    plus independent velocity variation; optional practitioner-style hat swing
+    (Roger Linn/MPC percentage); an expression (CC11) swell/release keyed to named
+    sections, optionally paired with a CC91 reverb-send swell for a gated-reverb-style
+    build. Seeds are drawn once here (not inside the closure) so the result is still
+    reproducible."""
     bass_seed = rng.randint(0, 1_000_000)
     mel_seed = rng.randint(0, 1_000_000)
+    bass_vel_seed = rng.randint(0, 1_000_000)
+    mel_vel_seed = rng.randint(0, 1_000_000)
 
     def produce(result, bass_channel, melody_channel):
-        bass = hz.jitter(result["bass"], timing_ticks=bass_timing, vel_amount=bass_vel, seed=bass_seed)
-        melody = hz.jitter(result["melody"], timing_ticks=mel_timing, vel_amount=mel_vel, seed=mel_seed)
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=bass_sd_ms, seed=bass_seed)
+        bass = hz.jitter(bass, vel_amount=bass_vel, seed=bass_vel_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=mel_sd_ms, seed=mel_seed)
+        melody = hz.jitter(melody, vel_amount=mel_vel, seed=mel_vel_seed)
         drums = result["drums"]
         if swing_pct:
             hats = [e for e in drums if e.note == CHH]
@@ -105,7 +113,12 @@ def halftime_drone(rng, root=None, scale=None, bpm=None):
     bass_root = note_in_range(root_name, 28, 55)
     mel_root = note_in_range(root_name, 60, 76)
 
-    base_kick = palette.kick_pattern(rng, 16, pulse_choices=(3, 3, 4))
+    # occasionally reach for a documented named rhythm (Toussaint 2005) instead of
+    # a random Euclidean roll -- tresillo/bossa both tile cleanly onto a 16-step bar
+    if rng.random() < 0.3:
+        base_kick = rhythm.euclidean_preset_tiled(rng.choice(["tresillo", "bossa"]), 16, rotate=rng.choice([0, 0, 8]))
+    else:
+        base_kick = palette.kick_pattern(rng, 16, pulse_choices=(3, 3, 4))
     fill_kick = palette.kick_pattern(rng, 16, pulse_choices=(4, 4, 5), downbeat_bias=0.8)
     hats = palette.hats_pattern(rng, 16, density="med")
     busy_hats = palette.hats_pattern(rng, 16, density="busy")
@@ -180,7 +193,7 @@ def halftime_drone(rng, root=None, scale=None, bpm=None):
         outro_bars.append({"drums": sparse_bar(), "bass": [(0, 16, bass_root, 78)], "melody": melody})
     sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": outro_bars})
 
-    produce = _default_produce(rng, bass_timing=6, bass_vel=6, mel_timing=10, mel_vel=8,
+    produce = _default_produce(rng, bpm, bass_sd_ms=8, bass_vel=6, mel_sd_ms=13, mel_vel=8,
                                 swell_section="build", release_section="outro")
 
     return {"title": _title(rng, "drone"), "bpm": bpm, "root": root_name, "scale": scale,
@@ -266,8 +279,8 @@ def broken_meter(rng, root=None, scale=None, bpm=None):
     sections += flatten([pair(i, "build") for i in range(rng.randint(2, 3))], "build")
     sections += flatten([sparse_pair() for _ in range(2)], "outro")
 
-    produce = _default_produce(rng, bass_timing=14, bass_vel=8, mel_timing=16, mel_vel=10,
-                                swell_section="build", swing_pct=rng.choice([54, 58, 62]), reverb_swell=True)
+    produce = _default_produce(rng, bpm, bass_sd_ms=15, bass_vel=8, mel_sd_ms=18, mel_vel=10,
+                                swell_section="build", swing_pct=hz.bur_swing_pct(bpm), reverb_swell=True)
 
     return {"title": _title(rng, "orchard"), "bpm": bpm, "root": root_name, "scale": scale,
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
@@ -440,9 +453,14 @@ def gated_drama(rng, root=None, scale=None, bpm=None):
         for _ in range(2)
     ]})
 
+    bass_seed, bass_vel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+    mel_seed, mel_vel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
     def produce(result, bass_channel, melody_channel):
-        bass = hz.jitter(result["bass"], timing_ticks=8, vel_amount=6, seed=rng.randint(0, 1_000_000))
-        melody = hz.jitter(result["melody"], timing_ticks=10, vel_amount=8, seed=rng.randint(0, 1_000_000))
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=9, seed=bass_seed)
+        bass = hz.jitter(bass, vel_amount=6, seed=bass_vel_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=12, seed=mel_seed)
+        melody = hz.jitter(melody, vel_amount=8, seed=mel_vel_seed)
         bounds = result["section_bounds"]
         bs, be = section_span(bounds, "bridge")
         cc = {"drums": [], "bass": [], "melody": []}
@@ -486,6 +504,11 @@ def _qc(result):
                 problems.append(f"{label} note {e.note} out of MIDI range")
             if e.dur <= 0:
                 problems.append(f"{label} non-positive duration")
+        pitches = [e.note for e in sorted(events, key=lambda e: e.start)]
+        if len(pitches) >= 4:
+            ent = shannon_entropy(melodic_intervals(pitches))
+            if ent < 0.15:
+                problems.append(f"{label} interval entropy too low ({ent:.2f} bits) -- likely near-static")
     return problems
 
 
@@ -511,10 +534,12 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, max_att
 
         problems = _qc(result)
         if not problems:
+            all_pitches = [e.note for e in result["bass"]] + [e.note for e in result["melody"]]
+            slope, r2 = zipf_slope(all_pitches)
             return {
                 "seed": seed, "attempt": attempt, "archetype": archetype_name,
                 "title": spec["title"], "bpm": spec["bpm"], "root": spec["root"], "scale": spec["scale"],
-                "result": result, "cc": cc,
+                "result": result, "cc": cc, "zipf_slope": slope, "zipf_r2": r2,
             }
 
     raise RuntimeError(f"seed {seed} ({archetype_name}) failed QC after {max_attempts} attempts: {problems}")

@@ -98,19 +98,55 @@ random-walk design, groove/microtiming practice, and polyrhythm perception --
   documented cognitive limit for grouping and reads as texture, not groove.
 - `kick_pattern` / `hats_pattern` — Euclidean-rhythm kicks (via `rhythm.py`'s
   Bjorklund implementation) and hi-hat density/glitch patterns, rather than
-  fully free-form step-by-step coin flips.
+  fully free-form step-by-step coin flips. `rhythm.EUCLIDEAN_PRESETS` also
+  ships named real-world patterns documented by Toussaint (2005) --
+  tresillo, cinquillo, bossa nova, Ghanaian fume-fume, a Steve Reich
+  signature rhythm -- and `halftime_drone` occasionally reaches for one
+  instead of a fully random Euclidean roll.
+- `scale_walk`'s stepwise/leap direction is no longer symmetric: small
+  intervals are weighted toward *descending* motion and leaps toward
+  *ascending* motion, per Vos & Troost's (1989) corpus finding that melodic
+  steps tend to fall while leaps tend to rise.
 
-**Groove/production details**, in `humanize.py` and `drums.py`:
+**Groove/production details**, in `humanize.py` and `drums.py` -- revised
+after a second research pass specifically on the experimental groove/timing
+literature, which overturned an assumption from the first pass:
 
-- `humanize.swing()` takes a practitioner swing *percentage* (Roger Linn/MPC
-  convention: 50 = straight, 54-62 = "loose but not swung," 66 = perfect
-  triplet swing) and converts it to ticks via `(pct/100 - 0.5) * eighth_ticks`,
-  rather than a guessed tick offset.
+- **Timing deviation is now 1/f (pink) noise, not independent jitter.**
+  Controlled studies (Frühauf/Kopiez/Platz 2013; Davies/Madison/Silva/Gouyon
+  2013) found random microtiming does not reliably increase perceived groove
+  and often reduces it, while listeners prefer long-range-*correlated*
+  timing fluctuations (Hennig, Fleischmann & Geisel 2011, PLOS ONE
+  6(10):e26457). `humanize.pink_jitter()` generates a Voss-McCartney 1/f
+  series and applies it in time order (so nearby notes drift together,
+  rather than scattering independently) with a target standard deviation of
+  ~8-18ms depending on part/archetype. Velocity variation is left as
+  independent jitter -- the groove finding was specifically about timing.
+- **Swing is now a tempo-dependent curve, not a fixed percentage.**
+  `humanize.bur_swing_pct(bpm)` derives a beat-upbeat ratio from tempo
+  (Friberg & Sundström 2002: ~2.5-3.5:1 at slow tempos, trending toward 1:1
+  by ~250-300 BPM -- the exact interpolation is this project's inference,
+  not a reported curve) and converts it to the practitioner swing-percentage
+  convention.
 - `drums.choke_hihats()` shortens a still-ringing open hi-hat when a later
   closed/pedal hit lands inside it — GM channel 10 doesn't voice-steal this
   automatically, so every rendered drum track gets choked before writing.
 - Ghost-note velocities sit in the ~15-35 range (audible but clearly
   subordinate), not just "quieter."
+
+**QC additions** (`analysis.py`): alongside the existing empty-part/
+single-pitch/out-of-range checks, `generator._qc` now also rejects a part
+whose melodic-interval Shannon entropy is near zero (dominated by one
+interval, likely near-static) and every generated clip reports a **Zipf
+rank-frequency slope** for its combined pitch content — aesthetically-typical
+music tends to cluster near slope -1 on a log-log rank-frequency plot
+(Manaris et al. 2005); this is printed informationally, not used to block
+generation (the "necessary but not sufficient" caveat from that paper is
+taken seriously here). A from-scratch Temperley-style probabilistic melody
+model and an IDyOM-trained information-content gate are on the list for a
+future pass but not implemented — both need either a training corpus or
+more validation than fits in one iteration; treat the current interval
+weighting/entropy checks as a lighter-weight approximation of that direction.
 
 `generator.generate()` also runs a lightweight **QC pass** after rendering
 (`generator._qc`) — checking for an empty part, a melody/bassline stuck on

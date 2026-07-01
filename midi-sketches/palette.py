@@ -39,9 +39,19 @@ def min_safe_chunk_steps(bpm, min_ioi_ms=100, steps_per_beat=4):
     return max(1, math.ceil(min_ioi_ms / step_ms))
 
 
+
+# Vos & Troost (1989, Music Perception 6(4)): analyzing melodic-interval corpora,
+# small intervals (steps) tended to descend and large intervals (leaps) tended to
+# ascend. Encoded here as a directional bias rather than the coin-flip symmetry
+# an unweighted choice would give.
+_STEP_SIZES, _STEP_WEIGHTS = [-2, -1, 1, 2], [0.15, 0.40, 0.30, 0.15]
+_LEAP_DIRECTIONS, _LEAP_DIR_WEIGHTS = [-1, 1], [0.35, 0.65]
+
+
 def scale_walk(rng, start_degree, n, leap_prob=0.15, root_pull=0.2, max_leap=5):
-    """A random walk over scale degrees: mostly stepwise motion, occasional leaps
-    that are then resolved by a step in the opposite direction (Narmour-style
+    """A random walk over scale degrees: mostly stepwise motion (biased to
+    descend, per Vos & Troost), occasional leaps (biased to ascend) that are
+    then resolved by a step in the opposite direction (Narmour-style
     post-leap reversal), with an occasional pull back to the starting degree
     (usually the root) for coherence. Roughly 65-80% of moves end up stepwise."""
     degrees = [start_degree]
@@ -56,12 +66,12 @@ def scale_walk(rng, start_degree, n, leap_prob=0.15, root_pull=0.2, max_leap=5):
             degrees.append(start_degree)
             continue
         if rng.random() < leap_prob:
-            direction = rng.choice([-1, 1])
+            direction = rng.choices(_LEAP_DIRECTIONS, weights=_LEAP_DIR_WEIGHTS)[0]
             size = max_leap if max_leap < 3 else rng.randint(3, max_leap)
             degrees.append(degrees[-1] + direction * size)
             force_reversal = -direction
         else:
-            degrees.append(degrees[-1] + rng.choice([-2, -1, -1, 1, 1, 2]))
+            degrees.append(degrees[-1] + rng.choices(_STEP_SIZES, weights=_STEP_WEIGHTS)[0])
     return degrees
 
 
