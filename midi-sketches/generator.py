@@ -24,7 +24,8 @@ from arrange import render_piece, section_span, STEP_TICKS
 from midiwriter import cc_ramp, CC_EXPRESSION, CC_REVERB_SEND, CC_BRIGHTNESS, PPQ
 from rhythm import grid_from_hits
 from theory import NOTE_NAMES, note_in_range, scale_degree
-from drums import KICK, SNARE, CLAP, RIM, CHH, OHH, HTOM, MTOM2, LTOM2, SHAKER, choke_hihats
+from drums import (KICK, SNARE, CLAP, RIM, CHH, OHH, HTOM, MTOM2, LTOM2, SHAKER, choke_hihats,
+                    CONGA_HI, CONGA_LO, CABASA, CLAVES, COWBELL, TAMBOURINE)
 
 DRUM_BANK = {
     "kick": (KICK, 106, 122),
@@ -38,6 +39,24 @@ DRUM_BANK = {
     "htom": (HTOM, 86, 106),
     "mtom": (MTOM2, 86, 106),
     "ltom": (LTOM2, 86, 106),
+}
+
+# A tribal/hand-percussion bank for the fever_ray archetype: claves, congas,
+# cabasa, cowbell instead of a rock kit, plus low velocities everywhere for
+# the sparse, meticulous, "tone over rhythm" feel of the first album.
+FEVER_DRUMS = {
+    "kick": (KICK, 98, 116),
+    "clap": (CLAP, 82, 104),
+    "rim": (RIM, 58, 82),
+    "claves": (CLAVES, 64, 88),
+    "shaker": (SHAKER, 38, 58),
+    "cabasa": (CABASA, 42, 62),
+    "conga_hi": (CONGA_HI, 76, 98),
+    "conga_lo": (CONGA_LO, 80, 102),
+    "ltom": (LTOM2, 82, 104),
+    "mtom": (MTOM2, 82, 104),
+    "cowbell": (COWBELL, 66, 90),
+    "tamb": (TAMBOURINE, 50, 70),
 }
 
 _ADJ = ["hollow", "glass", "static", "pale", "slow", "far", "dry", "cold", "low", "loose", "bent"]
@@ -474,11 +493,140 @@ def gated_drama(rng, root=None, scale=None, bpm=None):
             "sections": sections, "drum_notes": DRUM_BANK, "produce": produce}
 
 
+def fever_ray(rng, root=None, scale=None, bpm=None):
+    """Fever Ray, first-album flavour (~'If I Had a Heart', 'When I Grow Up',
+    'Keep the Streets Empty for Me'): a very slow half-time feel, a deep pulsing
+    pedal-tone sub-bass that barely moves, sparse-but-detailed *tribal/hand*
+    percussion (claves, congas, shaker, clap -- no rock backbeat, no cymbals),
+    a dark minor/phrygian mode, and a low, narrow, chant-like melody that
+    repeats obsessively rather than developing. 'Tone over rhythm', heavy
+    reverb, lots of space.
+    """
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or rng.choice(["aeolian", "aeolian", "phrygian"])  # mostly natural minor, sometimes darker
+    bpm = bpm or rng.randint(68, 92)
+    bass_root = note_in_range(root_name, 26, 40)     # deep sub
+    mel_root = note_in_range(root_name, 55, 67)      # low, pitched-down chant register
+    low7 = scale_degree(bass_root, scale, 6, octave_shift=-1)  # the b7 a step below the root
+
+    # A short chant cell -- very narrow, root-heavy -- reused obsessively.
+    chant = palette.motif_scored(rng, rng.choice([2, 3]), mel_root, scale,
+                                  attempts=6, leap_prob=0.05, root_pull=0.35, max_leap=2)
+    chant_pickup = rng.choice([0, 2, 4])
+
+    def drone_pulse(octave=0, sparse=False):
+        """The throbbing pedal-tone bass: root on a tresillo-ish pulse, dipping to
+        the b7 below now and then; almost no harmonic movement."""
+        positions = [0, 6, 10] if sparse else [0, 3, 6, 8, 11, 14]
+        notes = []
+        for i, p in enumerate(positions):
+            end = positions[i + 1] if i + 1 < len(positions) else 16
+            pitch = (low7 if (p in (11, 10) and rng.random() < 0.3) else bass_root) + 12 * octave
+            notes.append((p, end - p, pitch, rng.randint(86, 102)))
+        return notes
+
+    def perc_bar(kind="verse"):
+        if kind == "intro":
+            return {"shaker": grid_from_hits(16, set(range(16)), accents={0, 8}),
+                    "claves": grid_from_hits(16, {0}),
+                    "kick": grid_from_hits(16, {0})}
+        if kind == "build":
+            return {
+                "kick": grid_from_hits(16, {0, 6, 10}, accents={0}),
+                "clap": grid_from_hits(16, {8}, accents={8}),
+                "claves": grid_from_hits(16, {3, 6, 11, 14}),
+                "conga_lo": grid_from_hits(16, {4, 12}, accents={4}),
+                "conga_hi": grid_from_hits(16, {7, 13, 15}),
+                "ltom": grid_from_hits(16, {2, 10}),
+                "cowbell": grid_from_hits(16, {0, 8}),
+                "shaker": grid_from_hits(16, set(range(16)), accents={0, 4, 8, 12}),
+                "cabasa": grid_from_hits(16, {2, 6, 10, 14}),
+                "tamb": grid_from_hits(16, {12}),
+            }
+        if kind == "outro":
+            return {"shaker": grid_from_hits(16, set(range(0, 16, 2)), accents={0}),
+                    "claves": grid_from_hits(16, {0, 10})}
+        # verse: sparse tribal half-time -- deep kick, offbeat claves, hand drums, steady shaker
+        return {
+            "kick": grid_from_hits(16, {0, 10}, accents={0}),
+            "clap": grid_from_hits(16, {8}, accents={8}),
+            "claves": grid_from_hits(16, {3, 6, 11, 14}),
+            "conga_lo": grid_from_hits(16, {4, 12}),
+            "conga_hi": grid_from_hits(16, {7, 15}),
+            "shaker": grid_from_hits(16, set(range(16)), accents={0, 8}),
+            "cabasa": grid_from_hits(16, {2, 6, 10, 14}),
+        }
+
+    sections = []
+    sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": perc_bar("intro"), "bass": drone_pulse(sparse=True), "melody": []}
+        for _ in range(rng.randint(2, 4))
+    ]})
+
+    n_verse = rng.choice([8, 10])
+    verse_bars = []
+    for i in range(n_verse):
+        # obsessive repetition: the SAME chant nearly every bar, resting only occasionally to breathe
+        rest = (i % 4 == 3)
+        if rest:
+            melody = []
+        else:
+            melody = _clip_to_bar(palette.render_motif(rng, chant, mel_root, scale, chant_pickup,
+                                                        register=(53, 69), vel_base=74, vel_spread=6), 16)
+            melody = palette.resolve_consonance(drone_pulse(), melody, bass_root, scale, {0, 8})
+        verse_bars.append({"drums": perc_bar("verse"), "bass": drone_pulse(), "melody": melody})
+    sections.append({"name": "verse", "time_sig": (4, 4), "bpm": bpm, "bars": verse_bars})
+
+    n_build = rng.randint(4, 6)
+    build_bars = []
+    for i in range(n_build):
+        # bass lifts an octave halfway; chant doubles up (answers on the off-bars it rested before)
+        octave = 1 if i >= n_build // 2 else 0
+        melody = _clip_to_bar(palette.render_motif(rng, chant, mel_root, scale, chant_pickup,
+                                                    register=(55, 72), vel_base=84 + i, vel_spread=6), 16)
+        melody = palette.resolve_consonance(drone_pulse(octave), melody, bass_root, scale, {0, 8})
+        build_bars.append({"drums": perc_bar("build"), "bass": drone_pulse(octave), "melody": melody})
+    sections.append({"name": "build", "time_sig": (4, 4), "bpm": bpm, "bars": build_bars})
+
+    outro_bars = []
+    for i in range(rng.randint(2, 3)):
+        melody = [(0, 16, mel_root, 66)] if i == 0 else []
+        outro_bars.append({"drums": perc_bar("outro"), "bass": drone_pulse(sparse=True), "melody": melody})
+    sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": outro_bars})
+
+    # Heavy reverb send throughout (the cavernous first-album space), swelling into the build;
+    # expression lifts through the build and releases in the outro. No swing -- it's straight and hypnotic.
+    reverb_base = rng.randint(55, 75)
+    bass_seed, bass_vel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+    mel_seed, mel_vel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
+    def produce(result, bass_channel, melody_channel):
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=10, seed=bass_seed)
+        bass = hz.jitter(bass, vel_amount=6, seed=bass_vel_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=14, seed=mel_seed)
+        melody = hz.jitter(melody, vel_amount=6, seed=mel_vel_seed)
+        bounds = result["section_bounds"]
+        bs, be = section_span(bounds, "build")
+        os_, oe = section_span(bounds, "outro")
+        cc = {"drums": [], "bass": [], "melody": []}
+        for ch in (bass_channel, melody_channel):
+            key = "bass" if ch == bass_channel else "melody"
+            cc[key] += cc_ramp(ch, CC_REVERB_SEND, 0, bs, reverb_base, reverb_base)
+            cc[key] += cc_ramp(ch, CC_REVERB_SEND, bs, be, reverb_base, 120)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, bs, be, 92, 126)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, os_, oe, 126, 80)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, "feverray"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": FEVER_DRUMS, "produce": produce}
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
     "four_floor_glitch": four_floor_glitch,
     "gated_drama": gated_drama,
+    "fever_ray": fever_ray,
 }
 
 
