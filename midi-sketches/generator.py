@@ -1263,111 +1263,127 @@ def kate_bush(rng, root=None, scale=None, bpm=None):
     bpm = bpm or rng.randint(104, 140)
     v_bass = note_in_range(root_name, 33, 45)
     v_mel = note_in_range(root_name, 60, 71)
-    lift = 3                                    # semitones up to the relative major
+
+    # --- variety: each seed draws a different progression set, chorus lift, and bridge metre ---
+    verse_prog = rng.choice([[0, 5, 6, 0], [0, 6, 5, 6], [0, 3, 5, 4], [0, 2, 5, 6]])    # aeolian, moving
+    chorus_prog = rng.choice([[5, 3, 0, 4], [0, 4, 5, 3], [0, 3, 5, 4], [5, 0, 3, 4]])   # in the lift key
+    lift_kind, lift, c_scale = rng.choice([
+        ("relative major", 3, "major"),     # aeolian -> its relative major (the classic bright lift)
+        ("up a fifth", 7, "major"),          # a bigger, brighter lift
+        ("dorian brighten", 0, "dorian"),    # same root, raised 6th -- a subtler warm lift
+    ])
     c_bass, c_mel = v_bass + lift, v_mel + lift
     bridge_scale = rng.choice(["phrygian", "dorian"])
+    bridge_ts = rng.choice([(6, 4), (3, 2), (7, 8), (5, 4)])     # the Kate Bush metre surprise
 
     # fixed hooks (generated once, so they RETURN identically -- that's the earworm)
     ostinato = palette.ostinato_cell(rng, v_mel, "aeolian", (58, 72))          # verse instrumental hook
-    hook_q, hook_a = palette.hook_phrase(rng, c_mel, "major", (62, 79))         # chorus vocal hook
+    hook_q, hook_a = palette.hook_phrase(rng, c_mel, c_scale, (62, 79))         # chorus vocal hook
 
     def chord_root(section_bass, sc, deg):
         return scale_degree(section_bass, sc, deg)
 
-    def bass_bar(rootp, feel):
-        frozen = [(0, 16, rootp - 12, 66)]      # the "frozen chord" sustain underneath
+    def steps_of(ts):
+        num, den = ts
+        return num * 16 // den
+
+    def bass_bar(rootp, feel, steps=16):
+        frozen = [(0, steps, rootp - 12, 66)]   # the "frozen chord" sustain underneath
         fifth = rootp + 7
         if feel == "chorus":
-            pulse = [(p, 2, rootp if (p // 4) % 2 == 0 else fifth, 96) for p in range(0, 16, 4)]
+            pulse = [(p, 2, rootp if (p // 4) % 2 == 0 else fifth, 96) for p in range(0, steps, 4)]
         elif feel == "bridge":
-            pulse = [(0, 8, rootp, 88), (8, 8, fifth, 84)]
+            half = steps // 2
+            pulse = [(0, half, rootp, 88), (half, steps - half, fifth, 84)]
         else:                                   # verse: Del Palmer pulse locked to the kick
-            pulse = [(0, 4, rootp, 92), (8, 4, rootp, 88), (12, 3, fifth, 86)]
+            pulse = [p for p in [(0, 4, rootp, 92), (8, 4, rootp, 88), (12, 3, fifth, 86)] if p[0] < steps]
         return frozen + pulse
 
-    def linn(feel, fill=False):
+    def linn(feel, fill=False, intensity=0):
         if feel == "chorus":
-            out = {"kick": grid_from_hits(16, {0, 4, 8, 12}, accents={0, 8}),
-                   "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
-                   "clap": grid_from_hits(16, {4, 12}),
-                   "htom": grid_from_hits(16, {14, 15} if fill else {6, 14}),
-                   "mtom": grid_from_hits(16, {2, 10})}
-            return out
-        if feel == "bridge":
-            return {"kick": grid_from_hits(16, {0}, accents={0}),
-                    "rim": grid_from_hits(16, {4, 8, 12}),
-                    "ltom": grid_from_hits(16, {0, 12})}
+            return {"kick": grid_from_hits(16, {0, 4, 8, 12}, accents={0, 8}),
+                    "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
+                    "clap": grid_from_hits(16, {4, 12}),
+                    "htom": grid_from_hits(16, {14, 15} if fill else {6, 14}),
+                    "mtom": grid_from_hits(16, {2, 10})}
         if feel == "intro":
             return {"rim": grid_from_hits(16, {0, 8}), "ltom": grid_from_hits(16, {12})}
-        # verse: LinnDrum tom gallop, kick 1&3, snare 2&4, a delayed hit before beat 3, NO hats
-        return {"kick": grid_from_hits(16, {0, 8}, accents={0}),
-                "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
-                "htom": grid_from_hits(16, {2, 6, 10, 14}),
-                "rim": grid_from_hits(16, {7})}
+        # verse: LinnDrum gallop; intensity 1 thickens the 2nd half (dynamic verse), NO hats
+        out = {"kick": grid_from_hits(16, {0, 6, 8} if intensity else {0, 8}, accents={0}),
+               "snare": grid_from_hits(16, {4, 12}, accents={4, 12}),
+               "htom": grid_from_hits(16, {2, 6, 10, 14}),
+               "rim": grid_from_hits(16, {7})}
+        if intensity:
+            out["mtom"] = grid_from_hits(16, {3, 11})
+        if fill:
+            out["ltom"] = grid_from_hits(16, {13, 14, 15})
+        return out
 
-    def render_cell(cell, at_root, sc, register, vel_base, harm=None):
-        notes = []
-        for o, dr, pitch, v in cell:
-            # cell pitches are relative to their generation root; move to `at_root`
-            notes.append((o, dr, pitch, v))
-        if harm is not None:
-            notes = notes + palette.harmonize(notes, harm, 0.7)
-        return notes
+    def bridge_drums(steps, i):
+        return {"kick": grid_from_hits(steps, {0}, accents={0}),
+                "rim": grid_from_hits(steps, set(range(0, steps, 4))),
+                "ltom": grid_from_hits(steps, {steps - 4} if i % 2 else {0})}
 
     sections = []
-
-    # intro: frozen drone + the ostinato hook creeping in, sparse
     sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
         {"drums": linn("intro"), "bass": bass_bar(chord_root(v_bass, "aeolian", 0), "verse"),
-         "melody": ostinato if i >= 2 else []} for i in range(4)]})
-
-    verse_prog = [0, 5, 6, 0]      # i - VI - VII - i  (aeolian, moving)
+         "melody": ostinato if i >= 2 else []} for i in range(rng.randint(3, 4))]})
 
     def verse(nbars):
         bars = []
         for i in range(nbars):
-            deg = verse_prog[i % len(verse_prog)]
-            rp = chord_root(v_bass, "aeolian", deg)
-            bars.append({"drums": linn("verse", fill=(i % 4 == 3)),
-                         "bass": bass_bar(rp, "verse"),
-                         "melody": ostinato})   # the Fairlight riff hook, repeating
+            rp = chord_root(v_bass, "aeolian", verse_prog[i % len(verse_prog)])
+            intensity = 1 if i >= nbars // 2 else 0                          # dynamic: 2nd half lifts
+            mel = ostinato + (palette.harmonize(ostinato, 12, 0.6) if intensity else [])  # octave-thicken
+            bars.append({"drums": linn("verse", fill=(i % 4 == 3), intensity=intensity),
+                         "bass": bass_bar(rp, "verse"), "melody": mel})
         return bars
 
-    chorus_prog = [5, 3, 0, 4]     # vi - IV - I - V  in the relative major (bright, pop, moving)
+    def prechorus(nbars):
+        # a rising crescendo into the chorus: iv -> v tension, tom roll, rising held melody
+        bars = []
+        for i in range(nbars):
+            rp = chord_root(v_bass, "aeolian", [3, 4][i % 2])
+            drums = {"kick": grid_from_hits(16, {0, 8}),
+                     "snare": grid_from_hits(16, set(range(0, 16, 2)) if i == nbars - 1 else {4, 12}),
+                     "htom": grid_from_hits(16, {8, 10, 12, 14})}
+            mel = [(0, 8, scale_degree(v_mel, "aeolian", 4), 92 + i * 4),
+                   (8, 8, scale_degree(v_mel, "aeolian", 6), 98 + i * 4)]
+            bars.append({"drums": drums, "bass": bass_bar(rp, "verse"), "melody": mel})
+        return bars
 
     def chorus(nbars):
         bars = []
         for i in range(nbars):
-            deg = chorus_prog[i % len(chorus_prog)]
-            rp = chord_root(c_bass, "major", deg)
-            # the vocal hook: antecedent then consequent, octave-doubled, RETURNS every chorus
+            rp = chord_root(c_bass, c_scale, chorus_prog[i % len(chorus_prog)])
             phrase = hook_q if i % 2 == 0 else hook_a
-            mel = phrase + palette.harmonize(phrase, -12, 0.65)   # add the low 'shadow' voice
+            mel = phrase + palette.harmonize(phrase, -12, 0.65)   # the low 'shadow' voice
             bars.append({"drums": linn("chorus", fill=(i % 4 == 3)),
                          "bass": bass_bar(rp, "chorus"), "melody": mel})
         return bars
 
-    bridge_prog = [0, 1, 6, 0]     # dark modal movement
-
     def bridge(nbars):
+        steps = steps_of(bridge_ts)
+        prog = [0, 1, 6, 0] if bridge_scale == "phrygian" else [0, 5, 3, 0]
         bars = []
         for i in range(nbars):
-            deg = bridge_prog[i % len(bridge_prog)]
-            rp = chord_root(v_bass, bridge_scale, deg)
+            rp = chord_root(v_bass, bridge_scale, prog[i % len(prog)])
             mel = _clip_to_bar(palette.render_motif(
                 rng, palette.motif(rng, 3, leap_prob=0.4, root_pull=0.1, max_leap=8),
-                v_mel, bridge_scale, 2, register=(58, 74), vel_base=88), 16) if i % 2 == 1 else []
-            bars.append({"drums": linn("bridge"), "bass": bass_bar(rp, "bridge"), "melody": mel})
-        return bars
+                v_mel, bridge_scale, 2, register=(58, 74), vel_base=88), steps) if i % 2 else []
+            bars.append({"drums": bridge_drums(steps, i), "bass": bass_bar(rp, "bridge", steps), "melody": mel})
+        return {"name": "bridge", "time_sig": bridge_ts, "bpm": bpm, "bars": bars}
 
-    sections.append({"name": "verse", "time_sig": (4, 4), "bpm": bpm, "bars": verse(8)})
+    sections.append({"name": "verse", "time_sig": (4, 4), "bpm": bpm, "bars": verse(rng.choice([6, 8, 8]))})
+    sections.append({"name": "prechorus", "time_sig": (4, 4), "bpm": bpm, "bars": prechorus(2)})
     sections.append({"name": "chorus", "time_sig": (4, 4), "bpm": bpm, "bars": chorus(8)})
     sections.append({"name": "verse2", "time_sig": (4, 4), "bpm": bpm, "bars": verse(4)})
-    sections.append({"name": "bridge", "time_sig": (4, 4), "bpm": bpm, "bars": bridge(6)})
-    sections.append({"name": "chorus2", "time_sig": (4, 4), "bpm": bpm, "bars": chorus(8)})
+    sections.append(bridge(rng.choice([4, 6])))
+    sections.append({"name": "prechorus2", "time_sig": (4, 4), "bpm": bpm, "bars": prechorus(2)})
+    sections.append({"name": "chorus2", "time_sig": (4, 4), "bpm": bpm, "bars": chorus(rng.choice([8, 8, 10]))})
     sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
         {"drums": linn("intro"), "bass": bass_bar(chord_root(v_bass, "aeolian", 0), "verse"),
-         "melody": ostinato if i == 0 else []} for i in range(4)]})
+         "melody": ostinato if i == 0 else []} for i in range(rng.randint(3, 4))]})
 
     bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
 
@@ -1378,12 +1394,16 @@ def kate_bush(rng, root=None, scale=None, bpm=None):
         melody = hz.jitter(melody, vel_amount=7, seed=mel_seed + 1)
         bounds = result["section_bounds"]
         cc = {"drums": [], "bass": [], "melody": []}
-        # lift the chorus (brighter + louder), settle the verses -- reinforces the contrast
-        for name, hi in (("chorus", 122), ("chorus2", 127)):
-            s, e = section_span(bounds, name)
+        # lift the chorus (brighter + louder) and swell the pre-choruses -- reinforces the contrast
+        for name, lo, hi in (("prechorus", 90, 118), ("chorus", 95, 122),
+                             ("prechorus2", 92, 120), ("chorus2", 98, 127)):
+            try:
+                s, e = section_span(bounds, name)
+            except KeyError:
+                continue
             for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
-                cc[key] += cc_ramp(ch, CC_BRIGHTNESS, s, e, 95, hi)
-                cc[key] += cc_ramp(ch, CC_EXPRESSION, s, e, 108, 124)
+                cc[key] += cc_ramp(ch, CC_BRIGHTNESS, s, e, lo, hi)
+                cc[key] += cc_ramp(ch, CC_EXPRESSION, s, e, 106, 124)
         return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
 
     return {"title": _title(rng, "kate"), "bpm": bpm, "root": root_name, "scale": "aeolian",
