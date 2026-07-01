@@ -89,6 +89,9 @@ def main():
     ap.add_argument("--bpm", type=int, default=None, help="omit to pick from the archetype's tasteful range")
     ap.add_argument("--phases", type=int, default=None,
                      help="growth stages for archetypes that support it (fever_ray: 2 or 3); longer clip")
+    ap.add_argument("--mode", default=None,
+                     help="sub-mode for archetypes that support it (radiohead_kida: "
+                          "odd5 / pedal10 / idioteque / pyramid)")
     ap.add_argument("--count", type=int, default=1, help="generate this many clips (each gets its own seed)")
     ap.add_argument("--out", default=OUTPUT_DIR, help="output root directory")
     args = ap.parse_args()
@@ -98,7 +101,7 @@ def main():
             args.seed + i if args.seed is not None else None)
         try:
             spec = generator.generate(seed=seed, archetype=args.archetype, root=args.root,
-                                       scale=args.scale, bpm=args.bpm, phases=args.phases)
+                                       scale=args.scale, bpm=args.bpm, phases=args.phases, mode=args.mode)
         except RuntimeError as exc:
             print(f"generation failed: {exc}", file=sys.stderr)
             sys.exit(1)

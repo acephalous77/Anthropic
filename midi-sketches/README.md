@@ -28,7 +28,7 @@ Each run writes `drums.mid` / `bass.mid` / `melody.mid` / `all.mid` to
 tempo, section count/length) since there's no audio backend here to preview
 with.
 
-Four **archetypes** carry the composed pieces' techniques as generators
+Six **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -41,6 +41,16 @@ choices (key, tempo, density, contour, section lengths) every time:
 - `gated_drama` — Kate Bush's tom-heavy, no-hats/no-cymbals gated-reverb
   groove plus Fever Ray's static drone-bass harmony. See "workable blends"
   below for why this one is deliberately narrower than the other three.
+- `fever_ray` — first-album Fever Ray: very slow half-time, deep pulsing
+  pedal-tone sub-bass, sparse tribal/hand percussion (claves/congas/cabasa,
+  no rock kit or cymbals), a low obsessive chant. `--phases 2|3` grows it
+  through multiple varied stages (~1–2+ min); see the fever_ray note below.
+- `radiohead_kida` — Kid A / Amnesiac Radiohead, in four `--mode`s: `odd5`
+  (5/4, Morning Bell / 15 Step), `pedal10` (10/4 pedal-tone, Everything In
+  Its Right Place), `idioteque` (4/4 with a 5-against-4 grouping-dissonance
+  melody + stuttering glitch drums), `pyramid` (Pyramid Song's 3+3+4+3+3, a
+  16/8 bar). Modal/pedal-point, and a *terminally-climactic form* — it ends
+  on new climactic material rather than recapitulating the opening.
 
 ### Workable blends, not an average
 
@@ -146,10 +156,19 @@ music tends to cluster near slope -1 on a log-log rank-frequency plot
 (Manaris et al. 2005); this is printed informationally, not used to block
 generation (the "necessary but not sufficient" caveat from that paper is
 taken seriously here). A from-scratch Temperley-style probabilistic melody
-model and an IDyOM-trained information-content gate are on the list for a
-future pass but not implemented — both need either a training corpus or
-more validation than fits in one iteration; treat the current interval
+model and an IDyOM-trained information-content gate are the two research items
+still **intentionally deferred** — both need either a training corpus or more
+validation than fits in one iteration; treat the current interval
 weighting/entropy checks as a lighter-weight approximation of that direction.
+
+**Other research items now applied** (via the two artist-specific archetypes):
+odd/mixed meters as first-class options — 5/4, 10/4, and Pyramid Song's
+3+3+4+3+3 (`radiohead_kida`) alongside the existing 4/4↔7/8 (`broken_meter`);
+grouping dissonance (an n-step melodic cell against a differently-sized bar);
+Osborn's terminally-climactic form (ending on new material, not a recap); and
+the full set of motif-development operators (`motif_invert`/`_retrograde`/
+`_augment`/`_fragment`), which develop the opening idea through the middle of
+a `radiohead_kida` clip rather than only being available as an unused toolkit.
 
 `generator.generate()` also runs a lightweight **QC pass** after rendering
 (`generator._qc`) — checking for an empty part, a melody/bassline stuck on

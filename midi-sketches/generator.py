@@ -638,12 +638,206 @@ def fever_ray(rng, root=None, scale=None, bpm=None, phases=2):
             "sections": sections, "drum_notes": FEVER_DRUMS, "produce": produce}
 
 
+RADIOHEAD_DRUMS = {
+    "kick": (KICK, 104, 120),
+    "snare": (SNARE, 96, 116),
+    "clap": (CLAP, 90, 112),
+    "rim": (RIM, 64, 88),
+    "chh": (CHH, 54, 84),
+    "ohh": (OHH, 66, 90),
+    "shaker": (SHAKER, 44, 64),
+    "ltom": (LTOM2, 84, 104),
+    "mtom": (MTOM2, 84, 104),
+}
+
+
+def radiohead_kida(rng, root=None, scale=None, bpm=None, mode=None):
+    """Kid A / Amnesiac-era Radiohead. Picks one of four modes, each a documented
+    device from that period:
+      - 'odd5'      -> 5/4 (Morning Bell / 15 Step): programmed beat + handclaps,
+                       economical bass stressing chord tones to ground the metre.
+      - 'pedal10'   -> 10/4 (Everything In Its Right Place): a one-note pedal
+                       ostinato under a repeating modal phrase, sparse glitch beat.
+      - 'idioteque' -> 4/4 with a 5-step melodic cell over the 16-step bar
+                       (5-against-4 grouping dissonance), stuttering glitch drums.
+      - 'pyramid'   -> Pyramid Song's 3+3+4+3+3 grouping (a 16/8 bar), swung and
+                       sparse, bass articulating the five uneven groups.
+    Modal (phrygian/dorian/aeolian), pedal-point, non-functional harmony
+    throughout, and a *terminally climactic form* (Osborn): rather than
+    recapitulating the opening, the arrangement ends on NEW climactic material
+    (motif_b), reached by developing the opening motif (retrograde / fragment /
+    augmentation) through the middle.
+    """
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or rng.choice(["phrygian", "dorian", "aeolian"])
+    mode = mode or rng.choice(["odd5", "pedal10", "idioteque", "pyramid"])
+    bass_root = note_in_range(root_name, 33, 48)
+    mel_root = note_in_range(root_name, 60, 74)
+
+    motif_a = palette.motif_scored(rng, rng.choice([3, 4]), mel_root, scale,
+                                    attempts=6, leap_prob=0.18, root_pull=0.2)
+    motif_b = palette.motif_scored(rng, rng.choice([3, 4, 5]), mel_root, scale,
+                                    attempts=6, leap_prob=0.32, root_pull=0.08)  # new, wider climax idea
+
+    def glitch(steps, drop_prob):
+        return palette.hats_pattern(rng, steps, density="busy", glitch_prob=drop_prob)
+
+    force_cell = None
+    if mode == "odd5":
+        ts, steps = (5, 4), 20
+        bpm = bpm or rng.randint(88, 104)
+
+        def d_main(peak=False):
+            out = {"kick": grid_from_hits(steps, {0, 6, 12} | ({16} if peak else set()), accents={0}),
+                   "clap": grid_from_hits(steps, {8, 16}, accents={8}),
+                   "chh": glitch(steps, 0.3 if peak else 0.7),
+                   "shaker": grid_from_hits(steps, set(range(0, steps, 2)))}
+            if peak:
+                out["ltom"] = grid_from_hits(steps, {4, 14})
+            return out
+
+        def b_main(peak=False):
+            oc = 12 if peak else 0
+            return [(0, 6, bass_root + oc, 100), (6, 2, scale_degree(bass_root, scale, 2) + oc, 88),
+                    (8, 4, scale_degree(bass_root, scale, 4) + oc, 94), (12, 8, bass_root + oc, 96)]
+    elif mode == "pedal10":
+        ts, steps = (10, 4), 40
+        bpm = bpm or rng.randint(118, 128)
+
+        def d_main(peak=False):
+            out = {"kick": grid_from_hits(steps, {0, 20} | ({10, 30} if peak else set()), accents={0}),
+                   "rim": grid_from_hits(steps, {10, 30}),
+                   "chh": glitch(steps, 0.6),
+                   "shaker": grid_from_hits(steps, set(range(0, steps, 2)), accents={0, 20})}
+            if peak:
+                out["clap"] = grid_from_hits(steps, {8, 28}, accents={8})
+            return out
+
+        def b_main(peak=False):
+            oc = 12 if peak else 0
+            # pedal ostinato: dominated by the root, with an occasional b7 dip and an
+            # octave drop for subtle movement (EIIRP-ish, and enough to clear the
+            # "near-static" QC guard without losing the pedal character)
+            b7 = scale_degree(bass_root, scale, 6, octave_shift=-1)
+            notes = []
+            for j, p in enumerate(range(0, steps, 4)):
+                pitch = b7 if j == 5 else (bass_root - 12 if j == 8 else bass_root)
+                notes.append((p, 4, pitch + oc, rng.randint(88, 100)))
+            return notes
+    elif mode == "idioteque":
+        ts, steps = (4, 4), 16
+        bpm = bpm or rng.randint(128, 140)
+        force_cell = 5  # 5-against-4 grouping dissonance
+
+        def d_main(peak=False):
+            out = {"kick": grid_from_hits(steps, {0, 7, 10} | ({4} if peak else set()), accents={0}),
+                   "clap": grid_from_hits(steps, {4, 12}, accents={4, 12}),
+                   "chh": glitch(steps, 0.9),
+                   "ohh": grid_from_hits(steps, {15})}
+            if peak:
+                out["ltom"] = grid_from_hits(steps, {2, 6, 11})
+            return out
+
+        def b_main(peak=False):
+            oc = 12 if peak else 0
+            return [(0, 4, bass_root + oc, 100), (6, 2, scale_degree(bass_root, scale, 4) + oc, 90),
+                    (8, 4, bass_root + oc, 98), (12, 4, scale_degree(bass_root, scale, 2) + oc, 92)]
+    else:  # pyramid: 3+3+4+3+3 eighth-note groups = a 16/8 bar of 32 sixteenth-steps
+        ts, steps = (16, 8), 32
+        bpm = bpm or rng.randint(76, 88)
+        groups = [0, 6, 12, 20, 26]  # sixteenth-step starts of the five uneven groups
+
+        def d_main(peak=False):
+            out = {"kick": grid_from_hits(steps, {0, 20}, accents={0}),
+                   "rim": grid_from_hits(steps, set(groups)),
+                   "shaker": grid_from_hits(steps, set(range(0, steps, 2)))}
+            if peak:
+                out["clap"] = grid_from_hits(steps, {12, 26}, accents={12})
+                out["ltom"] = grid_from_hits(steps, {6, 26})
+            return out
+
+        def b_main(peak=False):
+            oc = 12 if peak else 0
+            return [(g, (groups[i + 1] if i + 1 < len(groups) else steps) - g,
+                     (bass_root if i % 2 == 0 else scale_degree(bass_root, scale, 4)) + oc, rng.randint(88, 100))
+                    for i, g in enumerate(groups)]
+
+    def d_intro():
+        return {"chh": glitch(steps, 0.5), "shaker": grid_from_hits(steps, set(range(0, steps, 2)), accents={0})}
+
+    def bar(drums, peak=False, melody=None):
+        b = b_main(peak=peak)
+        mel = palette.resolve_consonance(b, melody or [], bass_root, scale, {0})
+        return {"time_sig": ts, "bpm": bpm, "drums": drums, "bass": b, "melody": mel}
+
+    sections = []
+    sections.append({"name": "intro", "time_sig": ts, "bpm": bpm, "bars": [
+        {"drums": d_intro(), "bass": b_main(), "melody": []} for _ in range(rng.randint(2, 3))]})
+
+    # main: the opening motif as a displaced modal cell (grouping dissonance)
+    n_main = rng.choice([4, 6])
+    main_mel = palette.phase_melody(rng, mel_root, scale, n_main, bar_steps=steps, cell_len=force_cell, bpm=bpm)
+    sections.append({"name": "main", "time_sig": ts, "bpm": bpm,
+                     "bars": [bar(d_main(), melody=main_mel[i]) for i in range(n_main)]})
+
+    # develop: the SAME motif put through a development operator (retrograde / fragment / augmentation),
+    # displaced and transposed bar to bar -- motivic growth, not a new tune
+    n_dev = rng.choice([4, 6])
+    dev = rng.choice([palette.motif_retrograde(motif_a),
+                      palette.motif_fragment(motif_a, length=max(2, len(motif_a) - 1)),
+                      palette.motif_augment(motif_a)])
+    dev_bars = []
+    for i in range(n_dev):
+        mel = _clip_to_bar(palette.render_motif(rng, dev, mel_root, scale, (i * 2) % 6,
+                                                degree_shift=i % 3, register=(58, 76), vel_base=82), steps)
+        dev_bars.append(bar(d_main(), melody=mel))
+    sections.append({"name": "develop", "time_sig": ts, "bpm": bpm, "bars": dev_bars})
+
+    # terminal climax: NEW material (motif_b), highest/loudest, full kit + octave bass -- the piece ends here
+    n_clx = rng.choice([4, 6])
+    clx_bars = []
+    for i in range(n_clx):
+        mel = _clip_to_bar(palette.render_motif(rng, motif_b, mel_root, scale, 0, degree_shift=2,
+                                                register=(64, 80), vel_base=96 + min(i, 6)), steps)
+        clx_bars.append(bar(d_main(peak=True), peak=True, melody=mel))
+    sections.append({"name": "climax", "time_sig": ts, "bpm": bpm, "bars": clx_bars})
+
+    # short tail: thin out on the new idea, no return to the opening
+    sections.append({"name": "tail", "time_sig": ts, "bpm": bpm, "bars": [
+        bar(d_intro(), melody=[(0, min(steps, 16), mel_root + 2, 74)]),
+        {"time_sig": ts, "bpm": bpm, "drums": {"shaker": grid_from_hits(steps, {0})}, "bass": b_main(), "melody": []}]})
+
+    bass_seed, bass_vel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+    mel_seed, mel_vel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
+    def produce(result, bass_channel, melody_channel):
+        # programmed beats stay tight (quantized); only bass/melody get 1/f timing.
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=8, seed=bass_seed)
+        bass = hz.jitter(bass, vel_amount=6, seed=bass_vel_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=10, seed=mel_seed)
+        melody = hz.jitter(melody, vel_amount=8, seed=mel_vel_seed)
+        bounds = result["section_bounds"]
+        ms, _ = section_span(bounds, "main")
+        cs, ce = section_span(bounds, "climax")
+        cc = {"drums": [], "bass": [], "melody": []}
+        for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
+            # IDM-style filter opening across the whole build into the climax, then expression peak
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, ms, ce, 45, 118)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, ms, cs, 92, 116)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, cs, ce, 116, 127)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, f"kida_{mode}"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": RADIOHEAD_DRUMS, "produce": produce}
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
     "four_floor_glitch": four_floor_glitch,
     "gated_drama": gated_drama,
     "fever_ray": fever_ray,
+    "radiohead_kida": radiohead_kida,
 }
 
 
@@ -677,10 +871,12 @@ def _qc(result):
     return problems
 
 
-def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=None, max_attempts=5):
+def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=None, mode=None,
+             max_attempts=5):
     """Build, render, and QC one clip. Returns a dict with the rendered result
     plus the metadata (seed/archetype/title/bpm/root/scale) needed to label it.
-    `phases` is passed through only to archetypes that accept it (e.g. fever_ray)."""
+    `phases`/`mode` are passed through only to archetypes that accept them
+    (fever_ray takes `phases`; radiohead_kida takes `mode`)."""
     if seed is None:
         seed = random.SystemRandom().randrange(2 ** 31)
 
@@ -689,9 +885,12 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=
         raise KeyError(f"unknown archetype {archetype_name!r}, choices: {list(ARCHETYPES)}")
 
     fn = ARCHETYPES[archetype_name]
+    params = inspect.signature(fn).parameters
     extra = {}
-    if phases is not None and "phases" in inspect.signature(fn).parameters:
+    if phases is not None and "phases" in params:
         extra["phases"] = phases
+    if mode is not None and "mode" in params:
+        extra["mode"] = mode
 
     problems = []
     for attempt in range(max_attempts):

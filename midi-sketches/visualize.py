@@ -52,12 +52,13 @@ def main():
     ap.add_argument("--generated", action="store_true", help="visualize a generator.py clip instead of pieces/*.py")
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--archetype", default=None, choices=list(generator.ARCHETYPES))
+    ap.add_argument("--mode", default=None, help="sub-mode for archetypes that support it (radiohead_kida)")
     ap.add_argument("--section", default=None, help="limit to one section name (default: all)")
     ap.add_argument("--voice", default=None, choices=["drums", "bass", "melody"])
     args = ap.parse_args()
 
     if args.generated:
-        spec = generator.generate(seed=args.seed, archetype=args.archetype)
+        spec = generator.generate(seed=args.seed, archetype=args.archetype, mode=args.mode)
         print(f"{spec['title']}  [seed {spec['seed']}, {spec['archetype']}]  "
               f"{spec['root']} {spec['scale']}  {spec['bpm']} BPM")
         result = spec["result"]
