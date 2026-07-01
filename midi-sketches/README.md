@@ -28,7 +28,7 @@ Each run writes `drums.mid` / `bass.mid` / `melody.mid` / `all.mid` to
 tempo, section count/length) since there's no audio backend here to preview
 with.
 
-Seven **archetypes** carry the composed pieces' techniques as generators
+Eight **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -60,6 +60,14 @@ choices (key, tempo, density, contour, section lengths) every time:
   triads/7ths — a breath between stanzas). Slow, dark, low-dynamic, heavy
   reverb; swells gently rather than climaxing. `--phases 2–4` sets the length
   (each phase = one bed + one interlude; phases 3–4 run ~2:30–3:30).
+- `spoken_word` and `meditative` share the deep/modal palette. `meditative`
+  is the sparsest: a continuous deep sub-drone, sustained open-fifth pad
+  chords struck every couple of bars (ringing through the gaps), occasional
+  high singing-bowl shimmer tones, an optional barely-there heartbeat, very
+  slow tempo (52–64), and slow modal drift with no build — it just breathes.
+  `--phases 1–5` sets the length (phases 4–5 run ~4 min); some float sections
+  are pure drone, others carry the faint pulse. Renders on a warm pad by
+  default (override with `--melody-program` / `--bass-program`).
 
 ### Workable blends, not an average
 

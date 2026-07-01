@@ -967,6 +967,111 @@ def spoken_word(rng, root=None, scale=None, bpm=None, phases=2):
             "melody_program": 89, "bass_program": 38}  # 89 = Pad 2 (warm), for a sustained bed voice
 
 
+MED_DRUMS = {
+    "heart": (KICK, 34, 46),     # a soft, felt-not-heard heartbeat pulse
+    "shaker": (SHAKER, 24, 36),  # a whisper of texture, optional
+}
+
+
+def meditative(rng, root=None, scale=None, bpm=None, phases=3):
+    """Sparse, deep, meditative drone tracks -- stillness over groove. A
+    continuous deep sub-drone; sustained open-fifth pad chords struck only every
+    couple of bars so they ring through the gaps; occasional high singing-bowl
+    shimmer tones; an optional barely-there heartbeat pulse; very slow tempo;
+    and slow modal harmonic drift (mostly tonic, with long-held shifts to a
+    modal colour chord) with no build or climax -- it just breathes.
+
+    Voiced in open fifths (little/no third) so it reads modeless and serene.
+    `phases` (1-5) sets how many long 'float' sections it drifts through, and
+    thus length; each float can run a couple of minutes at these tempos.
+    """
+    phases = max(1, min(5, phases))
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or rng.choice(["aeolian", "dorian", "phrygian", "major"])
+    bpm = bpm or rng.randint(52, 64)
+    bass_root = note_in_range(root_name, 24, 38)     # deep sub
+    drone_root = note_in_range(root_name, 45, 57)    # low-mid pad
+
+    def open_chord(deg, register, vel, add_third=False):
+        # an open fifth (+ octave), optionally a third; whole voicing octave-shifted into register
+        r = scale_degree(drone_root, scale, deg)
+        tones = [r, scale_degree(drone_root, scale, deg + 4), r + 12]
+        if add_third:
+            tones.insert(1, scale_degree(drone_root, scale, deg + 2))
+        lo, hi = register
+        while tones[0] < lo:
+            tones = [t + 12 for t in tones]
+        while tones[0] > hi:
+            tones = [t - 12 for t in tones]
+        return [(0, 16, t, max(1, min(127, vel + rng.randint(-3, 3)))) for t in tones]
+
+    def deep_drone(deg, vel=66):
+        p = scale_degree(bass_root, scale, deg)
+        while p < 22:
+            p += 12
+        while p > 41:
+            p -= 12
+        return [(0, 16, p, vel)]
+
+    def bowl(deg, vel=52):
+        p = palette.clamp_register(scale_degree(drone_root, scale, deg) + 12, 66, 84)
+        start = rng.choice([2, 4, 6, 8])
+        dur = min(rng.choice([8, 10, 12]), 16 - start)   # keep the shimmer inside the bar
+        return [(start, dur, p, max(1, vel + rng.randint(-4, 4)))]
+
+    # slow harmonic drift: grounded on tonic, opening on a colour tone, occasional shifts.
+    # prog[0] != 0 guarantees the bass takes >=2 pitches (clears the near-static QC guard).
+    prog = [5, 0, 0, 3, 0, 6]
+
+    sections = []
+    sections.append({"name": "settle", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {}, "bass": deep_drone(0, 62),
+         "melody": open_chord(0, (48, 60), 50) if i % 2 == 0 else []} for i in range(rng.randint(4, 6))]})
+
+    for p in range(phases):
+        deg = prog[p % len(prog)]
+        n = rng.choice([8, 10, 12])
+        heartbeat = (p % 2 == 0)      # even floats carry the soft pulse, odd ones are pure drone
+                                       # (keeps phase 0 grounded so a 1-phase track still has a beat)
+        add_third = (p >= 2)
+        bars = []
+        for i in range(n):
+            mel = open_chord(deg, (48, 62), 54 + p * 2, add_third=add_third) if i % 2 == 0 else []
+            if i % 4 == 1:
+                mel = mel + bowl(rng.choice([0, 2, 4, 6]), 50 + p)
+            drums = {}
+            if heartbeat and i % 2 == 0:
+                drums["heart"] = grid_from_hits(16, {0})
+            if p >= 3 and i % 2 == 1:
+                drums["shaker"] = grid_from_hits(16, {0, 8})   # faintest whisper in later floats
+            bars.append({"drums": drums, "bass": deep_drone(deg), "melody": mel})
+        sections.append({"name": f"float{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": bars})
+
+    sections.append({"name": "dissolve", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {}, "bass": deep_drone(0, max(40, 60 - i * 8)),
+         "melody": open_chord(0, (48, 60), 48) if i == 0 else []} for i in range(rng.randint(4, 6))]})
+
+    reverb_base = rng.randint(100, 120)   # very cavernous
+    bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
+    def produce(result, bass_channel, melody_channel):
+        # minimal timing drift -- stillness; a single slow expression breath (arch) over the whole piece
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=6, seed=bass_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=8, seed=mel_seed)
+        total = result["total_ticks"]
+        mid = total // 2
+        cc = {"drums": [], "bass": [], "melody": []}
+        for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
+            cc[key] += cc_ramp(ch, CC_REVERB_SEND, 0, total, reverb_base, reverb_base)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, 0, mid, 78, 108)
+            cc[key] += cc_ramp(ch, CC_EXPRESSION, mid, total, 108, 74)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    return {"title": _title(rng, "meditation"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": MED_DRUMS, "produce": produce,
+            "melody_program": 89, "bass_program": 89}   # warm pad for both -- a deep drone voice
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
@@ -975,6 +1080,7 @@ ARCHETYPES = {
     "fever_ray": fever_ray,
     "radiohead_kida": radiohead_kida,
     "spoken_word": spoken_word,
+    "meditative": meditative,
 }
 
 
