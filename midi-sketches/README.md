@@ -49,7 +49,7 @@ python generate.py --archetype groove --mode motorik --drum-map mc707 --loops 4,
   sequencing on the 707's clip grid — alongside the full arrangement. It
   auto-picks the meatiest 4/4 section, or use `--loop-section <name>`.
 
-Ten **archetypes** carry the composed pieces' techniques as generators
+Eleven **archetypes** carry the composed pieces' techniques as generators
 instead of fixed data — same rhythmic/harmonic vocabulary, different specific
 choices (key, tempo, density, contour, section lengths) every time:
 
@@ -105,10 +105,22 @@ choices (key, tempo, density, contour, section lengths) every time:
   phrygian/dorian bridge. The bass/chords **move** through a progression
   (i-VI-VII verse → vi-IV-I-V chorus) rather than sitting on a pedal.
 
+- `fever_radiohead` — Fever Ray × Radiohead: a dark, hypnotic groove from
+  SHORT repeating patterns, for long deep grooves and mixes. Every bar is
+  filled — a deep pulsing pedal-tone sub-drone, dense tribal/electronic
+  percussion (coprime cross-rhythm congas + busy glitch hats + shaker), and a
+  continuous 16th-note **arpeggio** run over a 5-tone spread chord so it
+  re-phases against the 4/4 bar (the Weird Fishes / Idioteque grouping-
+  dissonance drift). A 4-bar core loop repeats through an extended-mix
+  arrangement (intro → grooves that accrue layers → breakdown → peak → outro);
+  `--phases 2–5` sets length. Loop-friendly — pair with `--loops 4,8`.
+
 **The hook engine** (`palette.hook_phrase` / `ostinato_cell` / `harmonize`)
 builds singable phrases — a syncopated rhythm, a contour that arcs to an
-accented peak, chord-tone landings, and question→answer repetition — and is
-the reusable core for making any archetype catchier.
+accented peak, chord-tone landings, and question→answer repetition. **The arp
+engine** (`palette.arpeggiate` / `spread_chord`) runs a chord as an arpeggio,
+and re-phases against the bar when given a coprime number of tones. Both are
+reusable across archetypes.
 
 ### Workable blends, not an average
 

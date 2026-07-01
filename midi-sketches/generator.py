@@ -1411,6 +1411,129 @@ def kate_bush(rng, root=None, scale=None, bpm=None):
             "melody_program": 48, "bass_program": 33}   # strings (Fairlight-ish) + finger bass
 
 
+def fever_radiohead(rng, root=None, scale=None, bpm=None, phases=3):
+    """Fever Ray meets Radiohead -- a dark, hypnotic groove built from SHORT
+    repeating patterns for long deep grooves and mixes. Every bar is filled:
+      - Fever Ray: a deep pulsing pedal-tone sub-drone; dense tribal/electronic
+        percussion (syncopated kick, coprime cross-rhythm congas, busy glitch
+        hats, steady shaker) -- no empty measures.
+      - Radiohead: a continuous 16th-note ARPEGGIO as the centerpiece, run over
+        a 5-tone spread chord so it re-phases against the 4/4 bar (the Weird
+        Fishes / Idioteque grouping-dissonance drift); pedal-point modal harmony
+        that mostly holds the tonic and shifts to a modal colour chord.
+    A short 4-bar core loop repeats through an extended-mix arrangement (intro ->
+    grooves that accrue layers -> breakdown -> peak -> outro). `--phases 2-5`
+    sets length; steady 4/4 for beatmatching.
+    """
+    phases = max(2, min(5, phases))
+    root_name = root or rng.choice(NOTE_NAMES)
+    scale = scale or rng.choice(["phrygian", "aeolian", "dorian"])
+    bpm = bpm or rng.randint(108, 126)
+    bass_root = note_in_range(root_name, 28, 40)
+    arp_root = note_in_range(root_name, 52, 64)
+    b7 = scale_degree(bass_root, scale, 6, octave_shift=-1)
+
+    # a short modal core progression (mostly tonic pedal, one colour shift) -- 4 bars
+    core = rng.choice([[0, 0, 6, 0], [0, 0, 1, 0], [0, 6, 0, 5], [0, 0, 5, 6]])
+    arp_dir = rng.choice(["up", "updown", "up", "down"])
+    arp_degs = rng.choice([(0, 2, 4, 6, 7), (0, 2, 4, 5, 7), (0, 3, 4, 6, 7)])  # 5 tones -> coprime drift
+
+    def drone(deg, octave=0, sparse=False):
+        rp = scale_degree(bass_root, scale, deg) + 12 * octave
+        if sparse:
+            return [(0, 16, rp, 84)]
+        # Fever Ray throb: pedal root on a tresillo-ish pulse, occasional b7 dip
+        pos = [0, 3, 6, 8, 11, 14]
+        out = []
+        for i, p in enumerate(pos):
+            end = pos[i + 1] if i + 1 < len(pos) else 16
+            pitch = (b7 + 12 * octave) if (p == 11 and rng.random() < 0.25) else rp
+            out.append((p, end - p, pitch, rng.randint(86, 100)))
+        return out
+
+    def arp_bar(deg, register, vel_base):
+        chord = palette.spread_chord(scale_degree(arp_root, scale, deg), scale, arp_degs)
+        return palette.arpeggiate(rng, chord, 16, rate=1, direction=arp_dir,
+                                  register=register, vel_base=vel_base, gate=0.9)
+
+    def drums(density):
+        # every bar filled; layers accrue with density (0..3)
+        out = {
+            "kick": grid_from_hits(16, {0, 6, 10} if density >= 1 else {0, 8}, accents={0}),
+            "shaker": grid_from_hits(16, set(range(16)), accents={0, 8}),
+            "chh": palette.hats_pattern(rng, 16, density="busy", glitch_prob=0.7 if density >= 2 else 0.3),
+        }
+        if density >= 1:
+            cross = palette.euclid_cross(rng, 16, [("conga_lo", 3, 0), ("conga_hi", 5, 2)])
+            out.update(cross)
+        if density >= 2:
+            out["clap"] = grid_from_hits(16, {8}, accents={8})
+            out["cabasa"] = grid_from_hits(16, {2, 6, 10, 14})
+        if density >= 3:
+            out["ohh"] = grid_from_hits(16, {15})
+            out["rim"] = grid_from_hits(16, {3, 11})
+        return out
+
+    def core_bars(n, density, octave=0, arp_reg=(55, 74), arp_vel=82):
+        bars = []
+        for i in range(n):
+            deg = core[i % len(core)]
+            bars.append({"drums": drums(density), "bass": drone(deg, octave),
+                         "melody": arp_bar(deg, arp_reg, arp_vel)})
+        return bars
+
+    sections = []
+    # intro: drone + arp only, no drums -- the loop revealed
+    sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {"shaker": grid_from_hits(16, set(range(0, 16, 2)))} if i >= 2 else {},
+         "bass": drone(0, sparse=True), "melody": arp_bar(core[i % len(core)], (55, 72), 74)}
+        for i in range(4)]})
+
+    for p in range(phases):
+        sections.append({"name": f"groove{p + 1}", "time_sig": (4, 4), "bpm": bpm,
+                         "bars": core_bars(8, min(p + 1, 3), arp_vel=80 + p * 3)})
+
+    # breakdown: drums drop, arp + drone keep the loop (mix breakdown)
+    sections.append({"name": "breakdown", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {"shaker": grid_from_hits(16, set(range(0, 16, 2)))},
+         "bass": drone(core[i % len(core)], sparse=True), "melody": arp_bar(core[i % len(core)], (55, 74), 78)}
+        for i in range(4)]})
+
+    # peak: fullest, arp up an octave region + bass octave lift halfway
+    sections.append({"name": "peak", "time_sig": (4, 4), "bpm": bpm,
+                     "bars": core_bars(8, 3, octave=0, arp_reg=(58, 79), arp_vel=94)})
+
+    sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
+        {"drums": {"shaker": grid_from_hits(16, {0, 8})} if i < 2 else {},
+         "bass": drone(0, sparse=True), "melody": arp_bar(0, (55, 72), 70) if i < 3 else []}
+        for i in range(4)]})
+
+    bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)
+
+    def produce(result, bass_channel, melody_channel):
+        # arp/bass stay tight (electronic); a DJ filter opens over the intro, dips in the breakdown
+        bass = hz.pink_jitter(result["bass"], bpm, PPQ, sd_ms=6, seed=bass_seed)
+        melody = hz.pink_jitter(result["melody"], bpm, PPQ, sd_ms=5, seed=mel_seed)
+        bounds = result["section_bounds"]
+        g1s, _ = section_span(bounds, "groove1")
+        bs, be = section_span(bounds, "breakdown")
+        ps, pe = section_span(bounds, "peak")
+        cc = {"drums": [], "bass": [], "melody": []}
+        for ch, key in ((bass_channel, "bass"), (melody_channel, "melody")):
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, 0, g1s, 38, 100)
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, bs, be, 100, 52)
+            cc[key] += cc_ramp(ch, CC_BRIGHTNESS, be, pe, 52, 120)
+            cc[key] += cc_ramp(ch, CC_REVERB_SEND, 0, result["total_ticks"], 55, 55)
+        return {"drums": result["drums"], "bass": bass, "melody": melody, "cc": cc}
+
+    # tribal hand-percussion (Fever Ray) + glitch hi-hats (Radiohead) in one kit
+    feverhead_drums = {**FEVER_DRUMS, "chh": (CHH, 54, 84), "ohh": (OHH, 66, 90)}
+
+    return {"title": _title(rng, "feverhead"), "bpm": bpm, "root": root_name, "scale": scale,
+            "sections": sections, "drum_notes": feverhead_drums, "produce": produce,
+            "melody_program": 5, "bass_program": 38}   # E.Piano-ish arp + synth bass
+
+
 ARCHETYPES = {
     "halftime_drone": halftime_drone,
     "broken_meter": broken_meter,
@@ -1422,6 +1545,7 @@ ARCHETYPES = {
     "meditative": meditative,
     "groove": groove,
     "kate_bush": kate_bush,
+    "fever_radiohead": fever_radiohead,
 }
 
 

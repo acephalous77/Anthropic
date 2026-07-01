@@ -287,6 +287,36 @@ def ostinato_cell(rng, root, scale, register, vel_base=88):
     return cell
 
 
+def spread_chord(root, scale, degrees=(0, 2, 4, 6, 7)):
+    """A chord voiced upward as scale tones (default root/3rd/5th/7th/octave) --
+    the material an arpeggiator runs through."""
+    return [scale_degree(root, scale, d) for d in degrees]
+
+
+def arpeggiate(rng, chord, steps, rate=1, direction="up", register=None,
+               vel_base=84, vel_spread=6, gate=0.9, accent_every=4):
+    """Run `chord` as an arpeggio filling `steps`, one note every `rate` steps.
+    direction: up / down / updown / random. `gate` (<1) shortens each note for a
+    plucky feel. CLEVER USE: give the chord a coprime number of tones (e.g. 5)
+    and rate=1 over a 16-step bar and the pattern re-phases against the beat --
+    the hypnotic Weird Fishes / Idioteque arp drift (grouping dissonance)."""
+    order = list(chord)
+    if direction == "down":
+        order = order[::-1]
+    elif direction == "updown" and len(order) > 2:
+        order = order + order[-2:0:-1]
+    dur = max(1, round(rate * gate))
+    notes, idx = [], 0
+    for k, pos in enumerate(range(0, steps, rate)):
+        pitch = rng.choice(chord) if direction == "random" else order[idx % len(order)]
+        idx += 1
+        if register:
+            pitch = clamp_register(pitch, *register)
+        vel = vel_base + (10 if k % accent_every == 0 else 0) + rng.randint(-vel_spread, vel_spread)
+        notes.append((pos, dur, pitch, max(1, min(127, vel))))
+    return notes
+
+
 def euclid_cross(rng, steps, specs):
     """Coprime Euclidean layers for polyrhythmic hand percussion: `specs` is a
     list of (voice, pulses, rotate). Returns {voice: grid_string}. Using
