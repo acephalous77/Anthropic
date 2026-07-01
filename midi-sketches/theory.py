@@ -36,3 +36,11 @@ def scale_degree(root, scale, degree, octave_shift=0):
 
 def chord(root, quality):
     return [root + iv for iv in CHORDS[quality]]
+
+
+def note_in_range(name, lo, hi):
+    """The MIDI number for `name` in whichever octave lands closest to the middle of [lo, hi]."""
+    target = (lo + hi) / 2
+    candidates = [note(name, o) for o in range(-1, 10)]
+    candidates = [n for n in candidates if lo <= n <= hi] or candidates
+    return min(candidates, key=lambda n: abs(n - target))

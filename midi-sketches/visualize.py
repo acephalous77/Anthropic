@@ -5,11 +5,13 @@ arrangement without an audio backend. Not part of the render pipeline.
 Usage:
     python visualize.py undertow
     python visualize.py undertow --section verse
+    python visualize.py --generated --seed 7 --archetype broken_meter
 """
 
 import argparse
 import importlib
 
+import generator
 from arrange import render_piece, STEP_TICKS
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -46,17 +48,28 @@ def dump_section(result, name, voice):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("piece")
+    ap.add_argument("piece", nargs="?", help="a name from pieces/ (ignored with --generated)")
+    ap.add_argument("--generated", action="store_true", help="visualize a generator.py clip instead of pieces/*.py")
+    ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument("--archetype", default=None, choices=list(generator.ARCHETYPES))
     ap.add_argument("--section", default=None, help="limit to one section name (default: all)")
     ap.add_argument("--voice", default=None, choices=["drums", "bass", "melody"])
     args = ap.parse_args()
 
-    mod = importlib.import_module(f"pieces.{args.piece}")
-    sections = mod.build()
-    result = render_piece(sections, mod.DRUM_NOTES)
-    if hasattr(mod, "produce"):
-        produced = mod.produce(result, bass_channel=0, melody_channel=1)
-        result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
+    if args.generated:
+        spec = generator.generate(seed=args.seed, archetype=args.archetype)
+        print(f"{spec['title']}  [seed {spec['seed']}, {spec['archetype']}]  "
+              f"{spec['root']} {spec['scale']}  {spec['bpm']} BPM")
+        result = spec["result"]
+    else:
+        if not args.piece:
+            ap.error("piece is required unless --generated is passed")
+        mod = importlib.import_module(f"pieces.{args.piece}")
+        sections = mod.build()
+        result = render_piece(sections, mod.DRUM_NOTES)
+        if hasattr(mod, "produce"):
+            produced = mod.produce(result, bass_channel=0, melody_channel=1)
+            result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
 
     names = [args.section] if args.section else [b["name"] for b in result["section_bounds"]]
     voices = [args.voice] if args.voice else ["drums", "bass", "melody"]
