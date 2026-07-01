@@ -841,14 +841,17 @@ def spoken_word(rng, root=None, scale=None, bpm=None, phases=2):
     b7 / b3) that change every few bars with lots of rests, so nothing competes
     with the words. Slow-to-mid, dark, low dynamics, heavy reverb.
 
-    `phases` (2 or 3) sets how many bed stages it moves through, and thus length
-    -- a longer bed to underscore a longer reading. It swells gently rather than
-    climaxing (a bed should support, not steal the scene).
+    `phases` (2-4) sets how many beat-bed + harmony-interlude pairs it moves
+    through, and thus length -- each phase is a beat-driven bed (for a stanza)
+    followed by a chordal harmony interlude where the drums drop out and the pad
+    holds sustained chords (a breath between stanzas). Longer for a longer poem.
+    It swells gently rather than climaxing (a bed should support, not steal the
+    scene).
     """
-    phases = max(1, min(3, phases))
+    phases = max(1, min(4, phases))
     root_name = root or rng.choice(NOTE_NAMES)
     scale = scale or rng.choice(["aeolian", "dorian", "phrygian"])
-    bpm = bpm or rng.randint(70, 96)
+    bpm = bpm or rng.randint(68, 92)
     bass_root = note_in_range(root_name, 28, 42)          # deep drone
     pad_root = note_in_range(root_name, 52, 64)           # low-mid pad, under the voice
     b7 = scale_degree(bass_root, scale, 6, octave_shift=-1)
@@ -877,13 +880,28 @@ def spoken_word(rng, root=None, scale=None, bpm=None, phases=2):
             out["claves"] = grid_from_hits(16, {3, 11})
         return out
 
-    # the pad's slow harmonic rotation -- pedal-ish scale tones, changing every couple of bars
+    # the bed pad's slow rotation -- single pedal-ish scale tones, changing every couple of bars
     pad_cycle = rng.choice([[0, 6, 4, 2], [0, 4, 0, 6], [0, 2, 6, 4]])
 
     def pad_note(idx, register, vel):
         deg = pad_cycle[idx % len(pad_cycle)]
         note = palette.clamp_register(scale_degree(pad_root, scale, deg), *register)
         return [(0, 16, note, vel + rng.randint(-4, 4))]
+
+    def scale_chord(deg, register, vel, seventh=False):
+        # a diatonic (in-key) chord voiced upward, whole chord octave-shifted so its
+        # root sits in `register` -- a sustained whole-bar pad chord
+        idxs = [deg, deg + 2, deg + 4] + ([deg + 6] if seventh else [])
+        tones = [scale_degree(pad_root, scale, i) for i in idxs]
+        lo, hi = register
+        while tones[0] < lo:
+            tones = [t + 12 for t in tones]
+        while tones[0] > hi:
+            tones = [t - 12 for t in tones]
+        return [(0, 16, t, max(1, min(127, vel + rng.randint(-4, 4)))) for t in tones]
+
+    # tonic-centric modal progression for the harmony interludes (i - VII - VI - i, etc.)
+    harmony_prog = rng.choice([[0, 6, 5, 0], [0, 5, 6, 0], [0, 3, 6, 0], [0, 6, 0, 5]])
 
     sections = []
     sections.append({"name": "intro", "time_sig": (4, 4), "bpm": bpm, "bars": [
@@ -892,34 +910,42 @@ def spoken_word(rng, root=None, scale=None, bpm=None, phases=2):
 
     pad_idx = 0
     for p in range(phases):
+        # --- beat bed (a stanza): groove + drone + occasional single pad tone ---
         density = min(p, 2)
         reg = (50, 63) if p == 0 else (52, 66)
         vel = 56 + p * 4
-        stage = []
+        bed = []
         for i in range(8):
-            # pad changes every 2 bars, rests every 3rd bar for space
             if i % 3 == 2:
-                melody = []
+                melody = []                    # rest bar -- space
             else:
                 if i % 2 == 0:
                     pad_idx += 1
                 melody = pad_note(pad_idx, reg, vel)
-            stage.append({"drums": groove(density), "bass": pedal_bass(), "melody": melody})
-        sections.append({"name": f"bed{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": stage})
+            bed.append({"drums": groove(density), "bass": pedal_bass(), "melody": melody})
+        sections.append({"name": f"bed{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": bed})
 
-    # gentle lift (not a climax): a touch more percussion + a higher airy pad tone, then settle
+        # --- harmony interlude (a breath): drums drop, pad holds sustained chords ---
+        interlude = []
+        for i in range(6):
+            chord_deg = harmony_prog[(i // 2) % len(harmony_prog)]     # change chord every 2 bars
+            chord = scale_chord(chord_deg, (52, 70), 60 + p * 3, seventh=(p >= 1))
+            drums = {"shaker": grid_from_hits(16, {0})} if i % 2 == 0 else {}   # faint pulse, mostly silent
+            interlude.append({"drums": drums, "bass": pedal_bass(), "melody": chord})
+        sections.append({"name": f"harmony{p + 1}", "time_sig": (4, 4), "bpm": bpm, "bars": interlude})
+
+    # gentle lift (not a climax): fuller chord + a higher airy tone, then settle
     lift = []
     for i in range(6):
-        pad_idx += 1
-        high = palette.clamp_register(scale_degree(pad_root, scale, pad_cycle[pad_idx % len(pad_cycle)] + 7),
-                                       67, 84)
-        melody = pad_note(pad_idx, (54, 67), 64) + ([(8, 8, high, 58)] if i % 2 == 1 else [])
+        chord = scale_chord(harmony_prog[i % len(harmony_prog)], (54, 72), 66, seventh=True)
+        high = palette.clamp_register(scale_degree(pad_root, scale, pad_cycle[i % len(pad_cycle)] + 7), 67, 84)
+        melody = chord + ([(8, 8, high, 56)] if i % 2 == 1 else [])
         lift.append({"drums": groove(2), "bass": pedal_bass(1 if i >= 3 else 0), "melody": melody})
     sections.append({"name": "lift", "time_sig": (4, 4), "bpm": bpm, "bars": lift})
 
     sections.append({"name": "outro", "time_sig": (4, 4), "bpm": bpm, "bars": [
         {"drums": {"shaker": grid_from_hits(16, {0, 8})}, "bass": pedal_bass(),
-         "melody": [(0, 16, pad_root, 54)] if i == 0 else []} for i in range(rng.randint(3, 4))]})
+         "melody": scale_chord(0, (52, 70), 52) if i == 0 else []} for i in range(rng.randint(3, 4))]})
 
     reverb_base = rng.randint(70, 90)   # cavernous bed
     bass_seed, mel_seed = rng.randint(0, 1_000_000), rng.randint(0, 1_000_000)

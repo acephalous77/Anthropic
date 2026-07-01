@@ -51,13 +51,15 @@ choices (key, tempo, density, contour, section lengths) every time:
   melody + stuttering glitch drums), `pyramid` (Pyramid Song's 3+3+4+3+3, a
   16/8 bar). Modal/pedal-point, and a *terminally-climactic form* — it ends
   on new climactic material rather than recapitulating the opening.
-- `spoken_word` — a purpose-built *bed* for spoken word, mixing all three: a
-  Fever Ray drone/tribal pulse, Radiohead pedal-point modal harmony (no chord
-  changes to pull focus), and — instead of a lead line — Kate Bush-style
-  slow sustained pad tones (on a warm pad patch, GM program 89) that change
-  every few bars with lots of rests, leaving the midrange open for a voice.
-  Slow, dark, low-dynamic, heavy reverb; swells gently rather than climaxing.
-  `--phases 2|3` sets the length (a longer bed for a longer reading).
+- `spoken_word` — a purpose-built *bed* for spoken word / poetry, mixing all
+  three: a Fever Ray drone/tribal pulse, Radiohead pedal-point modal harmony,
+  and — instead of a lead line — Kate Bush-style sustained pad on a warm pad
+  patch (GM 89), leaving the midrange open for a voice. It alternates **beat
+  beds** (groove + single sustained pad tone, for a stanza) with **harmony
+  interludes** (drums drop out, the pad holds sustained diatonic chords —
+  triads/7ths — a breath between stanzas). Slow, dark, low-dynamic, heavy
+  reverb; swells gently rather than climaxing. `--phases 2–4` sets the length
+  (each phase = one bed + one interlude; phases 3–4 run ~2:30–3:30).
 
 ### Workable blends, not an average
 
