@@ -8,7 +8,7 @@
 
 Three commitments shape everything below.
 
-**The goal is reader perception and prose quality, not beating detectors.** Detector accuracy claims are benchmark theater (the same tool scores 99% in one study and 32% in another depending on text type and model vintage). Detectors false-positive on non-native English speakers at rates up to 61% (Stanford/Liang, *Patterns* 2023) and on neurodivergent writers, with documented human costs — lawsuits at Yale and Michigan, an expulsion at Minnesota, Vanderbilt disabling Turnitin's detector entirely. Meanwhile Turnitin now detects *humanizer-tool artifacts* specifically: paraphrase-spinning adds a signature while degrading the prose. Chasing classifiers is an arms race you can't audit and don't need to win. Human readers and editors key on cadence and hollowness, and those you can actually fix.
+**The goal is reader perception and prose quality — detectors are the wrong target.** Detector accuracy claims are benchmark theater (the same tool scores 99% in one study and 32% in another depending on text type and model vintage). Detectors false-positive on non-native English speakers at rates up to 61% (Stanford/Liang, *Patterns* 2023) and on neurodivergent writers, with documented human costs — lawsuits at Yale and Michigan, an expulsion at Minnesota, Vanderbilt disabling Turnitin's detector entirely. Meanwhile Turnitin now detects *humanizer-tool artifacts* specifically: paraphrase-spinning adds a signature while degrading the prose. Chasing classifiers is an arms race you can't audit and don't need to win. Human readers and editors key on cadence and hollowness, and those you can actually fix.
 
 **Deletion isn't editing.** Stripping "delve" and "tapestry" from templated prose yields sanitized slop. The tell-words are symptoms of missing specificity, missing stakes, and missing voice. Every fix in this guide replaces, it doesn't just remove.
 
@@ -18,7 +18,7 @@ Three commitments shape everything below.
 
 ## 1. Why AI text sounds like AI
 
-LLMs guess the statistically likely next word, so output trends toward "the most statistically likely result that applies to the widest variety of cases." Genericity is the optimization target, not an accident. Every tell in this guide is a downstream symptom of sampling toward the mean.
+LLMs guess the statistically likely next word, so output trends toward "the most statistically likely result that applies to the widest variety of cases." Genericity is the optimization target, baked in by design. Every tell in this guide is a downstream symptom of sampling toward the mean.
 
 Two measurable signatures:
 
@@ -28,7 +28,7 @@ Two measurable signatures:
 Two structural causes worth knowing:
 
 - **RLHF bakes the diction in.** The word-overuse fingerprint ("delve," "underscore," "meticulous") traces to preference tuning, not training data (arXiv 2508.01930; the COLING 2025 "Why Does ChatGPT Delve So Much?" paper). No prompt fully suppresses it, which is why editing passes remain necessary no matter how good your prompt is.
-- **The grammar fingerprint persists across styles.** The PNAS 2025 Carnegie Mellon study found instruction-tuned models use present-participial clauses at 2–5× the human rate (GPT-4o: 5.3×), plus elevated nominalization, passive voice, and phrasal coordination — a noun-heavy register that survives *even when prompted to write informally*. Persona prompts shift the costume, not the skeleton.
+- **The grammar fingerprint persists across styles.** The PNAS 2025 Carnegie Mellon study found instruction-tuned models use present-participial clauses at 2–5× the human rate (GPT-4o: 5.3×), plus elevated nominalization, passive voice, and phrasal coordination — a noun-heavy register that survives *even when prompted to write informally*. Persona prompts swap the costume; the skeleton stays.
 
 And one moving target: the tells are **versioned by model generation**. "Delve" and "stands as a testament" now date a text to 2023–24 rather than flag current output. GPT-5.x-era prose is terser, blander, more hedged; its puffery is quieter ("meaningful," "notable") and hides in participial bolt-ons. Newer models trained away from uniform cadence now overcorrect into *engineered* burstiness — runs of dramatic fragments — which reads as equally synthetic. Word lists are snapshots; the durable tells are structural.
 
@@ -170,7 +170,7 @@ The most dangerous step is the innocuous one: **"just polish this."** The 2026 "
 
 **(c) Interview / dictation mode — best.** The AI asks questions (one per turn, open → focused → closed), you answer, it assembles a draft from *your actual words*; or you dictate a voice memo and constrain the AI to filler-removal. Spoken language is naturally bursty and idiomatic, so the voice survives; the AI's role shifts from generation to arrangement. An interview also "unlocks parts of your knowledge that wouldn't have made it into the article." Weakness: the assembly step still imposes LLM connective tissue — the voice pass stays mandatory.
 
-**(a) Human draft → constrained AI feedback — close second.** Your diction, claims, and rhythm exist from the start; AI serves the up/dental drafts. Mitigate the polish hazard: ask for flagged suggestions with reasons, not rewrites; or use it variance-first (Mollick's practice: "give me 15 radically different rewrites of this bullet," then curate).
+**(a) Human draft → constrained AI feedback — close second.** Your diction, claims, and rhythm exist from the start; AI serves the up/dental drafts. Mitigate the polish hazard: ask for flagged suggestions with reasons instead of rewrites; or use it variance-first (Mollick's practice: "give me 15 radically different rewrites of this bullet," then curate).
 
 **(d) Human outline → AI prose → real voice pass — workable.** You own claims and structure, but every sentence is machine-born, so the voice pass fights the full grammar fingerprint sentence-by-sentence and in practice degrades to spot-editing.
 
@@ -188,7 +188,7 @@ What to extract from 5–10 samples of your real writing (see `voice-profile-tem
 - Punctuation habits (dashes? parentheticals? semicolons?)
 - Transition handling (explicit connectors vs. just starting the next point)
 - Opinions and standing stances; what you'd never say
-- **The banned list — the negative space does more work than the tone adjectives.** If you say "stuff" and "things," an editor upgrading you to "elements" and "components" is destroying your voice, not improving it.
+- **The banned list — the negative space does more work than the tone adjectives.** If you say "stuff" and "things," an editor upgrading you to "elements" and "components" is destroying your voice under the banner of improving it.
 
 ### 4.4 Prompting that actually reduces AI-isms
 

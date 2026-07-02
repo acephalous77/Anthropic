@@ -1,6 +1,6 @@
 # How AI Detectors Work — and How to Answer Them
 
-The deep-dive behind [GUIDE.md](GUIDE.md) §5. Mechanisms first, because every practical answer follows from them. "Answer" here means three things, all legitimate: write prose whose human signal is real, keep evidence that proves your process, and know the due-process facts when a score is used against you. What it does not mean is evasion-for-disguise — §5 explains why that's now the losing move technically, not just ethically.
+The deep-dive behind [GUIDE.md](GUIDE.md) §5. Mechanisms first, because every practical answer follows from them. "Answer" here means three things, all legitimate: write prose whose human signal is real, keep evidence that proves your process, and know the due-process facts when a score is used against you. What it does not mean is evasion-for-disguise — §5 explains why that's now a losing move on technical grounds before ethics even enters.
 
 ---
 
@@ -42,7 +42,7 @@ Authorship verification measures whether a disputed text matches a specific pers
 
 Every false-positive population shares specific measurable features with machine text:
 
-- **Non-native English writers**: constrained vocabulary and conventionalized syntax → low perplexity under any reference model. The Stanford/Liang study: 61.3% average false-positive rate on TOEFL essays across seven detectors; 97.8% of essays flagged by at least one. The kicker experiment: asking GPT-4 to *enrich the vocabulary* of those human essays dropped the false-positive rate to ~12% — proof the detectors were reading lexical richness, not authorship.
+- **Non-native English writers**: constrained vocabulary and conventionalized syntax → low perplexity under any reference model. The Stanford/Liang study: 61.3% average false-positive rate on TOEFL essays across seven detectors; 97.8% of essays flagged by at least one. The kicker experiment: asking GPT-4 to *enrich the vocabulary* of those human essays dropped the false-positive rate to ~12% — proof the detectors were reading lexical richness rather than authorship.
 - **Polished professional prose**: editing removes burstiness. Uniform register, regularized syntax, and genre conventions (abstracts, cover letters, legal boilerplate) flatten the variance detectors read as human.
 - **Neurodivergent writers**: consistent formal structure and low-idiom directness mimic machine regularity; autistic and ADHD students are documented high-risk groups.
 - **Memorized and formulaic passages**: near-zero perplexity by definition.
@@ -83,7 +83,7 @@ Output-based arguments ("but a different detector scored it 3%") are weak. Proce
 The due-process facts, for when a score is waved at you or someone you're defending:
 
 - **No detector output is proof.** Turnitin's own chief product officer calls the score "a signal to start a conversation." The MLA-CCCC joint task force position: detectors are unreliable and biased, and institutions should not treat scores as sole evidence.
-- **The precedents cut against scores, not for them.** Vanderbilt and others disabled detection over false positives and opacity. The Minnesota expulsion survived appeal (Feb 2026) explicitly on *non-detector* evidence — grader judgment and citation anomalies — not the score. A 2026 Palo Alto civil-rights suit is testing whether score-based accusations violate due process.
+- **The precedents cut against detector scores.** Vanderbilt and others disabled detection over false positives and opacity. The Minnesota expulsion survived appeal (Feb 2026) explicitly on *non-detector* evidence — grader judgment and citation anomalies — not the score. A 2026 Palo Alto civil-rights suit is testing whether score-based accusations violate due process.
 - **The demand to make**: sentence-level findings (not one headline number), the tool and version used, its published false-positive rate for writers like you (ESL? neurodivergent? polished formal register?), and an opportunity to present process evidence. The Stanford enrichment experiment and the Booth benchmark are the two citations that end most "the detector said so" arguments.
 
 ## 6. Why evasion is the losing move
@@ -98,4 +98,4 @@ The durable answer to detectors is the same as the answer to readers: text whose
 
 ---
 
-*Sources: the mechanism papers (DetectGPT arXiv 2301.11305; Fast-DetectGPT arXiv 2310.05130; Binoculars arXiv 2401.12070; SynthID Nature 10.1038/s41586-024-08025-4; Pangram arXiv 2402.14873, DAMAGE arXiv 2501.03437; Kobak excess vocabulary, Science Advances 2025); the false-positive literature (Liang et al., Patterns 2023; UChicago Booth BFI WP 2025-116; Turnitin's published FPR analyses); institutional guidance (MLA-CCCC working papers; Vanderbilt's 2023 statement; USD's instructor due-process guide); reporting on the OpenAI watermark decision (WSJ/TechCrunch, Aug 2024) and the GPTZero acquisition (TechCrunch, June 2026). Vendor accuracy claims are flagged as such throughout; Turnitin's internal architecture details come from vendor and vendor-adjacent documentation, not independent audit.*
+*Sources: the mechanism papers (DetectGPT arXiv 2301.11305; Fast-DetectGPT arXiv 2310.05130; Binoculars arXiv 2401.12070; SynthID Nature 10.1038/s41586-024-08025-4; Pangram arXiv 2402.14873, DAMAGE arXiv 2501.03437; Kobak excess vocabulary, Science Advances 2025); the false-positive literature (Liang et al., Patterns 2023; UChicago Booth BFI WP 2025-116; Turnitin's published FPR analyses); institutional guidance (MLA-CCCC working papers; Vanderbilt's 2023 statement; USD's instructor due-process guide); reporting on the OpenAI watermark decision (WSJ/TechCrunch, Aug 2024) and the GPTZero acquisition (TechCrunch, June 2026). Vendor accuracy claims are flagged as such throughout; Turnitin's internal architecture details come from vendor and vendor-adjacent documentation; no independent audit exists.*

@@ -2,7 +2,7 @@
 
 Fill this in from 5–10 samples of your genuine writing — vary the genres (an email, a blog post, a message to a friend, something technical). Paste the finished card into your system prompt, Claude Project, or `~/.claude/skills/humanize/voice-profile.md`, along with 4–5 short excerpts of the samples themselves (few-shot plateaus after ~5; same-structure samples teach a template, not a voice).
 
-A fast way to draft it: paste your samples into Claude with *"Analyze my writing style using the template below. Be specific — quote my own phrases as evidence."* Then correct what it gets wrong. You are the authority on your voice, not the model.
+A fast way to draft it: paste your samples into Claude with *"Analyze my writing style using the template below. Be specific — quote my own phrases as evidence."* Then correct what it gets wrong. You are the final authority on your voice — the model only drafts.
 
 ## 1. Sentence rhythm
 - Typical mix (e.g., "mostly mid-length, with a short punch sentence every paragraph or two"):

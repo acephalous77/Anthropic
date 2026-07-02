@@ -1,0 +1,19 @@
+# The signature AI construction, in ALL its variants. Flagged at error level:
+# every hit needs a human decision — rewrite as a direct claim, or consciously keep.
+extends: existence
+message: "Negative parallelism ('%s'): the #1 AI tell. Rewrite as a direct affirmative claim."
+level: error
+ignorecase: true
+raw:
+  - '\b(?:it|this|that)(?:[''’]s| is| was)(?:n[''’]t| not) (?:just|only|merely|simply|about)?\b[^!?\n]{0,60}\b(?:it|this|that)(?:[''’]s| is| was)\b|'
+  - '\b(?:the )?(?:point|goal|question|issue|problem|answer|story|trick|difference)(?: here)? (?:is|was)n[''’]t\b[^!?\n]{0,60}\b(?:it|that)(?:[''’]s| is| was)\b|'
+  - '\bnot only\b[^.!?\n]{0,60}\bbut(?: also)?\b|'
+  - '\bnot (?:just|merely|simply|only)\b[^.!?\n]{0,60}\bbut\b|'
+  - '\bnot so much\b[^.!?\n]{0,50}\b(?:as|but)\b|'
+  - '\bnot (?:a|an|the) \w+ but (?:rather |instead |a |an |the )?\w+|'
+  - '\bless about\b[^.!?\n]{0,40}\b(?:than|and more) about\b|'
+  - '\b(?:is|are|was|were)(?:n[''’]t| not)? more than (?:just|merely) (?:a |an |the )?\w+|'
+  - ', not (?:a |an |the )?\w+(?: \w+)?[.;]|'
+  - '\bno \w+(?: \w+)?\. no \w+(?: \w+)?\.|'
+  - '\brather than \w+(?:ing)?[^.!?\n]{0,40}, (?:it|this|that|we|the)\b|'
+  - '\b(?:is|are|was|were)(?:n[''’]t| not| never)\b[^!?\n]{0,60}(?:—|–|;|\.|,) ?[''"’”]?(?:it|they)(?:[''’]s| is| are| was)\b'

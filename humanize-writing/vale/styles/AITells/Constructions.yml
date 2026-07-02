@@ -2,10 +2,9 @@ extends: existence
 message: "AI-tell construction ('%s'): rewrite as a direct claim."
 level: warning
 ignorecase: true
+# Note: negative parallelism ("not X but Y" and variants) lives in its own
+# rule, NegativeParallelism.yml, at error level.
 raw:
-  - '\b(?:it|this|that)(?:[''’]s| is)(?:n[''’]t| not) (?:just|only|merely|about)?\b[^!?\n]{0,60}\b(?:it|this|that)(?:[''’]s| is)\b|'
-  - '\bnot only\b[^.!?\n]{0,60}\bbut also\b|'
-  - '\bnot just\b[^.!?\n]{0,60}\bbut(?: also)?\b|'
   - ', (?:highlighting|underscoring|reflecting|demonstrating|showcasing|emphasizing|signaling|cementing|solidifying|ensuring) |'
   - '\bit(?:[''’]s| is) (?:important|worth) (?:to note|noting)\b|'
   - '\bin today[''’]s (?:fast-paced|ever-evolving|digital|competitive|rapidly)|'

@@ -10,15 +10,16 @@ cd humanize-writing/vale
 vale ../../some-draft.md  # or copy .vale.ini + styles/ to your project root
 ```
 
-Note: every rule file YAML-parses, and the regexes compile and pass a 17-case behavior test (hits on "It's not just X, it's Y" in all its word orders, -ing tails, "important to note", etc.; no hits on ordinary negation like "the dog is not just outside"). The Vale binary itself wasn't runnable in the environment that generated these, so run `vale ls-config` once after install to confirm end-to-end.
+Note: every rule file YAML-parses, and the regexes compile and pass a 40+-case behavior battery (hits on every negative-parallelism variant and word order, -ing tails, "important to note", etc.; no hits on ordinary negation like "the dog is not just outside" or "we could not reproduce the crash"). The Vale binary itself wasn't runnable in the environment that generated these, so run `vale ls-config` once after install to confirm end-to-end.
 
 ## What's included
 
 | Rule | Level | Catches |
 |---|---|---|
+| `NegativeParallelism` | **error** | the #1 tell, all variants: "it's not X, it's Y", "X is not Y — it's Z", "not X but Y", "not only/so much/merely", "less about X than Y", "more than just X", trailing "Y, not X.", "No A. No B. Just C." |
 | `OverusedVocabulary` | warning | delve, leverage, seamless, boasts, serves as… with suggested swaps |
 | `InflationWords` | suggestion | pivotal, tapestry, testament, unprecedented… |
-| `Constructions` | warning | negative parallelism, -ing tails, "important to note", throat-clearing openers, "future looks bright" closers |
+| `Constructions` | warning | -ing tails, "important to note", throat-clearing openers, "future looks bright" closers |
 | `VagueAttribution` | warning | "experts argue", "studies show" (uncited) |
 | `ChatbotResidue` | error | "I hope this helps!", knowledge-cutoff disclaimers |
 | `Personal` | warning | **your** banned list — edit this one first |

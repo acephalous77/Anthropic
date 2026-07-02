@@ -1,6 +1,6 @@
 # Prompt Library: generation-time de-AI-ing
 
-Copy-paste blocks for the *generation* side (layer 1 of the stack in [GUIDE.md](GUIDE.md) §6). These reduce AI-isms at the source; they don't eliminate them — the overuse patterns are baked in by preference tuning, so the editing passes still apply. Evidence-based design notes: concrete negative constraints beat vague positives ("be conversational" produces folksy filler); ban 1–2 pattern families per prompt, not fifty (giant ban-lists degrade output); persona prompts shift costume, not grammar.
+Copy-paste blocks for the *generation* side (layer 1 of the stack in [GUIDE.md](GUIDE.md) §6). These reduce AI-isms at the source; they don't eliminate them — the overuse patterns are baked in by preference tuning, so the editing passes still apply. Evidence-based design notes: concrete negative constraints beat vague positives ("be conversational" produces folksy filler); ban 1–2 pattern families per prompt, not fifty (giant ban-lists degrade output); persona prompts shift costume while the grammar stays.
 
 ---
 

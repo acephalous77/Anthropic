@@ -51,4 +51,4 @@ AI text sounds like AI because models sample toward the statistical mean: unifor
 
 ## A note on detectors
 
-This toolkit optimizes for readers, not classifiers. Detector word-lists go stale with every model generation, detectors false-positive on non-native and neurodivergent writers at documented human cost, and paraphrase-spinning "humanizer" tools now leave their own detectable signature while making prose worse. Write things a human judges as good and as yours; disclose AI assistance where your domain's norms require it.
+This toolkit optimizes for readers and lets classifier scores fall where they may. Detector word-lists go stale with every model generation, detectors false-positive on non-native and neurodivergent writers at documented human cost, and paraphrase-spinning "humanizer" tools now leave their own detectable signature while making prose worse. Write things a human judges as good and as yours; disclose AI assistance where your domain's norms require it.
