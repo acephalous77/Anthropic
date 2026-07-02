@@ -8,6 +8,19 @@ SCALES = {
     "dorian": (0, 2, 3, 5, 7, 9, 10),
     "phrygian": (0, 1, 3, 5, 7, 8, 10),
     "minor_pentatonic": (0, 3, 5, 7, 10),
+    "lydian": (0, 2, 4, 6, 7, 9, 11),
+    "locrian": (0, 1, 3, 5, 6, 8, 10),
+    # --- esoteric / historical colours ---
+    "whole_tone": (0, 2, 4, 6, 8, 10),               # Messiaen mode 1 / Debussy
+    "octatonic": (0, 1, 3, 4, 6, 7, 9, 10),          # Messiaen mode 2 (half-whole)
+    "messiaen3": (0, 2, 3, 4, 6, 7, 8, 10, 11),      # Messiaen mode 3
+    "mystic": (0, 2, 4, 6, 9, 10),                   # Scriabin's mystic/Prometheus chord
+    "byzantine": (0, 1, 4, 5, 7, 8, 11),             # double-harmonic major
+    "hungarian_minor": (0, 2, 3, 6, 7, 8, 11),       # gypsy minor
+    "phrygian_dominant": (0, 1, 4, 5, 7, 8, 10),     # Freygish / Ahava Rabbah
+    "enigmatic": (0, 1, 4, 6, 8, 10, 11),            # Verdi's scala enigmatica
+    "hirajoshi": (0, 2, 3, 7, 8),                    # Japanese koto tuning
+    "in_sen": (0, 1, 5, 7, 10),                      # Japanese in-sen
 }
 
 CHORDS = {
