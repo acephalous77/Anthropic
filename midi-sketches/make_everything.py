@@ -36,6 +36,7 @@ PACKS = [
     ("09_sophia-beds", "sophia", "sophia.py"),
     ("10_stemlib", "stemlib", "stemlib.py"),
     ("11_terminal-light-album", "album", "album.py"),
+    ("12_livekit", "livekit", "livekit.py"),
 ]
 
 
