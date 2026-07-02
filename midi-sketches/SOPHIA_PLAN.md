@@ -29,6 +29,27 @@ beds come back every time).
 | 05_Nocturne_68_Fsm | i–VII–VI–VII | choir, very spare — maximal room for the voice |
 | 06_Solstice_96_Dmaj | I–V–vi–IV | e-piano, driving — the energetic one |
 
+## Volume 2 — the shapes a singer misses (families 07–14)
+
+Volume 1 was all 4/4, all tertian triads, band always playing, one tonal
+center per bed. Each vol. 2 family removes one of those walls:
+
+| Bed | What it opens | Why it matters to a voice |
+|---|---|---|
+| 07_Cradle_54_Gmaj_6-8 | **compound meter** (I–IV–I–V in 6/8) | the triple sway is the most singable rhythm there is — gospel, lullaby, shanty. The voice rocks instead of marching. |
+| 08_Duende_76_Am | **chromatic harmony** (Am–G–F–E, real E major) | the Andalusian cadence: that raised G# pulls the ear home harder than anything modal can. Flamenco's duende. Palmas-like rim pattern. |
+| 09_Quarry_66_Dsus | **thirdless harmony** (sus4/sus2 only) | with no third, the bed never declares major or minor — the singer's note decides. Every phrase she sings recolors the chord. |
+| 10_Folia_96_Dm_3-4 | **a historical improv form** (La Folia ground, 8-bar, sarabande 3/4) | Renaissance and Baroque musicians improvised over this exact bass for 300 years. It is literally a professional improvisation chassis. |
+| 11_Reel_84_Dmix | **mixolydian folk** (I–bVII–IV–I, accordion) | the flat-7 folk vamp — open-throat, modal, no leading-tone pressure. |
+| 12_Trade_92_Cdor | **structured silence** (band drops bars 3–4 of every 4 in the verses) | call-and-response is the oldest vocal teacher: the band states, the gap is *her turn*. Drums+drone keep the floor under her. |
+| 13_Vigil_56_Flyd | **rubato** (no drums at all; chords float 2 bars each in F lydian) | singing outside meter. The pad breathes, the harp swells, nothing counts time at her. |
+| 14_Ascent_80_Am | **key-area journey** (the same 4 chords reordered each round: Am-home → C-major-home → Am) | a built-in bridge. When the floor brightens under the identical chords, the melody gets pulled somewhere new without learning anything new. |
+
+Engine additions that made these possible: 6/8 and 3/4 bar support, chromatic
+chord specs `(semitones, quality)` alongside diatonic degrees, sus2 chords and
+mixolydian in theory.py, trading/rubato section behaviors, per-round cycles.
+Volume 1 output verified **byte-identical** after the refactor.
+
 ## How to use (MC-707 or DAW)
 
 1. Start with `bed_full.mid` in a family whose mood fits.
