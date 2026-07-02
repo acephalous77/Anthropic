@@ -20,6 +20,12 @@ Words and constructions I would never write — the editor must not "upgrade" me
 - e.g., leverage, seamless, delve, "It's not just X, it's Y", …
 - If I say "stuff" and "things," do NOT make it "elements" and "components"
 
+### 3b. Measured provenance markers (strongest evidence you can put in this file)
+If you have provably pre-2022 writing, measure instead of guessing: run the tell regexes (see `vale/styles/AITells/`) over that corpus and record the counts here. Constructions at **base rate zero** become provenance markers — any instance in a new draft means the passage is machine-touched, mandatory rewrite. Rare-but-present constructions stay review-flags.
+- Corpus used (what, year, word count):
+- Base rate ZERO (auto-flag): e.g., resumptive reveal ("It's not X. It's Y.")
+- Rare but mine (review only, never add): e.g., "not only X but also Y" — N per 1,000 words
+
 ## 4. Punctuation habits
 - Em dashes: [love them / one per page / never]
 - Parentheticals: [frequent asides / rare]

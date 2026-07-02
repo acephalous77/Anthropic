@@ -190,6 +190,8 @@ What to extract from 5–10 samples of your real writing (see `voice-profile-tem
 - Opinions and standing stances; what you'd never say
 - **The banned list — the negative space does more work than the tone adjectives.** If you say "stuff" and "things," an editor upgrading you to "elements" and "components" is destroying your voice under the banner of improving it.
 
+**Upgrade the banned list from opinion to measurement.** If you have provably pre-2022 writing (a thesis, old blog, published book), run the tell patterns over it and record your personal base rates. The payoff is a class of **provenance markers**: constructions with base rate zero in your verified corpus. In one measured case, the resumptive reveal ("It's not X. It's Y.") appeared 0 times in 8,000 words of a writer's pre-LLM prose against 8 per 5,000 words in their AI-assisted draft — meaning any instance in new work flags that passage as machine-touched, with no judgment call required. Constructions that are merely rare in your corpus stay review-flags; only measured zeros become hard markers.
+
 ### 4.4 Prompting that actually reduces AI-isms
 
 What works:

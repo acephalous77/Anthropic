@@ -16,22 +16,20 @@ Built from a synthesis of the current (mid-2026) research and craft literature: 
 | [`vale/`](vale/) | Starter [Vale](https://vale.sh) linter rules that catch the word- and phrase-level tells mechanically, in pre-commit or CI — including a template for your personal banned list. |
 | [`detectors.md`](detectors.md) | How AI detectors actually work (perplexity/burstiness, trained classifiers, watermarking, stylometry), why they false-positive on legitimate writers, and how to answer them — in the prose, in your process evidence, and in a dispute. |
 
-## Installing the skill on your machine
-
-Copy the skill into your personal skills directory (works in Claude Code CLI and desktop):
+## Installing / updating on your machine
 
 ```bash
-mkdir -p ~/.claude/skills/humanize
-cp skill/SKILL.md ~/.claude/skills/humanize/SKILL.md
+./install.sh                                    # skill only
+./install.sh ~/path/to/your/voice-profile.md   # skill + your private voice profile
 ```
 
-Then in any Claude Code session:
+Re-run `install.sh` after every `git pull` — that's the whole update protocol. Then in any Claude Code session:
 
 ```
 /humanize path/to/draft.md
 ```
 
-or paste text and ask it to humanize. Add your filled-in voice profile alongside it (`~/.claude/skills/humanize/voice-profile.md`) and the skill will edit toward *your* patterns instead of a generic "natural" register.
+or paste text and ask it to humanize. With a voice profile installed (`~/.claude/skills/humanize/voice-profile.md`), the skill edits toward *your* patterns instead of a generic "natural" register — and if the profile records measured base rates, zero-rate constructions are treated as provenance markers (see GUIDE §4.3).
 
 ## The workflow, end to end
 

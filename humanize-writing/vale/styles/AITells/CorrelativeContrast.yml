@@ -1,0 +1,13 @@
+# Classical correlative contrasts. Real human writers use these at a low rate
+# (~0.4/1000 words measured in a verified pre-LLM academic corpus), so this is
+# a review flag rather than an error: keep the ones you'd defend, and never let
+# an AI edit ADD one. If your own measured base rate is zero, raise to error in
+# .vale.ini: AITells.CorrelativeContrast = error
+extends: existence
+message: "Correlative contrast ('%s'): humans use this sparingly — keep only if you'd defend it aloud."
+level: suggestion
+ignorecase: true
+raw:
+  - '\bnot only\b[^.!?\n]{0,60}\bbut(?: also)?\b|'
+  - '\bnot (?:just|merely|simply)\b[^.!?\n]{0,60}\bbut\b|'
+  - '\bnot (?:a|an|the) \w+,? but (?:rather |instead |a |an |the )?\w+'

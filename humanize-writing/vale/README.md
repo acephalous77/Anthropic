@@ -16,7 +16,8 @@ Note: every rule file YAML-parses, and the regexes compile and pass a 40+-case b
 
 | Rule | Level | Catches |
 |---|---|---|
-| `NegativeParallelism` | **error** | the #1 tell, all variants: "it's not X, it's Y", "X is not Y — it's Z", "not X but Y", "not only/so much/merely", "less about X than Y", "more than just X", trailing "Y, not X.", "No A. No B. Just C." |
+| `NegativeParallelism` | **error** | the resumptive-reveal family (near-zero human base rate): "it's not X, it's Y", "X is not Y — it's Z", "not so much X as Y", "less about X than Y", "more than just X", trailing "Y, not X.", "No A. No B. Just C." |
+| `CorrelativeContrast` | suggestion | classical correlatives with a real human base rate: "not only X but also Y", "not X, but Y" — keep only what you'd defend; raise to error if your measured base rate is zero |
 | `OverusedVocabulary` | warning | delve, leverage, seamless, boasts, serves as… with suggested swaps |
 | `InflationWords` | suggestion | pivotal, tapestry, testament, unprecedented… |
 | `Constructions` | warning | -ing tails, "important to note", throat-clearing openers, "future looks bright" closers |
