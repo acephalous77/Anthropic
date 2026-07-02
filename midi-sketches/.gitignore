@@ -8,3 +8,4 @@ output/projects/
 output/by-key/
 output/by-part/
 output/INDEX.csv
+output/*.zip
