@@ -303,6 +303,15 @@ def write_stage_loops(sections):
         mini = [{"name": sec["name"], "time_sig": (4, 4), "bpm": st["bpm"],
                  "bars": sec["bars"][:2]}]
         r = arrange.render_piece(mini, DV)
+        # the groove pass: metric accents + a ceremonial feel (structure intact)
+        import groove as G
+        grng = random.Random(1973 + st["bpm"])
+        r["drums"] = G.apply_feel(G.apply_accents(r["drums"], STEP, depth=0.9),
+                                  "ritual", st["bpm"], PPQ, grng, anchor_ticks=PPQ * 4)
+        r["bass"] = G.apply_feel(G.apply_accents(r["bass"], STEP, depth=0.5),
+                                 "ritual", st["bpm"], PPQ, grng)
+        r["melody"] = G.apply_feel(G.apply_accents(r["melody"], STEP, depth=0.5),
+                                   "ritual", st["bpm"], PPQ, grng)
         folder = os.path.join(loops, sec["name"])
         os.makedirs(folder, exist_ok=True)
         midiwriter.write_track(os.path.join(folder, "drums.mid"), r["drums"],

@@ -3,9 +3,14 @@
 short, seamless, grab-and-stack clips (the opposite of the long arrangements).
 
 Everything here is:
-  * 2 bars on a locked 16th grid, with a hit on beat 1 (no dead space),
+  * 4 bars in an A B A B' plan: the 2-bar statement plays twice, and the last
+    bar is a varied turnaround -- repetition you can hook onto, then a push
+    back to the top. A hit lands on beat 1 (no dead space).
+  * played through the groove engine (groove.py): ghost snare ticks, a metric
+    accent hierarchy, and one role-based FEEL per family (laidback / ritual /
+    pushing) so every part in a family sits in the same pocket,
   * organized into tempo+key FAMILIES so any beat + any bass + any melody from
-    one family folder is guaranteed in-key and in-tempo -- stack them freely,
+    one family folder is guaranteed in-key, in-tempo, and in-feel,
   * 707-native: drum loops use only pad notes 36-51 (no remap needed),
   * reproducible from the family seed.
 
@@ -24,6 +29,7 @@ import random
 import shutil
 
 import drums as D
+import groove as G
 import humanize
 import midiwriter
 import palette as P
@@ -90,7 +96,11 @@ def beat_fourfloor(rng):
 
 
 def beat_broken(rng):
-    kick = _bars(euclid_grid(5, 16, rng.randint(0, 3)), euclid_grid(5, 16, rng.randint(0, 3)))
+    def anchored(rot):
+        g = euclid_grid(5, 16, rot)
+        k = g.index("x")
+        return g[k:] + g[:k]          # rotate so a kick lands on beat 1
+    kick = _bars(anchored(rng.randint(0, 3)), anchored(rng.randint(0, 3)))
     snare = grid_from_hits(16, {4, 12}) * 2
     ghost = grid_from_hits(16, {7, 15}) * 2
     hats = _bars(euclid_grid(9, 16, 1), euclid_grid(11, 16, 2))   # glitchy 16ths
@@ -206,6 +216,64 @@ MELODY = [("hook", mel_hook), ("arp-drift", mel_arp_up),
 
 
 # ----------------------------------------------------------------------------- glue
+# each family plays with ONE feel so any beat+bass+melody from it still stack
+FAMILY_FEEL = {"SlowDrift": "laidback", "Midnight": "ritual", "Halftime": "laidback",
+               "HeadNod": "laidback", "Pulse": "pushing", "Idioteque": "pushing"}
+
+# melody styles that phrase like a voice get real rests; arps stay continuous
+BREATHING_STYLES = {"hook", "ostinato-cell"}
+
+
+def _events_to_cell(events, bar_index):
+    """Extract one bar of pre-humanize (grid-exact) events as a step cell."""
+    base = bar_index * BAR * STEP
+    return sorted(((e.start - base) // STEP, max(1, e.dur // STEP), e.note, e.vel)
+                  for e in events if base <= e.start < base + BAR * STEP)
+
+
+def _vary_drum_bar(rng, cell_ev):
+    """A turnaround restatement of a one-bar drum cell: 1-2 extra hits in the
+    last quarter on a non-hat voice."""
+    occupied = {e.start // STEP for e in cell_ev}
+    pool = [e.note for e in cell_ev if e.note not in (D.CHH, D.PHH, D.OHH)] or [D.SNARE]
+    out = list(cell_ev)
+    empties = [s for s in range(BAR * 3 // 4, BAR) if s not in occupied]
+    rng.shuffle(empties)
+    for s in sorted(empties[: rng.randint(1, 2)]):
+        out.append(Event(s * STEP, STEP // 2, rng.choice(pool), rng.randint(70, 95), DRUM_CH))
+    return out
+
+
+def _post(events, bpm, kind, feel, swung, rng, breathe=False):
+    """The groove pipeline: 2-bar source -> 4-bar A B A B' loop with ghosts,
+    metric accents, and a role-based feel. Replaces flat-velocity + jitter."""
+    if not events:
+        return events
+    b1, b2 = _events_to_cell(events, 0), _events_to_cell(events, 1)
+    b2 = b2 or b1
+    ch = events[0].channel
+
+    if kind == "drums":
+        def cell_ev(cell):
+            return [Event(o * STEP, d * STEP, p, v, DRUM_CH) for (o, d, p, v) in cell]
+        c1 = G.apply_accents(G.add_ghosts(rng, cell_ev(b1), STEP, density=0.4), STEP, depth=1.0)
+        c2 = G.apply_accents(G.add_ghosts(rng, cell_ev(b2), STEP, density=0.4), STEP, depth=1.0)
+        bars = [c1, c2, c1, _vary_drum_bar(rng, c2)]
+        out = [e._replace(start=e.start + i * BAR * STEP) for i, cell in enumerate(bars) for e in cell]
+        if swung:
+            out = humanize.swing(out, STEP, swing_pct=humanize.sixteenth_swing_pct(bpm))
+        out = G.apply_feel(out, feel, bpm, PPQ, rng, anchor_ticks=BAR * STEP)
+        return _anchor(out)
+
+    if breathe:
+        b1, b2 = G.breathe(b1), G.breathe(b2)
+    cells = [b1, b2, b1, G.vary_cell(rng, b2)]
+    out = G.cells_to_events(cells, STEP, channel=ch)
+    out = G.apply_accents(out, STEP, depth=0.6)
+    out = G.apply_feel(out, feel, bpm, PPQ, rng)
+    return _anchor(out)
+
+
 def _anchor(events):
     """Guarantee no dead space: any event humanized to within half a step of the
     downbeat is snapped exactly onto beat 1."""
@@ -236,21 +304,26 @@ def build_family(seed, name, bpm, root, scale, mel_prog, bass_prog, index):
         os.makedirs(os.path.join(folder, sub), exist_ok=True)
 
     made = {"beats": [], "bass": [], "melody": []}
+    family_feel = FAMILY_FEEL.get(name, "laidback")
 
     for feel, fn, swung in BEATS:
-        ev = _humanize(fn(random.Random(int(rng.random() * 1e9))), bpm, True, swung)
+        raw = fn(random.Random(int(rng.random() * 1e9)))
+        ev = _post(raw, bpm, "drums", family_feel, swung, random.Random(int(rng.random() * 1e9)))
         p = os.path.join(folder, "beats", f"{feel}.mid")
         _write(p, ev, bpm, DRUM_CH, None, f"{name}-{feel}")
         made["beats"].append((feel, ev))
 
     for style, fn in BASS:
-        ev = _humanize(fn(random.Random(int(rng.random() * 1e9)), root, scale), bpm, False, False)
+        raw = fn(random.Random(int(rng.random() * 1e9)), root, scale)
+        ev = _post(raw, bpm, "bass", family_feel, False, random.Random(int(rng.random() * 1e9)))
         p = os.path.join(folder, "bass", f"{style}.mid")
         _write(p, ev, bpm, 0, bass_prog, f"{name}-bass-{style}")
         made["bass"].append((style, ev))
 
     for style, fn in MELODY:
-        ev = _humanize(fn(random.Random(int(rng.random() * 1e9)), root, scale), bpm, False, False)
+        raw = fn(random.Random(int(rng.random() * 1e9)), root, scale)
+        ev = _post(raw, bpm, "melody", family_feel, False, random.Random(int(rng.random() * 1e9)),
+                   breathe=style in BREATHING_STYLES)
         p = os.path.join(folder, "melody", f"{style}.mid")
         _write(p, ev, bpm, 1, mel_prog, f"{name}-mel-{style}")
         made["melody"].append((style, ev))
@@ -283,6 +356,8 @@ def main():
         folder, n = build_family(*fam, index=i)
         total += n
         print(f"  {os.path.basename(folder):<26} {n:>3} loops")
+    with open(os.path.join(DEST, "README.txt"), "w") as fh:
+        fh.write(__doc__)
     print(f"\n{total} loops across {len(FAMILIES)} families -> {DEST}")
 
 

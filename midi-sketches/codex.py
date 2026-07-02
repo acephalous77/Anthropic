@@ -29,10 +29,29 @@ classical planets, each with its own mode, tempo, technique, and archaic tone.
 import os
 import shutil
 
+import groove as G
+import humanize
 import loopkit as LK
 import midiwriter
 import palette as P
 from theory import scale_degree
+
+# each sphere's temperament as a playing feel (structure-preserving: the
+# isorhythms/peals keep their exact cycles; only dynamics and timing breathe)
+PLANET_FEEL = {"Luna": "ritual", "Mercury": "pushing", "Venus": "laidback",
+               "Sol": "pushing", "Mars": "ritual", "Jupiter": "laidback",
+               "Saturn": "ritual"}
+
+
+def _groove(events, bpm, feel, rng, drums=False, swung=False):
+    if not events:
+        return events
+    ev = G.apply_accents(events, LK.STEP, depth=1.0 if drums else 0.5)
+    if drums and swung:
+        ev = humanize.swing(ev, LK.STEP, swing_pct=humanize.sixteenth_swing_pct(bpm))
+    ev = G.apply_feel(ev, feel, bpm, LK.PPQ, rng,
+                      anchor_ticks=LK.BAR * LK.STEP if drums else None)
+    return LK._anchor(ev)
 
 DEST = os.path.join(LK.HERE, "output", "codex")
 STEP, BAR, LOOP, DRUM_CH = LK.STEP, LK.BAR, LK.LOOP, LK.DRUM_CH
@@ -185,6 +204,7 @@ def build_melody(rng, fam):
 
 def build_family(fam):
     rng = LK.random.Random(9000 + fam["i"])
+    pfeel = PLANET_FEEL[fam["planet"]]
     root, scale, bpm = fam["root"], fam["scale"], fam["bpm"]
     folder = os.path.join(DEST, f"{fam['i']:02d}_{fam['planet']}_{bpm}_{_tag(root, scale)}")
     for sub in ("beats", "bass", "melody"):
@@ -195,7 +215,7 @@ def build_family(fam):
     first_beat = None
     for feel in fam["beats"]:
         fn, sw = beat_fns[feel]
-        ev = LK._humanize(fn(LK.random.Random(int(rng.random() * 1e9))), bpm, True, sw)
+        ev = _groove(fn(LK.random.Random(int(rng.random() * 1e9))), bpm, pfeel, rng, drums=True, swung=sw)
         LK._write(os.path.join(folder, "beats", f"{feel}.mid"), ev, bpm, DRUM_CH, None,
                   f"{fam['planet']}-{feel}")
         first_beat = first_beat or ev
@@ -203,10 +223,10 @@ def build_family(fam):
     # bass: historical ground, or a modal drone-pulse
     if fam["bass"] == "drone":
         bass_cell = None
-        bass_ev = LK._humanize(LK.bass_dronepulse(rng, root, scale), bpm, False, False)
+        bass_ev = _groove(LK.bass_dronepulse(rng, root, scale), bpm, pfeel, rng)
     else:
         bass_cell = ground_bass(root, scale, fam["bass"], LOOP)
-        bass_ev = LK._humanize(LK._notes_to_events(bass_cell, 0), bpm, False, False)
+        bass_ev = _groove(LK._notes_to_events(bass_cell, 0), bpm, pfeel, rng)
     LK._write(os.path.join(folder, "bass", f"{fam['bass']}.mid"), bass_ev, bpm, 0,
               fam["bass_prog"], f"{fam['planet']}-bass")
 
@@ -214,15 +234,15 @@ def build_family(fam):
     mel_cell = build_melody(rng, fam)
     if fam["mel"][0] == "hocket-ring":
         va, vb = hocket(mel_cell)
-        mel_ev = LK._humanize(LK._notes_to_events(va, 1), bpm, False, False)
-        vb_ev = LK._humanize(LK._notes_to_events(vb, 2), bpm, False, False)
+        mel_ev = _groove(LK._notes_to_events(va, 1), bpm, pfeel, rng)
+        vb_ev = _groove(LK._notes_to_events(vb, 2), bpm, pfeel, rng)
         LK._write(os.path.join(folder, "melody", "hocket_voice-A.mid"), mel_ev, bpm, 1,
                   fam["mel_prog"], f"{fam['planet']}-hocketA")
         LK._write(os.path.join(folder, "melody", "hocket_voice-B.mid"), vb_ev, bpm, 2,
                   fam["mel_prog"], f"{fam['planet']}-hocketB")
         combo_extra = {"events": vb_ev, "channel": 2, "program": fam["mel_prog"], "name": "hocketB"}
     else:
-        mel_ev = LK._humanize(LK._notes_to_events(mel_cell, 1), bpm, False, False)
+        mel_ev = _groove(LK._notes_to_events(mel_cell, 1), bpm, pfeel, rng)
         name = {"iso": "isorhythm", "ring": "change-ringing",
                 "mystic-arp": "mystic-arp", "hook": "hook"}[fam["mel"][0]]
         LK._write(os.path.join(folder, "melody", f"{name}.mid"), mel_ev, bpm, 1,
@@ -232,7 +252,7 @@ def build_family(fam):
     # organum: a parallel-fifth doubling (medieval tone) as its own stem + in combo
     if fam["organum"]:
         org_cell = P.harmonize(mel_cell, 7)
-        org_ev = LK._humanize(LK._notes_to_events(org_cell, 3), bpm, False, False)
+        org_ev = _groove(LK._notes_to_events(org_cell, 3), bpm, pfeel, rng)
         LK._write(os.path.join(folder, "melody", "organum-fifths.mid"), org_ev, bpm, 3,
                   fam["mel_prog"], f"{fam['planet']}-organum")
         if combo_extra is None:
