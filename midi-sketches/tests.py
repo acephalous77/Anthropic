@@ -37,6 +37,7 @@ def check(name, cond, detail=""):
 def test_no_dead_space_and_pads():
     import mido
     packs = ["output/loopkit", "output/codex", "output/holy_mountain/loops"]
+    # sophia stems are timeline-aligned (bass/arp enter late by design) -- bed anchors checked in sophia.py validation
     dead, offpad, n = [], [], 0
     for pack in packs:
         root = os.path.join(HERE, pack)

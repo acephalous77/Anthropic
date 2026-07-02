@@ -33,6 +33,7 @@ PACKS = [
     ("06_clippack-feverhead-120", "clippack_feverhead_120", None),
     ("07_instrument-audition", "instrument_set_40001_kida_odd5", None),
     ("08_ab-demo", "ab_demo", "ab_demo.py"),
+    ("09_sophia-beds", "sophia", "sophia.py"),
 ]
 
 
