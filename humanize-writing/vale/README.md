@@ -7,7 +7,7 @@ A starter [Vale](https://vale.sh) rule pack that catches the lexical and phrasal
 ```bash
 brew install vale        # or: https://vale.sh/docs/vale-cli/installation/
 cd humanize-writing/vale
-vale ../..some-draft.md  # or copy .vale.ini + styles/ to your project root
+vale ../../some-draft.md  # or copy .vale.ini + styles/ to your project root
 ```
 
 Note: every rule file YAML-parses, and the regexes compile and pass a 17-case behavior test (hits on "It's not just X, it's Y" in all its word orders, -ing tails, "important to note", etc.; no hits on ordinary negation like "the dog is not just outside"). The Vale binary itself wasn't runnable in the environment that generated these, so run `vale ls-config` once after install to confirm end-to-end.

@@ -32,6 +32,18 @@ Then in any Claude Code session:
 
 or paste text and ask it to humanize. Add your filled-in voice profile alongside it (`~/.claude/skills/humanize/voice-profile.md`) and the skill will edit toward *your* patterns instead of a generic "natural" register.
 
+## The workflow, end to end
+
+One piece of writing moves through the toolkit in this order:
+
+1. **Before drafting** — fill in [`voice-profile-template.md`](voice-profile-template.md) once (from 5–10 samples of your real writing) and keep it with the skill. For each piece, pick a workflow from [GUIDE §4](GUIDE.md): talk or draft first if voice matters; outline-first if speed matters.
+2. **Generating** — use the blocks in [`prompts.md`](prompts.md): the style-constraint block on every prompt, interview mode for personal pieces, the pre-writing gate for long ones.
+3. **Editing** — run `/humanize` ([`skill/SKILL.md`](skill/SKILL.md)): six ordered passes, structure down to diction, with a mandatory self-audit. It leaves `[ADD: …]` placeholders wherever only you can supply the detail, stance, or source.
+4. **Enforcing** — `vale` with the [`vale/`](vale/) rules catches the mechanical tells that crept back in; loop to zero warnings.
+5. **Judging** — the passes no tool can do, from [`CHECKLIST.md`](CHECKLIST.md): fill the `[ADD]`s, commit to your verdicts, read it aloud.
+
+[`GUIDE.md`](GUIDE.md) is the reference behind all five steps: the full tells catalog, the evidence, and the reasoning.
+
 ## The one-paragraph version
 
 AI text sounds like AI because models sample toward the statistical mean: uniform sentence rhythm, hedged claims, balanced structure, promotional abstraction, and nothing only you could know. Deleting tell-words is not the fix; the tells are symptoms. The fix is five moves — concretize, commit or attribute, break symmetry, demote formatting, add what the model can't invent — applied in ordered passes (structure → claims → rhythm → diction → voice → read-aloud). And the best results come from workflows where your own phrasing survives to the final text: talk or draft first, let the model suggest rather than rewrite, and never ask it to "just polish."

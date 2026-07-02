@@ -225,9 +225,9 @@ Folklore:
 
 Four layers, each catching what the previous can't:
 
-1. **Generation:** style card + few-shot samples + focused banned-construction list in the system prompt (§4.3–4.4). Reduces but never eliminates — the overuse is RLHF-baked.
-2. **LLM edit pass:** a humanizer-protocol skill (this repo's `skill/SKILL.md`; see also `blader/humanizer` and `Aboudjem/humanizer-skill` on GitHub, both built on Wikipedia's Signs-of-AI-writing catalog) with your voice profile loaded. Catches structural and semantic tells.
-3. **Mechanical enforcement:** [Vale](https://vale.sh) with the [`tbhb/vale-ai-tells`](https://github.com/tbhb/vale-ai-tells) rule pack — 63 prose rules covering the lexical and phrasal tells deterministically (OverusedVocabulary, ContrastiveFormulas, ParticipialPadding, VagueAttributions, MicDrop, WrapUpHeadings…). Add your personal banned list as Vale `substitution` rules; run in pre-commit or CI; tell your agent "run vale and fix warnings" and loop to zero. Vale's own stated limits: it can't detect burstiness, paragraph patterns, or semantics — that's layers 2 and 4.
+1. **Generation:** style card + few-shot samples + focused banned-construction list in the system prompt (§4.3–4.4). Ready-made blocks live in this toolkit's [`prompts.md`](prompts.md); the style card comes from [`voice-profile-template.md`](voice-profile-template.md). Reduces but never eliminates — the overuse is RLHF-baked.
+2. **LLM edit pass:** a humanizer-protocol skill (this toolkit's [`skill/SKILL.md`](skill/SKILL.md); see also `blader/humanizer` and `Aboudjem/humanizer-skill` on GitHub, both built on Wikipedia's Signs-of-AI-writing catalog) with your voice profile loaded. Catches structural and semantic tells.
+3. **Mechanical enforcement:** [Vale](https://vale.sh) with an AI-tells rule pack — this toolkit ships starter rules in [`vale/`](vale/) (including a personal banned-list template); the fuller [`tbhb/vale-ai-tells`](https://github.com/tbhb/vale-ai-tells) pack adds 63 rules (ParticipialPadding, VerbTricolon, StackedAnaphora, MicDrop…) and is compatible alongside. Run in pre-commit or CI; tell your agent "run vale and fix warnings" and loop to zero. A linter's hard limits: it can't detect burstiness, paragraph patterns, or semantics — that's layers 2 and 4.
 4. **Human judgment:** the claims pass, the voice pass, and the read-aloud pass (§3.2). No tool adds your pear, your Fish Guy, your opinion. It doesn't know them.
 
 **Avoid commercial "humanizers."** In independent testing, 14 of 16 were glorified paraphrasers that swapped fancy words or added typos; aggressive paraphrase changes meaning, drifts facts, and produces rambling purple prose — while now also carrying its own detector signature. A paraphraser changes words; humanizing changes the character of the writing, and voice, specificity, and accountability are things no tool reliably adds by itself.
@@ -252,6 +252,8 @@ One family: noise. Three or more: AI-shaped, whoever wrote it — and the fix-ki
 ---
 
 ## Sources
+
+Attribution: several before/after example pairs in §2–3 are adapted from the MIT-licensed [`blader/humanizer`](https://github.com/blader/humanizer) skill (itself built on Wikipedia's *Signs of AI writing*, CC BY-SA, maintained by WikiProject AI Cleanup); the rest are original illustrations of documented fix patterns.
 
 Primary research: Kobak et al., *Science Advances* 2025 (arXiv 2406.07016) · PNAS 2025 "Do LLMs write like humans?" (10.1073/pnas.2422455122) · EMNLP 2025 Findings arXiv 2509.14543 · "Voice Under Revision" arXiv 2604.22142 · RLHF word-overuse arXiv 2508.01930 · COLING 2025 arXiv 2412.11385 · Liang et al., *Patterns* 2023 (TOEFL false positives) · FSU spoken-drift arXiv 2508.00238 · Pangram aidiolects arXiv 2506.21817.
 
