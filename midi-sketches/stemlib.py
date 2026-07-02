@@ -57,11 +57,20 @@ SLOTS = [
     dict(key="Am",    bpm=96,  root=45, scale="aeolian",  feel="laidback", mel_prog=11),
     dict(key="Cphr",  bpm=110, root=48, scale="phrygian", feel="pushing",  mel_prog=80),
     dict(key="Gm",    bpm=124, root=43, scale="aeolian",  feel="pushing",  mel_prog=81),
+    # batch 2 -- aligned with the sophia beds, so these stems layer straight
+    # into her backing tracks (same key, tempo, and feel as the bed named)
+    dict(key="Am",    bpm=72,  root=45, scale="aeolian",    feel="laidback", mel_prog=4),   # Ember
+    dict(key="Ddor",  bpm=64,  root=50, scale="dorian",     feel="ritual",   mel_prog=16),  # Vesper
+    dict(key="Gm",    bpm=80,  root=43, scale="aeolian",    feel="laidback", mel_prog=48),  # Sable
+    dict(key="Cmaj",  bpm=88,  root=48, scale="major",      feel="laidback", mel_prog=89),  # Aurora
+    dict(key="Dmaj",  bpm=96,  root=50, scale="major",      feel="pushing",  mel_prog=5),   # Solstice
+    dict(key="Dmix",  bpm=84,  root=50, scale="mixolydian", feel="laidback", mel_prog=21),  # Reel
 ]
 
 TEMPO_FEEL = {62: "laidback", 72: "ritual", 84: "laidback", 96: "laidback",
               110: "pushing", 124: "pushing", 54: "laidback", 66: "laidback",
-              90: "ritual", 108: "ritual", 140: "pushing"}
+              90: "ritual", 108: "ritual", 140: "pushing", 56: "ritual",
+              64: "ritual", 68: "laidback", 80: "laidback", 88: "laidback"}
 
 
 # ---------------------------------------------------------------- pipelines
@@ -175,6 +184,26 @@ BEAT_DEFS = {
          42: euclid_grid(11, 16, 1)},
         {36: grid_from_hits(16, {0, 4, 8, 12}), 40: euclid_grid(5, 16, r.randint(1, 4)),
          42: euclid_grid(11, 16, 3), 46: grid_from_hits(16, {14})})),
+    "bembe":     ([66, 88], 12, False, lambda r: two_bars(
+        {36: grid_from_hits(12, {0, 6}), 51: euclid_grid(7, 12, 0),
+         45: grid_from_hits(12, {3, 9})},
+        {36: grid_from_hits(12, {0, 6}), 51: euclid_grid(7, 12, 0),
+         45: grid_from_hits(12, {3, 9}), 46: grid_from_hits(12, {10})}, 12)),
+    "bossa":     ([88, 96], 16, False, lambda r: two_bars(
+        {36: grid_from_hits(16, {0, 4, 8, 12}), 37: euclidean_preset_tiled("bossa", 16),
+         42: grid_from_hits(16, set(range(0, 16, 2)))})),
+    "boombap":   ([84, 96], 16, True, lambda r: two_bars(
+        _dg({36: [0, 10], 38: [4, 12], 42: [0, 2, 4, 6, 8, 10, 12, 14]}),
+        _dg({36: [0, 7, 10], 38: [4, 12], 42: [0, 2, 4, 6, 8, 10, 12, 14]}))),
+    "afrobeat":  ([96, 110], 16, False, lambda r: two_bars(
+        {36: grid_from_hits(16, {0, 8}), 46: grid_from_hits(16, {2, 6, 10, 14}),
+         37: euclidean_preset_tiled("tresillo", 16), 42: grid_from_hits(16, {4, 12})})),
+    "twostep":   ([124, 140], 16, True, lambda r: two_bars(
+        _dg({36: [0, 10], 38: [4, 12], 42: [0, 3, 4, 6, 8, 11, 12, 14]}),
+        _dg({36: [0, 6, 10], 38: [4, 12], 42: [0, 3, 4, 6, 8, 11, 12, 14], 46: [14]}))),
+    "waltz":     ([96, 108], 12, False, lambda r: two_bars(
+        _dg({36: [0], 42: [4, 8], 44: [2, 6, 10]}, 12),
+        _dg({36: [0], 42: [4, 8], 44: [2, 6, 10], 37: [11]}, 12), 12)),
     "trap":      ([70, 140], 16, True, lambda r: two_bars(
         _dg({36: [0, 10], 38: [8], 42: [0, 2, 4, 5, 6, 8, 10, 12, 13, 14]}),
         _dg({36: [0, 6, 10], 38: [8], 42: [0, 1, 2, 4, 6, 8, 10, 11, 12, 14]}))),
@@ -189,6 +218,10 @@ PERC_DEFS = {
                                        40: grid_from_hits(16, {0, 8})}),
     "ride-bells":  lambda r: two_bars({51: grid_from_hits(16, set(range(0, 16, 2))),
                                        50: euclid_grid(5, 16, 2)}),
+    "tumbao":      lambda r: two_bars({45: grid_from_hits(16, {0, 2, 6}), 47: grid_from_hits(16, {4, 12}),
+                                       50: grid_from_hits(16, {7, 15})}),
+    "cascara":     lambda r: two_bars({37: grid_from_hits(16, {0, 2, 3, 6, 8, 10, 11, 14}),
+                                       40: grid_from_hits(16, {4, 12})}),
 }
 
 
@@ -322,7 +355,7 @@ def main():
         rows.append([f"{sub}/{fname}", sub, style, key, scale, bpm, feel])
 
     for style, (tempos, steps, swung, fn) in BEAT_DEFS.items():
-        meter = (4, 4) if steps == 16 else ((6, 8) if style == "gospel68" else (3, 4))
+        meter = (4, 4) if steps == 16 else ((6, 8) if style in ("gospel68", "bembe") else (3, 4))
         for bpm in tempos:
             rng = random.Random(zlib.crc32(f"{style}|{bpm}".encode()))
             feel = TEMPO_FEEL.get(bpm, "laidback")
@@ -338,21 +371,21 @@ def main():
 
     for slot in SLOTS:
         key, bpm, root, scale, feel = slot["key"], slot["bpm"], slot["root"], slot["scale"], slot["feel"]
-        rng = random.Random(zlib.crc32(f"bass|{key}".encode()))
+        rng = random.Random(zlib.crc32(f"bass|{key}|{bpm}".encode()))
         for style, (ev, proc) in bass_styles(rng, root, scale, bpm).items():
             done = flat(ev, bpm, 16, feel, rng) if proc else loop2(ev, bpm, 16, feel, rng, "bass")
             write("basses", f"{style}_{key}_{bpm}.mid", done, bpm, (4, 4), 0, 38, style, key, scale, feel)
-        rng = random.Random(zlib.crc32(f"mel|{key}".encode()))
+        rng = random.Random(zlib.crc32(f"mel|{key}|{bpm}".encode()))
         for style, (ev, proc, br) in melody_styles(rng, root, scale, bpm).items():
             done = flat(ev, bpm, 16, feel, rng) if proc else loop2(ev, bpm, 16, feel, rng, "mel", breathe=br)
             write("melodies", f"{style}_{key}_{bpm}.mid", done, bpm, (4, 4), 1, slot["mel_prog"],
                   style, key, scale, feel)
-        rng = random.Random(zlib.crc32(f"arp|{key}".encode()))
+        rng = random.Random(zlib.crc32(f"arp|{key}|{bpm}".encode()))
         for style, (ev, proc) in arp_styles(rng, root, scale, bpm).items():
             done = flat(ev, bpm, 16, feel, rng, depth=0.4)
             write("arps", f"{style}_{key}_{bpm}.mid", done, bpm, (4, 4), 1, slot["mel_prog"],
                   style, key, scale, feel)
-        rng = random.Random(zlib.crc32(f"chords|{key}".encode()))
+        rng = random.Random(zlib.crc32(f"chords|{key}|{bpm}".encode()))
         for cname, cycle in CHORD_CYCLES.items():
             ev = flat(chord_events(rng, root, scale, cycle), bpm, 16, feel, rng, depth=0.3)
             write("chords", f"{cname}_{key}_{bpm}.mid", ev, bpm, (4, 4), 2, 89,
