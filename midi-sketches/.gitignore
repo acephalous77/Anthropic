@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+output/mc707_import/
+output/clippack_feverhead_120/
+output/slowpacks/
+output/library/
+output/projects/
+output/by-key/
+output/by-part/
+output/INDEX.csv
+output/*.zip
+output/loopkit/
+output/codex/
+output/holy_mountain/
+output/ab_demo/
+output/sophia/
