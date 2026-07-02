@@ -156,27 +156,8 @@ SPARSE_BY = {16: {"36": _g([0, 8], [0]), "44": _g([12])},
              12: {"36": _g([0, 6], [0], 12), "44": _g([9], (), 12)}}
 
 
-def voice_into(pitch, lo, hi):
-    while pitch < lo:
-        pitch += 12
-    while pitch > hi:
-        pitch -= 12
-    return pitch
+from songcraft import chord_of, lead_voicing, voice_into
 
-
-def triad(root, scale, degree, seventh=False):
-    degs = (0, 2, 4, 6) if seventh else (0, 2, 4)
-    return [scale_degree(root, scale, degree + d) for d in degs]
-
-
-def chord_of(root, scale, spec, seventh=False):
-    """spec: scale degree (int, diatonic triad) OR (semitones, quality) for a
-    chromatic chord -- how Duende gets its real E major inside A minor, and
-    Quarry its thirdless sus voicings."""
-    if isinstance(spec, tuple):
-        semis, quality = spec
-        return [root + semis + iv for iv in CHORDS[quality]]
-    return triad(root, scale, spec, seventh)
 
 
 def chord_root_fifth(root, scale, spec):
@@ -186,19 +167,6 @@ def chord_root_fifth(root, scale, spec):
     return scale_degree(root, scale, spec), scale_degree(root, scale, spec + 4)
 
 
-def lead_voicing(chord, prev, lo, hi):
-    """Voice each chord tone into register, choosing octaves nearest the
-    previous voicing (smooth pad movement -- no jumps to distract the singer)."""
-    voiced = []
-    for i, p in enumerate(chord):
-        p = voice_into(p, lo, hi)
-        if prev:
-            target = prev[min(i, len(prev) - 1)]
-            for cand in (p - 12, p, p + 12):
-                if lo <= cand <= hi and abs(cand - target) < abs(p - target):
-                    p = cand
-        voiced.append(p)
-    return voiced
 
 
 def grids_events(grids, bar_i, bar_t, vel_map=None):

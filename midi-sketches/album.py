@@ -33,7 +33,7 @@ import palette as P
 import stemlib as SL
 from midiwriter import Event
 from rhythm import grid_from_hits
-from sophia import lead_voicing, voice_into
+from songcraft import chord_of, chord_root, lead_voicing, voice_into
 from theory import CHORDS, scale_degree
 
 HERE = os.path.dirname(__file__)
@@ -175,17 +175,6 @@ def drums_for_bar(grids, bar_i, bar_steps, scale_vel=1.0):
     return ev
 
 
-# ---------------------------------------------------------------- harmony helpers
-def chord_of(root, scale, spec, seventh=False):
-    if isinstance(spec, tuple):
-        semis, qual = spec
-        return [root + semis + iv for iv in CHORDS[qual]]
-    degs = (0, 2, 4, 6) if seventh else (0, 2, 4)
-    return [scale_degree(root, scale, spec + d) for d in degs]
-
-
-def chord_root(root, scale, spec):
-    return root + spec[0] if isinstance(spec, tuple) else scale_degree(root, scale, spec)
 
 
 # ---------------------------------------------------------------- lead techniques
@@ -468,6 +457,10 @@ def build_track(track):
         tracks_out.append({"events": evs, "channel": ch, "program": prog, "name": name,
                            "cc_events": cc})
     midiwriter.write_combined(os.path.join(folder, "song.mid"), tracks_out, bpmc, tsc)
+    # the dub companion: the song stripped to its floor (drums/bass/pad/drone,
+    # everything below the vocal register) -- for singing the story over
+    dub = [t for t in tracks_out if t["name"] in ("drums", "bass", "pad", "drone")]
+    midiwriter.write_combined(os.path.join(folder, "dub.mid"), dub, bpmc, tsc)
     secs = total_bars * bar_t / PPQ * 60 / bpm
     return folder, total_bars, secs
 

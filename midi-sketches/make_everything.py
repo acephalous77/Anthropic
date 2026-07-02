@@ -37,6 +37,7 @@ PACKS = [
     ("10_stemlib", "stemlib", "stemlib.py"),
     ("11_terminal-light-album", "album", "album.py"),
     ("12_livekit", "livekit", "livekit.py"),
+    ("13_transitions", "transitions", "transitions.py"),
 ]
 
 

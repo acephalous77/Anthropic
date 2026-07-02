@@ -39,7 +39,7 @@ import midiwriter
 import palette as P
 from midiwriter import Event
 from rhythm import euclid_grid, euclidean_preset_tiled, grid_from_hits
-from sophia import lead_voicing, voice_into
+from songcraft import lead_voicing, voice_into
 from theory import CHORDS, scale_degree
 
 HERE = os.path.dirname(__file__)
@@ -204,6 +204,12 @@ BEAT_DEFS = {
     "waltz":     ([96, 108], 12, False, lambda r: two_bars(
         _dg({36: [0], 42: [4, 8], 44: [2, 6, 10]}, 12),
         _dg({36: [0], 42: [4, 8], 44: [2, 6, 10], 37: [11]}, 12), 12)),
+    "fivefour":  ([80, 96], 20, False, lambda r: two_bars(
+        _dg({36: [0, 6, 12], 38: [8, 16], 42: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]}, 20),
+        _dg({36: [0, 6, 12, 18], 38: [8, 16], 42: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]}, 20), 20)),
+    "seveneight": ([84, 110], 14, False, lambda r: two_bars(
+        _dg({36: [0, 8], 38: [4, 11], 42: [0, 2, 4, 6, 8, 10, 12]}, 14),
+        _dg({36: [0, 6, 8], 38: [4, 11], 42: [0, 2, 4, 6, 8, 10, 12]}, 14), 14)),
     "trap":      ([70, 140], 16, True, lambda r: two_bars(
         _dg({36: [0, 10], 38: [8], 42: [0, 2, 4, 5, 6, 8, 10, 12, 13, 14]}),
         _dg({36: [0, 6, 10], 38: [8], 42: [0, 1, 2, 4, 6, 8, 10, 11, 12, 14]}))),
@@ -355,7 +361,7 @@ def main():
         rows.append([f"{sub}/{fname}", sub, style, key, scale, bpm, feel])
 
     for style, (tempos, steps, swung, fn) in BEAT_DEFS.items():
-        meter = (4, 4) if steps == 16 else ((6, 8) if style in ("gospel68", "bembe") else (3, 4))
+        meter = {16: (4, 4), 12: (6, 8) if style in ("gospel68", "bembe") else (3, 4), 20: (5, 4), 14: (7, 8)}[steps]
         for bpm in tempos:
             rng = random.Random(zlib.crc32(f"{style}|{bpm}".encode()))
             feel = TEMPO_FEEL.get(bpm, "laidback")
