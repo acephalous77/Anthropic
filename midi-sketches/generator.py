@@ -1579,6 +1579,35 @@ def _qc(result):
     return problems
 
 
+# archetype -> how it should sit in time (see groove.FEELS). The groove pass
+# runs after QC: metric accents (meter-aware) + systematic role offsets on top
+# of each archetype's own humanization. Gentle depths -- the archetypes already
+# carry grid accents; this adds the metric hierarchy and the pocket.
+ARCHETYPE_FEEL = {
+    "fever_ray": "ritual", "fever_radiohead": "ritual", "gated_drama": "ritual",
+    "meditative": "ritual", "halftime_drone": "ritual",
+    "radiohead_kida": "pushing", "four_floor_glitch": "pushing",
+    "kate_bush": "laidback", "spoken_word": "laidback", "broken_meter": "laidback",
+    "groove": "laidback",
+}
+
+
+def _groove_pass(result, archetype_name, seed):
+    import groove as G
+    feel = ARCHETYPE_FEEL.get(archetype_name, "laidback")
+    if archetype_name == "groove" and result["bpm_changes"][0][1] >= 118:
+        feel = "pushing"
+    frng = random.Random(seed * 77 + 13)
+    bpm0 = result["bpm_changes"][0][1]
+    tsc = result["time_sig_changes"]
+    half = STEP_TICKS // 2
+    for part, depth in (("drums", 0.55), ("bass", 0.35), ("melody", 0.35)):
+        ev = G.apply_accents_metered(result[part], STEP_TICKS, tsc, PPQ, depth=depth)
+        ev = G.apply_feel(ev, feel, bpm0, PPQ, frng)
+        result[part] = [e._replace(start=0) if 0 <= e.start < half else e for e in ev]
+    return result
+
+
 def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=None, mode=None,
              max_attempts=5):
     """Build, render, and QC one clip. Returns a dict with the rendered result
@@ -1612,6 +1641,7 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=
 
         problems = _qc(result)
         if not problems:
+            result = _groove_pass(result, archetype_name, seed)
             all_pitches = [e.note for e in result["bass"]] + [e.note for e in result["melody"]]
             slope, r2 = zipf_slope(all_pitches)
             return {

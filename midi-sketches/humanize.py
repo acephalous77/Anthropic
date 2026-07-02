@@ -75,44 +75,12 @@ def pink_jitter(events, bpm, ppq, sd_ms=15, seed=0):
     return out
 
 
-def split_by(events, predicate):
-    """Partition events into (matching, rest) -- e.g. to jitter kicks and ghost
-    notes by different amounts: `kicks, rest = split_by(events, lambda e: e.note == KICK)`."""
-    matching, rest = [], []
-    for e in events:
-        (matching if predicate(e) else rest).append(e)
-    return matching, rest
-
-
-def bur_for_tempo(bpm):
-    """Beat-upbeat ratio (BUR) as a function of tempo, per Friberg & Sundstrom
-    (2002, Music Perception 19(3)): swing is *not* a fixed ratio -- it runs
-    ~2.5-3.5:1 at slow tempos and trends toward 1:1 (straight) by ~250-300 BPM.
-    The exact interpolation between their sampled points is an inference, not
-    a reported curve -- treat as a reasonable default, not a precise fit."""
-    if bpm <= 76:
-        return 3.5
-    if bpm <= 120:
-        return 3.5 - (bpm - 76) / (120 - 76) * (3.5 - 2.5)
-    if bpm >= 250:
-        return 1.0
-    return 2.5 - (bpm - 120) / (250 - 120) * (2.5 - 1.0)
-
-
-def bur_swing_pct(bpm):
-    """Convert a tempo's beat-upbeat ratio to a long-short *percentage* (the share
-    of a pair given to the first note): pct = 100 * BUR / (1 + BUR) -- e.g. BUR
-    2:1 -> 66.7%. NOTE: BUR is measured on *eighth*-note pairs (jazz ride feel).
-    Do not feed this straight into `swing()`, which swings the *sixteenth* grid --
-    use `sixteenth_swing_pct()` for that (see its docstring)."""
-    bur = bur_for_tempo(bpm)
-    return 100 * bur / (1 + bur)
 
 
 def sixteenth_swing_pct(bpm, slow=62.0, fast=50.0, slow_bpm=80, fast_bpm=140):
     """Tempo-dependent swing percentage for the *sixteenth*-note grid that
-    `swing()` operates on -- distinct from `bur_swing_pct()`, which is an
-    eighth-note ratio. Feeding an eighth-note BUR (up to ~78%) into a 16th-note
+    `swing()` operates on. CAUTION (a bug we actually hit): jazz BUR research
+    quotes EIGHTH-note beat-upbeat ratios (up to ~78%); feeding those into a 16th-note
     swing overstates the shuffle by a whole metric level (a 3:1 eighth ratio is
     an extreme, past-triplet 16th shuffle), so this stays in the practitioner
     16th-swing band: gentle at slow tempos, straightening toward 50% as tempo

@@ -52,6 +52,31 @@ def apply_accents(events, step_ticks, bar_steps=16, floor=0.65, depth=1.0):
     return out
 
 
+def apply_accents_metered(events, step_ticks, time_sig_changes, ppq,
+                          floor=0.65, depth=1.0):
+    """apply_accents for pieces whose meter changes: each event's bar position
+    is computed from the time signature in effect at its tick (render_piece
+    emits time-sig changes exactly on bar starts, so bars tile cleanly from
+    each change)."""
+    if not events:
+        return events
+    changes = sorted(time_sig_changes)
+    out = []
+    for e in events:
+        t0, (num, den) = changes[0]
+        for tick, sig in changes:
+            if tick <= e.start:
+                t0, (num, den) = tick, sig
+            else:
+                break
+        bar_ticks = ppq * 4 * num // den
+        pos = ((e.start - t0) % bar_ticks) // step_ticks
+        w = metric_weight(pos, bar_ticks // step_ticks)
+        w = 1.0 - (1.0 - w) * depth
+        out.append(e._replace(vel=max(1, min(127, round(e.vel * max(floor, w))))))
+    return out
+
+
 # ---------------------------------------------------------------- ghost notes
 SNARE_NOTES = {38, 40}
 HAT_NOTES = {42, 44}

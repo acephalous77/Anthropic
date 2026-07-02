@@ -165,10 +165,6 @@ def motif_augment(m, factor=2):
     return [(offset, dur * factor) for offset, dur in m]
 
 
-def motif_diminish(m, factor=2):
-    """Compress every note's duration by `factor` (minimum 1 step)."""
-    return [(offset, max(1, dur // factor)) for offset, dur in m]
-
 
 def motif_fragment(m, start=0, length=None):
     """A sub-slice of the motif -- development by fragmentation."""
@@ -203,26 +199,8 @@ def harmonize(notes, interval, vel_scale=0.75):
     return out
 
 
-def antiphon(rng, call_motif, response_motif, root, scale, n_bars, bar_steps,
-             call_reg, resp_reg, vel_base=88, degree_shift=0):
-    """Two-voice call-and-response: odd bars answer the even bars' call, in a
-    different register -- a dialogue between two 'characters' rather than one
-    line. Returns a list of per-bar note lists."""
-    bars = []
-    for i in range(n_bars):
-        if i % 2 == 0:
-            notes = render_motif(rng, call_motif, root, scale, rng.choice([0, 2]),
-                                 degree_shift=degree_shift, register=call_reg, vel_base=vel_base)
-        else:
-            notes = render_motif(rng, response_motif, root, scale, rng.choice([1, 3]),
-                                 degree_shift=degree_shift + 2, register=resp_reg, vel_base=vel_base - 4)
-        bars.append([(s, d, n, v) for (s, d, n, v) in notes if s < bar_steps])
-    return bars
 
 
-# --- hook engine: catchy, singable melodic phrases (not wandering walks) -----
-# Syncopated onset templates over a 16-step bar, each ending on a held "landing"
-# note. Real hooks have a memorable *rhythm*, not even eighths.
 HOOK_RHYTHMS = [
     [0, 4, 6, 8, 12],
     [0, 2, 4, 8, 12],
