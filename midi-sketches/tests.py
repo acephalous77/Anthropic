@@ -109,6 +109,91 @@ def test_generator_determinism():
           max(vels) - min(vels) >= 60, f"range={max(vels)-min(vels)}")
 
 
+def _notes(path, ch=None):
+    import mido
+    out = []
+    for tr in mido.MidiFile(path).tracks:
+        tick = 0
+        for msg in tr:
+            tick += msg.time
+            if msg.type == "note_on" and msg.velocity > 0 and (ch is None or getattr(msg, "channel", 0) == ch):
+                out.append((tick, msg.note, msg.velocity))
+    return out
+
+
+def test_sophia_vocal_octave():
+    """The singer's octave stays empty: pads below C4, arps above C5."""
+    import glob
+    root = os.path.join(HERE, "output", "sophia")
+    if not os.path.isdir(root):
+        print("  [skip] sophia not generated")
+        return
+    bad = []
+    for f in glob.glob(root + "/*/pad.mid"):
+        if any(n >= 60 for _, n, _ in _notes(f)):
+            bad.append(("pad", f))
+    for f in glob.glob(root + "/*/arp.mid"):
+        ns = _notes(f)
+        if ns and min(n for _, n, _ in ns) < 73:
+            bad.append(("arp", f))
+    check("sophia pads below C4 / arps above C5", not bad, str(bad[:2]))
+
+
+def test_album_invariants():
+    """TERMINAL LIGHT's musical claims stay true forever."""
+    import glob, mido
+    root = os.path.join(HERE, "output", "album")
+    if not os.path.isdir(root):
+        print("  [skip] album not generated")
+        return
+    # picardy: Afterglow's lead contains G# (pc 8)
+    f = glob.glob(root + "/16_*/lead.mid")
+    check("Afterglow lead contains the picardy G#",
+          bool(f) and 8 in {n % 12 for _, n, _ in _notes(f[0])})
+    # the Museum walks in 5/4
+    f = glob.glob(root + "/12_*/song.mid")
+    sigs = [(m.numerator, m.denominator) for m in mido.MidiFile(f[0]).tracks[0]
+            if m.type == "time_signature"] if f else []
+    check("Museum of Us written in 5/4", sigs[:1] == [(5, 4)])
+    # the Great Quiet's gaps grow verse to verse
+    f = glob.glob(root + "/15_*/pad.mid")
+    if f:
+        bars = {t // 1920 for t, _, _ in _notes(f[0])}
+        v1 = len([b for b in range(4, 12) if b not in bars])
+        v2 = len([b for b in range(20, 28) if b not in bars])
+        check("Great Quiet gaps grow verse to verse", v2 > v1, f"{v1}->{v2}")
+    # every track lands on a coda (long final events), drums on pads
+    bad = []
+    for f in glob.glob(root + "/*/song.mid"):
+        ns = _notes(f)
+        if ns and min(t for t, _, _ in ns) > 60:
+            bad.append(("anchor", f))
+        if any(not (36 <= n <= 51) for _, n, _ in _notes(f, ch=9)):
+            bad.append(("pads", f))
+    check("album songs anchored on beat 1, drums on pads", not bad, str(bad[:2]))
+    # CC automation present (audit M4)
+    f = glob.glob(root + "/01_*/pad.mid")
+    ncc = sum(1 for m in mido.MidiFile(f[0]) if m.type == "control_change") if f else 0
+    check("album pads carry CC expression automation", ncc > 100, str(ncc))
+
+
+def test_stemlib_registers():
+    import glob
+    root = os.path.join(HERE, "output", "stemlib")
+    if not os.path.isdir(root):
+        print("  [skip] stemlib not generated")
+        return
+    REG = {"basses": (28, 64), "melodies": (58, 86), "arps": (70, 98), "chords": (44, 66)}
+    bad = []
+    for sub, (lo, hi) in REG.items():
+        for f in glob.glob(f"{root}/{sub}/*.mid"):
+            for _, n, _ in _notes(f):
+                if not (lo <= n <= hi):
+                    bad.append((sub, os.path.basename(f), n))
+                    break
+    check("stemlib stems stay in their registers", not bad, str(bad[:3]))
+
+
 def test_swing_axis():
     vals = [humanize.sixteenth_swing_pct(b) for b in (60, 80, 100, 120, 140, 160)]
     check("sixteenth swing stays in 50-62% (never 8th-note BUR range)",
@@ -117,7 +202,8 @@ def test_swing_axis():
 
 if __name__ == "__main__":
     for t in (test_no_dead_space_and_pads, test_ring_closure, test_groove_invariants,
-              test_generator_determinism, test_swing_axis):
+              test_generator_determinism, test_swing_axis, test_sophia_vocal_octave,
+              test_album_invariants, test_stemlib_registers):
         print(t.__name__)
         t()
     if FAILURES:

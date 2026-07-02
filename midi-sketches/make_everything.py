@@ -66,6 +66,31 @@ def main():
         total += n
         print(f"  {zname:<34} {n:>4} .mid")
 
+    # master index across every pack -- generated here so it can't omit one
+    import csv
+    import mido
+    with open(os.path.join(stage, "INDEX_ALL.csv"), "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["pack", "file", "bpm", "meter", "seconds"])
+        for zname, _, _ in PACKS:
+            for dirpath, _, files in os.walk(os.path.join(stage, zname)):
+                for f in sorted(files):
+                    if not f.endswith(".mid"):
+                        continue
+                    p = os.path.join(dirpath, f)
+                    try:
+                        m = mido.MidiFile(p)
+                        bpm = meter = ""
+                        for msg in m.tracks[0]:
+                            if msg.type == "set_tempo" and not bpm:
+                                bpm = round(mido.tempo2bpm(msg.tempo))
+                            if msg.type == "time_signature" and not meter:
+                                meter = f"{msg.numerator}/{msg.denominator}"
+                        w.writerow([zname, os.path.relpath(p, stage), bpm, meter, round(m.length, 1)])
+                    except Exception as e:
+                        w.writerow([zname, os.path.relpath(p, stage), "", "", f"ERR {e}"])
+    shutil.copyfile(os.path.join(stage, "INDEX_ALL.csv"), os.path.join(OUT, "INDEX_ALL.csv"))
+
     for extra in ("INDEX.csv",):
         p = os.path.join(OUT, extra)
         if os.path.exists(p):
