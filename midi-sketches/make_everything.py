@@ -34,6 +34,7 @@ PACKS = [
     ("07_instrument-audition", "instrument_set_40001_kida_odd5", None),
     ("08_ab-demo", "ab_demo", "ab_demo.py"),
     ("09_sophia-beds", "sophia", "sophia.py"),
+    ("10_stemlib", "stemlib", "stemlib.py"),
 ]
 
 
