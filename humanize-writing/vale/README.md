@@ -10,7 +10,7 @@ cd humanize-writing/vale
 vale ../..some-draft.md  # or copy .vale.ini + styles/ to your project root
 ```
 
-Note: these rules were written against Vale's documented `substitution`/`existence` syntax but haven't been runtime-validated in this repo (Vale isn't installed in the environment that generated them). Run `vale ls-config` once after install to confirm they parse; fix-ups should be trivial.
+Note: every rule file YAML-parses, and the regexes compile and pass a 17-case behavior test (hits on "It's not just X, it's Y" in all its word orders, -ing tails, "important to note", etc.; no hits on ordinary negation like "the dog is not just outside"). The Vale binary itself wasn't runnable in the environment that generated these, so run `vale ls-config` once after install to confirm end-to-end.
 
 ## What's included
 

@@ -3,14 +3,14 @@ message: "AI-tell construction ('%s'): rewrite as a direct claim."
 level: warning
 ignorecase: true
 raw:
-  - '\b(?:it|this)(?:''s| is)n''t just (?:about )?\w+[^.]*(?:—|;|,)? ?it''s\b|'
-  - '\bnot just \w+(?:,| —| –| -) ?(?:but )?(?:a |an |the )?\w+|'
-  - '\bnot only\b[^.]{0,60}\bbut also\b|'
-  - ', (?:highlighting|underscoring|reflecting|demonstrating|showcasing|emphasizing|signaling|cementing|solidifying|ensuring) \b|'
-  - '\bit(?:''s| is) (?:important|worth) (?:to note|noting)\b|'
-  - '\bin today''s (?:fast-paced|ever-evolving|digital|competitive|rapidly)|'
+  - '\b(?:it|this|that)(?:[''’]s| is)(?:n[''’]t| not) (?:just|only|merely|about)?\b[^!?\n]{0,60}\b(?:it|this|that)(?:[''’]s| is)\b|'
+  - '\bnot only\b[^.!?\n]{0,60}\bbut also\b|'
+  - '\bnot just\b[^.!?\n]{0,60}\bbut(?: also)?\b|'
+  - ', (?:highlighting|underscoring|reflecting|demonstrating|showcasing|emphasizing|signaling|cementing|solidifying|ensuring) |'
+  - '\bit(?:[''’]s| is) (?:important|worth) (?:to note|noting)\b|'
+  - '\bin today[''’]s (?:fast-paced|ever-evolving|digital|competitive|rapidly)|'
   - '\bin the (?:ever-evolving|rapidly changing) (?:world|landscape|realm) of\b|'
   - '\b(?:the )?future looks bright\b|'
   - '\bexciting times (?:lie )?ahead\b|'
-  - '\blet''s (?:dive|delve) in(?:to)?\b|'
-  - '\bin this (?:article|post|section),? we (?:will|''ll)\b'
+  - '\blet[''’]s (?:dive|delve) in(?:to)?\b|'
+  - '\bin this (?:article|post|section),? we (?:will|[''’]ll)\b'
