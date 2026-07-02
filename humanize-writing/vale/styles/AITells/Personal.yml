@@ -1,0 +1,13 @@
+# Your personal banned list — words YOU never write, so an AI draft or edit
+# must not introduce them. Add to `swap` (with a replacement) or convert to an
+# existence rule. This does more work than any tone instruction: it pins the
+# editor to your register ("stuff" stays "stuff", never "elements").
+extends: substitution
+message: "Not in my voice: '%s' instead of '%s'."
+level: warning
+ignorecase: true
+swap:
+  # examples — replace with your own:
+  elements: stuff
+  components: parts
+  individuals: people

@@ -1,0 +1,13 @@
+extends: existence
+message: "Chatbot residue ('%s'): delete on sight."
+level: error
+ignorecase: true
+tokens:
+  - I hope this helps
+  - 'Certainly! '
+  - As an AI language model
+  - as of my last knowledge update
+  - as of my last update
+  - Would you like me to
+  - Great question
+  - Let me know if you'd like

@@ -1,0 +1,13 @@
+extends: existence
+message: "Vague attribution ('%s'): name the source or cut the claim."
+level: warning
+ignorecase: true
+tokens:
+  - experts (?:argue|believe|say|suggest|agree)
+  - studies (?:show|suggest|have shown)
+  - research (?:shows|suggests|indicates)
+  - observers have (?:noted|cited)
+  - industry reports suggest
+  - some critics argue
+  - it is widely (?:regarded|considered|believed)
+  - many believe

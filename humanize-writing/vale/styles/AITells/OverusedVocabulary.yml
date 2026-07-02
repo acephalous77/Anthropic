@@ -1,0 +1,31 @@
+extends: substitution
+message: "AI-tell vocabulary: try '%s' instead of '%s' — or better, the specific fact."
+level: warning
+ignorecase: true
+action:
+  name: replace
+swap:
+  delve into: look at
+  delves into: looks at
+  delving into: looking at
+  leverage(?:s|d)?: use
+  harness(?:es|ed)? the power of: use
+  seamlessly: (delete, or say what actually happens)
+  seamless: (name the specific property)
+  utilize(?:s|d)?: use
+  in order to: to
+  foster(?:s|ed)? (?:a|an|the)? ?(?:culture|environment|sense) of: build
+  showcase(?:s|d)?: show
+  underscore(?:s|d)?: show
+  a plethora of: many
+  a myriad of: many
+  a wide array of: several
+  boasts: has
+  serves as: is
+  stands as: is
+  nestled in: in
+  ever-evolving: (delete)
+  fast-paced: (delete)
+  cutting-edge: (name the capability)
+  game-changer: (say what changed)
+  game-changing: (say what changed)

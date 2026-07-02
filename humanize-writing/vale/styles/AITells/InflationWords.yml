@@ -1,0 +1,25 @@
+extends: existence
+message: "Significance inflation ('%s'): replace with the fact that would justify it."
+level: suggestion
+ignorecase: true
+tokens:
+  - pivotal
+  - crucial
+  - vital role
+  - transformative
+  - groundbreaking
+  - unparalleled
+  - unprecedented
+  - multifaceted
+  - holistic
+  - vibrant
+  - tapestry
+  - testament to
+  - treasure trove
+  - beacon of
+  - cornerstone of
+  - rich cultural heritage
+  - enduring legacy
+  - meticulous(?:ly)?
+  - intricate
+  - paradigm shift

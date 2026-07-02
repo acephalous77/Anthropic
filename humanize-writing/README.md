@@ -12,6 +12,8 @@ Built from a synthesis of the current (mid-2026) research and craft literature: 
 | [`CHECKLIST.md`](CHECKLIST.md) | One-page quick reference for an editing pass. Print it, pin it. |
 | [`voice-profile-template.md`](voice-profile-template.md) | Fill-in template for capturing your personal voice as a reusable style card. |
 | [`skill/SKILL.md`](skill/SKILL.md) | A portable Claude Code skill that runs the full multi-pass humanization protocol on any draft. |
+| [`prompts.md`](prompts.md) | Copy-paste prompt blocks for generation time: style constraints, voice-matched generation, interview mode, feedback-not-rewrite, self-audit rubric, pre-writing gate. |
+| [`vale/`](vale/) | Starter [Vale](https://vale.sh) linter rules that catch the word- and phrase-level tells mechanically, in pre-commit or CI — including a template for your personal banned list. |
 
 ## Installing the skill on your machine
 
