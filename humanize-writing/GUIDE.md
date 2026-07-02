@@ -211,6 +211,8 @@ Folklore:
 
 ## 5. Detectors and ethics (know the terrain, don't fight on it)
 
+*This is the summary; the mechanism-level deep-dive — how each detector family actually scores text, why false positives are structural, and the process-evidence playbook for disputes — is in [`detectors.md`](detectors.md).*
+
 **The landscape, mid-2026:** GPTZero (acquired by Superhuman/Grammarly, June 2026) claims 99% but flagged 15% of human essays in one real-world university test. Turnitin claims <1% false positives; its own CPO conceded ~4% — at a 67,000-student university, ~2,700 false accusations — and since Aug 2025 it specifically detects humanizer-tool artifacts. Pangram is the outlier: near-zero measured false positives (~0.01%, and no significant elevation for ESL writers) in the UChicago Booth benchmark. Watermarking (SynthID) is a provenance layer for participating models' media, not a text-detection solution; OpenAI's text watermark remains shelved.
 
 **The false-positive reality:** 61% of TOEFL essays by non-native speakers flagged (Stanford); elevated flags for neurodivergent writers; merely *polishing* human text with ChatGPT raises its flag rate. Institutions are retreating to "signal, never proof."

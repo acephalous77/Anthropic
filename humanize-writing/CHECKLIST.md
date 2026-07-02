@@ -51,3 +51,4 @@ Work top-down — structural edits first, line edits last. Full rationale in [GU
 ## Final audit
 - [ ] Ask: "What makes this still obviously AI-generated?" List residual tells; one more pass
 - [ ] Cluster check: 3+ tell families remaining = not done (see GUIDE §7)
+- [ ] High-stakes submission? Draft in Docs/Word with version history on, keep your prompts and notes — process evidence beats any detector score (see detectors.md §4)

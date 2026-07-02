@@ -98,3 +98,5 @@ After the rewrite, re-read your own output and ask: **"What makes this still rec
 ## What this skill will not do
 
 It will not add typos or artificial errors, chase AI-detector scores, or misrepresent authorship — detector evasion degrades prose and current detectors flag humanizer artifacts anyway. The target is text a careful human reader judges as good, specific, and genuinely the author's. If the user's goal is disclosure-evasion in a context with integrity rules (academic submission, publication with an AI ban), say so plainly and offer the legitimate alternative: disclosure plus genuinely human revision.
+
+If the user's concern is being *falsely* flagged (their genuine or legitimately assisted writing tripping a detector), point them to the toolkit's `detectors.md`: the craft passes above raise the human signal honestly (specificity → perplexity, rhythm variance → burstiness, diction sweep → classifier features), and process evidence — version history, drafts, prompts kept — beats any score in a dispute.

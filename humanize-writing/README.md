@@ -14,6 +14,7 @@ Built from a synthesis of the current (mid-2026) research and craft literature: 
 | [`skill/SKILL.md`](skill/SKILL.md) | A portable Claude Code skill that runs the full multi-pass humanization protocol on any draft. |
 | [`prompts.md`](prompts.md) | Copy-paste prompt blocks for generation time: style constraints, voice-matched generation, interview mode, feedback-not-rewrite, self-audit rubric, pre-writing gate. |
 | [`vale/`](vale/) | Starter [Vale](https://vale.sh) linter rules that catch the word- and phrase-level tells mechanically, in pre-commit or CI — including a template for your personal banned list. |
+| [`detectors.md`](detectors.md) | How AI detectors actually work (perplexity/burstiness, trained classifiers, watermarking, stylometry), why they false-positive on legitimate writers, and how to answer them — in the prose, in your process evidence, and in a dispute. |
 
 ## Installing the skill on your machine
 
