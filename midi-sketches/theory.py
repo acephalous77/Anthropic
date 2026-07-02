@@ -32,6 +32,7 @@ CHORDS = {
     "sus4": (0, 5, 7),
     "sus2": (0, 2, 7),
     "5": (0, 7),
+    "q4": (0, 5, 10),   # quartal stack (fourths -- the "So What" openness)
 }
 
 

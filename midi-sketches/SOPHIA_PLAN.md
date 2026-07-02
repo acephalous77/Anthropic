@@ -50,6 +50,27 @@ chord specs `(semitones, quality)` alongside diatonic degrees, sus2 chords and
 mixolydian in theory.py, trading/rubato section behaviors, per-round cycles.
 Volume 1 output verified **byte-identical** after the refactor.
 
+## Volume 3 — The Dialogue (families 15–20)
+
+Quarry and Trade turned out to share one principle: **the bed withholds
+something only the voice can supply.** Quarry withholds *color* (no thirds);
+Trade withholds *sound* (structured gaps). Volume 3 develops each axis and
+then fuses them:
+
+| Bed | Axis | Design |
+|---|---|---|
+| 15_Aperture_72_Edor | ambiguity → deeper | pure **quartal** stacks (chords built in fourths — the "So What" sound): rootless, floating, jazz-modal. Even less committed than sus chords. |
+| 16_Hollow_62_Gm | ambiguity → maximal | **bare open fifths only**, two pitch-classes per chord, strings, slow 2-bar harmonic rhythm. The medieval organum sound; the voice supplies literally everything else. |
+| 17_Antiphon_76_Ador | silence → melodic | a **cantor**: a low cello-register call phrase sings bars 1–2 of every 4, bars 3–4 are her answer. Call-and-response with an actual caller — church antiphony. |
+| 18_Sparring_100_Fdor | silence → faster | **1-bar trades**: band, her, band, her. Quick reflexes, funk drums under everything. |
+| 19_Yield_84_Ador | silence → progressive | the gaps **grow round by round**: 1 bar of every 4, then 2, then 3. The band withdraws as the bed proceeds — it trusts her more the longer she sings. |
+| 20_Oracle_78_E | **the fusion** | thirdless sus/quartal harmony AND trading gaps at once. Maximal withholding: the bed neither names the mode nor fills the space. |
+
+Engine additions: parametric gap patterns `trade_spec=(period, gap_bars)`,
+per-round gap growth `trade_by_round`, a `call.mid` cantor stem (hook_phrase
+voiced 48–58, below the vocal octave), quartal `q4` chords in theory.py.
+Volumes 1–2 verified byte-identical after the refactor (83/83 md5).
+
 ## How to use (MC-707 or DAW)
 
 1. Start with `bed_full.mid` in a family whose mood fits.

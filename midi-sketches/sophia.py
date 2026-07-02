@@ -55,8 +55,9 @@ REG_DRONE = (36, 47)
 def F(seed, name, bpm, root, scale, cycle, feel, pad, arp, bass, **kw):
     d = dict(seed=seed, name=name, bpm=bpm, root=root, scale=scale, cycle=cycle,
              feel=feel, pad_prog=pad, arp_prog=arp, bass_prog=bass,
-             meter=(4, 4), rounds=None, trade=False, rubato=False,
-             cycles_by_round=None, chord_per=1, has_drums=True)
+             meter=(4, 4), rounds=None, trade_spec=None, trade_by_round=None,
+             rubato=False, cycles_by_round=None, chord_per=1, has_drums=True,
+             call=False, call_prog=42)
     d.update(kw)
     return d
 
@@ -80,12 +81,28 @@ FAMILIES = [
       meter=(3, 4), rounds=4),                                        # D: La Folia ground, sarabande 3/4
     F(3111, "Reel",     84, 50, "mixolydian", [0, -1, 3, 0], "laidback", 21, 25, 32),  # D: I bVII IV I
     F(3112, "Trade",    92, 48, "dorian",  [0, 3, 0, 3],    "laidback", 4,  11, 33,
-      trade=True),                                          # C: neo-soul, band drops bars 3-4
+      trade_spec=(4, (2, 3))),                              # C: neo-soul, band drops bars 3-4
     F(3113, "Vigil",    56, 53, "lydian",  [0, 1],          "ritual",   95, 46, 42,
       rubato=True, has_drums=False, chord_per=2),           # F: no drums, chords float 2-bar
     F(3114, "Ascent",   80, 45, "aeolian", [0, 5, 2, 6],    "laidback", 50, 98, 38,
       rounds=3, cycles_by_round=[[0, 5, 2, 6], [2, 6, 0, 5], [0, 5, 2, 6]]),
     # Ascent: round 2 reorders the SAME chords so C major becomes home -- a bridge.
+    # -------- volume 3: The Dialogue (ambiguity + silence, then fused) --------
+    F(3115, "Aperture", 72, 52, "dorian",                   # E: quartal stacks -- the 'So What'
+      [(0, "q4"), (-2, "q4"), (3, "q4"), (0, "q4")], "laidback", 4, 11, 33),  # rootless openness
+    F(3116, "Hollow",   62, 43, "aeolian",                  # G: open fifths ONLY -- maximal
+      [(0, "5"), (-4, "5"), (-2, "5"), (0, "5")], "ritual", 48, 46, 32,       # ambiguity, organum tone
+      chord_per=2),
+    F(3117, "Antiphon", 76, 45, "dorian", [0, 3, 0, -1],    # A: a low cantor phrase calls
+      "ritual", 19, 46, 32, call=True),                     # (bars 1-2), she answers (bars 3-4)
+    F(3118, "Sparring", 100, 41, "dorian", [0, 3, 0, 3],    # F: 1-bar trades -- band, her,
+      "laidback", 4, 11, 33, trade_spec=(2, (1,))),         # band, her. Quick reflexes.
+    F(3119, "Yield",    84, 45, "dorian", [0, 3, 4, 0],     # A: the gaps GROW round by round:
+      "laidback", 4, 11, 33, rounds=3,                      # 1 bar, then 2, then 3 of every 4
+      trade_by_round=[(4, (3,)), (4, (2, 3)), (4, (1, 2, 3))]),
+    F(3120, "Oracle",   78, 52, "major",                    # E: the fusion -- thirdless harmony
+      [(0, "sus4"), (-2, "sus2"), (5, "sus4"), (0, "q4")],  # AND trading silence at once
+      "ritual", 95, 10, 38, trade_spec=(4, (2, 3))),
 ]
 
 
@@ -121,6 +138,19 @@ BEATS = {
                      lift_add={"46": _g([14])}),
     "Ascent":   dict(full={"36": _g([0, 8], [0]), "38": _g([4, 12]), "42": _g([0, 2, 4, 6, 8, 10, 12, 14])},
                      lift_add={"46": _g([6])}),
+    # vol. 3
+    "Aperture": dict(full={"36": _g([0, 10], [0]), "51": _g([0, 2, 4, 6, 8, 10, 12, 14], [0, 8]), "37": _g([4, 12])},
+                     lift_add={"46": _g([14])}),
+    "Hollow":   dict(full={"36": _g([0, 8], [0]), "41": _g([0], [0]), "46": _g([14])},
+                     lift_add={"51": _g([0, 4, 8, 12])}),
+    "Antiphon": dict(full={"36": _g([0, 8], [0]), "44": _g([4, 12]), "37": _g([6, 14])},
+                     lift_add={"42": _g([0, 2, 4, 6, 8, 10, 12, 14])}),
+    "Sparring": dict(full={"36": _g([0, 7, 10], [0]), "38": _g([4, 12], [12]), "42": _g([0, 2, 3, 4, 6, 8, 10, 11, 12, 14])},
+                     lift_add={"46": _g([14])}),
+    "Yield":    dict(full={"36": _g([0, 8], [0]), "38": _g([4, 12]), "42": _g([0, 2, 4, 6, 8, 10, 12, 14])},
+                     lift_add={"46": _g([6, 14])}),
+    "Oracle":   dict(full={"36": _g([0, 10], [0]), "45": _g([7]), "48": _g([12]), "44": _g([4, 12])},
+                     lift_add={"42": _g([2, 6, 10, 14])}),
 }
 SPARSE_BY = {16: {"36": _g([0, 8], [0]), "44": _g([12])},
              12: {"36": _g([0, 6], [0], 12), "44": _g([9], (), 12)}}
@@ -187,16 +217,18 @@ def grids_events(grids, bar_i, bar_t, vel_map=None):
 def build_plan(fam):
     cycle = fam["cycle"]
     if fam["rubato"]:
-        return [("intro", 2, "sparse", cycle), ("flow", 12, "rubato", cycle),
-                ("swell", 8, "rubato_lift", cycle), ("flow2", 12, "rubato", cycle),
-                ("tail", 6, "sparse", cycle)]
+        return [("intro", 2, "sparse", cycle, None), ("flow", 12, "rubato", cycle, None),
+                ("swell", 8, "rubato_lift", cycle, None), ("flow2", 12, "rubato", cycle, None),
+                ("tail", 6, "sparse", cycle, None)]
     rounds = fam["rounds"] or (2 if fam["bpm"] < 88 else 3)
     cbr = fam["cycles_by_round"] or [cycle] * rounds
-    plan = [("intro", 2, "sparse", cbr[0])]
+    tbr = fam["trade_by_round"]
+    plan = [("intro", 2, "sparse", cbr[0], None)]
     for r in range(rounds):
         cyc = cbr[r % len(cbr)]
-        plan += [(f"A{r}", 8, "full", cyc), (f"lift{r}", 8, "lift", cyc)]
-    plan += [("tail", 6, "sparse", cbr[-1])]
+        gaps = tbr[r % len(tbr)] if tbr else fam["trade_spec"]
+        plan += [(f"A{r}", 8, "full", cyc, gaps), (f"lift{r}", 8, "lift", cyc, None)]
+    plan += [("tail", 6, "sparse", cbr[-1], None)]
     return plan
 
 
@@ -212,7 +244,7 @@ def build_family(fam, index):
     rng = random.Random(seed)
 
     plan = build_plan(fam)
-    total_bars = sum(n for _, n, _, _ in plan)
+    total_bars = sum(n for _, n, *_ in plan)
     tail_start = total_bars - 6
 
     beats = BEATS.get(name, {})
@@ -220,16 +252,27 @@ def build_family(fam, index):
     lift_grids = {**full, **beats.get("lift_add", {})}
     sparse = SPARSE_BY[bar_steps]
 
-    drums, bass, pad, arp, drone = [], [], [], [], []
+    drums, bass, pad, arp, drone, call = [], [], [], [], [], []
+    call_cells = None
+    if fam["call"]:
+        import palette as P
+        call_cells = P.hook_phrase(rng, root, scale, (48, 58), vel_base=76)
     prev_voicing = None
     bar_i = 0
 
-    for sec, n_bars, kind, cycle in plan:
+    for sec, n_bars, kind, cycle, gaps in plan:
         for b in range(n_bars):
             fade = 1.0
             if bar_i >= tail_start:
                 fade = max(0.35, 1.0 - (bar_i - tail_start) * 0.12)
-            trading = fam["trade"] and kind == "full" and b % 4 >= 2
+            trading = gaps is not None and (b % gaps[0]) in gaps[1]
+
+            # the cantor: a low call phrase in bars 1-2 of each 4; 3-4 are hers
+            if call_cells and kind == "full" and b % 4 in (0, 1):
+                cell = call_cells[b % 4]
+                for (o, d, p, v) in cell:
+                    call.append(Event(bar_i * bar_t + o * STEP, d * STEP, p,
+                                      max(1, round(v * fade)), 5))
 
             # --- drums
             if fam["has_drums"]:
@@ -310,9 +353,10 @@ def build_family(fam, index):
     bass = G.apply_feel(G.apply_accents(bass, STEP, bar_steps=bar_steps, depth=0.4),
                         feel, bpm, PPQ, frng)
     arp = G.apply_feel(arp, feel, bpm, PPQ, frng)
+    call = G.apply_feel(call, feel, bpm, PPQ, frng) if call else call
     half = STEP // 2
     fix = lambda evs: [e._replace(start=0) if 0 <= e.start < half else e for e in evs]
-    drums, bass, arp = fix(drums), fix(bass), fix(arp)
+    drums, bass, arp, call = fix(drums), fix(bass), fix(arp), fix(call)
 
     qual = {"major": "maj", "dorian": "dor", "mixolydian": "mix", "lydian": "lyd"}.get(scale, "m")
     key = f"{['C','Cs','D','Ds','E','F','Fs','G','Gs','A','As','B'][root % 12]}{qual}"
@@ -323,7 +367,7 @@ def build_family(fam, index):
 
     stems = [("drums.mid", drums, 9, None), ("bass.mid", bass, 0, fam["bass_prog"]),
              ("pad.mid", pad, 2, fam["pad_prog"]), ("arp.mid", arp, 3, fam["arp_prog"]),
-             ("drone.mid", drone, 4, 89)]
+             ("call.mid", call, 5, fam["call_prog"]), ("drone.mid", drone, 4, 89)]
     tracks = []
     for fname, evs, ch, prog in stems:
         if not evs:
@@ -385,6 +429,16 @@ VOLUME 2 -- new shapes a singer can lean on
   14_Ascent_80_Am         the same four chords reordered each round: home
                           shifts Am -> C major -> Am. A built-in bridge --
                           when the floor brightens, the voice follows.
+
+VOLUME 3 -- The Dialogue: the bed withholds, the voice supplies
+  15_Aperture_72_Edor     quartal stacks (fourths) -- rootless jazz-modal float
+  16_Hollow_62_Gm         bare open fifths, nothing else -- she supplies ALL color
+  17_Antiphon_76_Ador     a low cantor phrase calls bars 1-2, bars 3-4 are hers
+                          (call.mid is its own stem -- drop it to silence him)
+  18_Sparring_100_Fdor    1-bar trades: band, her, band, her. Fast reflexes.
+  19_Yield_84_Ador        the gaps grow: 1 bar of 4, then 2, then 3 -- the band
+                          trusts her more the longer she sings
+  20_Oracle_78_E          the fusion: thirdless harmony AND trading silence
 
 STEMS (all share the family's key/tempo/feel -- stack any subset):
   bed_full.mid   the whole mix, ready to sing over
