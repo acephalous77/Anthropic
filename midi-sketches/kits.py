@@ -434,6 +434,178 @@ KIT_FNS = [kit_nightpulse, kit_glasskid, kit_hillrunner, kit_lowgold,
 
 
 # =============================================================================
+# SECTION VARIATIONS -- four clips per part: 1_intro, 2_main, 3_lift, 4_break.
+# Load a part's four clips across a 707 clip column and you have sections:
+# chain 1-2-2-3-2-3-4-2 (or your own order) and the song arranges itself.
+# Drum section textures are hand-specified per kit below; pitched variations
+# are composed transformations (reduction / octave thickening / fragment
+# isolation) -- arrangement moves, not randomness.
+# =============================================================================
+
+# per-kit drum section specs:
+#   intro: voices to KEEP from the main pattern (stripped opening)
+#   lift_add: {note: hits} layered onto every main A bar (+ crash on bar 1)
+#   brk: explicit hand-written 4-bar texture (the breakdown)
+DRUM_VARS = {
+    "Nightpulse": dict(
+        intro=[36, 44, 37],
+        lift_add={42: H(0, 58, 2, 44, 4, 54, 6, 44, 8, 56, 10, 44, 12, 54, 14, 46),
+                  46: H(6, 80)},
+        brk=[{41: H(0, 90, 6, 82, 11, 86), 45: H(3, 84, 13, 88), 48: H(9, 80),
+              44: H(2, 42, 6, 42, 10, 42, 14, 42)}] * 3 +
+            [{41: H(0, 90), 45: H(4, 86), 48: H(8, 88, 12, 92), 36: H(14, 70)}]),
+    "Glasskid": dict(
+        intro=[36, 44],
+        lift_add={42: H(2, 58, 6, 58, 10, 58, 14, 58), 46: H(14, 86)},
+        brk=[{39: H(4, 88, 12, 90), 40: H(14, 60),
+              37: H(0, 40, 3, 38, 5, 36, 8, 40, 11, 38, 13, 36)}] * 3 +
+            [{39: H(4, 88, 12, 90, 14, 84), 40: H(15, 70), 37: H(0, 40, 8, 40)}]),
+    "Hillrunner": dict(
+        intro=[36, 38, 44],
+        lift_add={46: H(6, 84, 14, 86), 51: H(0, 72, 4, 70, 8, 72, 12, 70)},
+        brk=[{43: H(3, 86, 4, 78, 11, 86, 12, 78), 45: H(0, 88, 8, 86),
+              44: H(2, 44, 10, 44)}] * 3 +
+            [{45: H(0, 88), 48: H(4, 84, 8, 88, 12, 92, 14, 96)}]),
+    "Lowgold": dict(
+        intro=[36, 42],
+        lift_add={39: H(4, 66, 12, 68), 46: H(14, 82)},
+        brk=[{37: H(0, 48, 5, 40, 7, 36, 10, 44, 15, 34),
+              44: H(2, 46, 6, 46, 10, 46, 14, 46)}] * 3 +
+            [{37: H(0, 48, 7, 38), 44: H(2, 46, 6, 46), 45: H(12, 80, 14, 84)}]),
+    "Seaglass": dict(
+        intro=[36, 44],
+        lift_add={46: H(6, 80, 14, 82), 37: H(2, 40, 10, 40)},
+        brk=[{36: H(0, 96, 8, 92), 46: H(12, 72),
+              44: H(2, 44, 4, 40, 6, 44, 10, 44, 12, 40, 14, 44)}] * 3 +
+            [{36: H(0, 96), 38: H(12, 74, 13, 78, 14, 84, 15, 90)}]),
+    "Ironveil": dict(
+        intro=[36, 37],
+        lift_add={42: H(1, 54, 3, 54, 5, 54, 7, 54, 9, 54, 11, 54, 13, 54, 15, 54)},
+        brk=[{46: H(2, 80, 6, 80, 10, 80, 14, 80), 39: H(0, 74, 4, 84, 12, 86),
+              37: H(1, 30, 3, 30, 5, 30, 7, 30, 9, 30, 11, 30, 13, 30, 15, 30)}] * 3 +
+            [{46: H(2, 80, 6, 80, 10, 80), 39: H(0, 74, 4, 84, 12, 86),
+              40: H(8, 70, 12, 74, 14, 80)}]),
+    "Holloway": dict(
+        intro=[36, 42],
+        lift_add={46: H(6, 76), 41: H(11, 70)},
+        brk=[{38: H(8, 100), 37: H(0, 44, 5, 34, 13, 34),
+              44: H(2, 46, 6, 46, 10, 46, 14, 46)}] * 3 +
+            [{38: H(8, 100, 15, 58), 41: H(11, 80), 44: H(2, 46, 10, 46)}]),
+    "Morningvow": dict(
+        intro=[36, 44],
+        lift_add={46: H(10, 74), 51: H(0, 64, 6, 62)},
+        brk=[{37: H(3, 58, 9, 60), 45: H(6, 74),
+              44: H(0, 44, 2, 40, 4, 42, 6, 44, 8, 40, 10, 42)}] * 3 +
+            [{37: H(3, 58), 45: H(6, 76), 48: H(8, 80, 10, 86)}]),
+}
+
+
+def drums_variation(kit, which):
+    name, spec = kit["name"], DRUM_VARS[kit["name"]]
+    main = kit["drums"]
+    if which == "main":
+        return main
+    if which == "intro":
+        keep = set(spec["intro"])
+        return [{n: [(s, max(1, int(v * 0.85))) for (s, v) in hits]
+                 for n, hits in bar.items() if n in keep} for bar in main]
+    if which == "lift":
+        out = []
+        for bi, bar in enumerate(main):
+            nb = {n: list(h) for n, h in bar.items()}
+            for n, hits in spec["lift_add"].items():
+                nb.setdefault(n, [])
+                nb[n] = nb[n] + list(hits)
+            if bi == 0:
+                nb.setdefault(49, [])
+                nb[49] = nb[49] + [(0, 100)]     # the crash that opens the lift
+            out.append(nb)
+        return out
+    return spec["brk"]
+
+
+def bass_variation(bars, which, bar_steps):
+    if which == "main":
+        return bars
+    if which == "intro":                          # root motion only, held
+        return [[(0, bar_steps, b[0][2], max(1, b[0][3] - 8))] for b in bars]
+    if which == "lift":                           # octave-up shadow thickens it
+        out = []
+        for bar in bars:
+            nb = list(bar)
+            for (s, d, note, v) in bar:
+                nn = (N(note) if isinstance(note, str) else note) + 12
+                nb.append((s, d, nn, max(1, int(v * 0.55))))
+            out.append(nb)
+        return out
+    # break: drones on the bar roots, the written turnaround pulls back in
+    return [[(0, bar_steps, b[0][2], max(1, b[0][3] - 12))] for b in bars[:3]] + [bars[3]]
+
+
+def lead_variation(bars, which):
+    if which == "main":
+        return bars
+    if which == "intro":                          # the call, then space
+        return [bars[0], bars[1], [], []]
+    if which == "lift":                           # octave double = chorus voice
+        out = []
+        for bar in bars:
+            nb = list(bar)
+            for (s, d, note, v) in bar:
+                nn = (N(note) if isinstance(note, str) else note) + 12
+                nb.append((s, d, nn, max(1, v - 24)))
+            out.append(nb)
+        return out
+    return [bars[1], [], bars[3], []]             # break: answers only, spacious
+
+
+def chords_variation(bars, which, bar_steps):
+    if which == "main":
+        return bars
+    if which == "intro":                          # one held strike per bar
+        out = []
+        for bar in bars:
+            first = min(s for (s, d, n, v) in bar)
+            out.append([(first, bar_steps - first, n, max(1, v - 6))
+                        for (s, d, n, v) in bar if s == first])
+        return out
+    if which == "lift":                           # rhythmic comp -- the 'rhythm' clip
+        strikes = (0, 4, 8, 12) if bar_steps == 16 else (0, 3, 6, 9)
+        out = []
+        for bar in bars:
+            first = min(s for (s, d, n, v) in bar)
+            tones = [(n, v) for (s, d, n, v) in bar if s == first]
+            nb = []
+            for k, st in enumerate(strikes):
+                for (n, v) in tones:
+                    nb.append((st, 2, n, max(1, (v + 8) if k % 2 == 0 else (v - 6))))
+            out.append(nb)
+        return out
+    out = []                                      # break: low floor, single strike
+    for bar in bars:
+        first = min(s for (s, d, n, v) in bar)
+        out.append([(first, bar_steps - first,
+                     (N(n) if isinstance(n, str) else n) - 12, max(1, v - 10))
+                    for (s, d, n, v) in bar if s == first])
+    return out
+
+
+def arp_variation(bars, which):
+    if which == "main":
+        return bars
+    if which == "intro":                          # half density
+        return [[t for i, t in enumerate(bar) if i % 2 == 0] for bar in bars]
+    if which == "lift":                           # up the octave
+        return [[(s, d, (N(n) if isinstance(n, str) else n) + 12, v)
+                 for (s, d, n, v) in bar] for bar in bars]
+    return [[(s, d, (N(n) if isinstance(n, str) else n) - 12, max(1, v - 8))
+             for i, (s, d, n, v) in enumerate(bar) if i % 2 == 0] for bar in bars]
+
+
+VARIATIONS = [("1_intro", "intro"), ("2_main", "main"),
+              ("3_lift", "lift"), ("4_break", "break")]
+
+
 def polish(events, kit, rng):
     """Feel micro-timing only -- the velocities above are the dynamics.
     Swung kits get the classic 8th-note shuffle (off-8ths delayed), applied
@@ -453,44 +625,66 @@ def build_kit(kit, index):
     rng = random.Random(7000 + index)
     bar_steps = kit.get("bar_steps", 16)
     meter = kit.get("meter", (4, 4))
-    drums = polish(drum_bars(kit["drums"], bar_steps), kit, rng)
-    bass = polish(bars_to_events(kit["bass"], 0, bar_steps), kit, rng)
-    lead = polish(bars_to_events(kit["lead"], 1, bar_steps), kit, rng)
-    chords = polish(bars_to_events(kit["chords"], 2, bar_steps), kit, rng)
-    arp = polish(bars_to_events(kit["arp"], 3, bar_steps), kit, rng) if kit["arp"] else []
-
-    folder = os.path.join(DEST, f"{index:02d}_{kit['name']}_{kit['key']}_{kit['bpm']}")
-    os.makedirs(folder, exist_ok=True)
     bpmc, tsc = [(0, kit["bpm"])], [(0, meter)]
     pr = kit["progs"]
-    stems = [("drums", drums, 9, None), ("bass", bass, 0, pr["bass"]),
-             ("lead", lead, 1, pr["lead"]), ("chords", chords, 2, pr["chords"]),
-             ("arp", arp, 3, pr["arp"])]
-    tracks = []
-    for name, evs, ch, prog in stems:
-        if not evs:
-            continue
-        midiwriter.write_track(os.path.join(folder, f"{name}.mid"), evs, bpmc, tsc,
-                               channel=ch, program=prog, track_name=f"{kit['name']}-{name}")
-        tracks.append({"events": evs, "channel": ch, "program": prog, "name": name})
-    midiwriter.write_combined(os.path.join(folder, "full.mid"), tracks, bpmc, tsc)
-    return folder, len(tracks)
+    folder = os.path.join(DEST, f"{index:02d}_{kit['name']}_{kit['key']}_{kit['bpm']}")
+
+    parts = {
+        "drums": (lambda w: drum_bars(drums_variation(kit, w), bar_steps), 9, None),
+        "bass": (lambda w: bars_to_events(bass_variation(kit["bass"], w, bar_steps), 0, bar_steps), 0, pr["bass"]),
+        "lead": (lambda w: bars_to_events(lead_variation(kit["lead"], w), 1, bar_steps), 1, pr["lead"]),
+        "chords": (lambda w: bars_to_events(chords_variation(kit["chords"], w, bar_steps), 2, bar_steps), 2, pr["chords"]),
+    }
+    if kit["arp"]:
+        parts["arp"] = (lambda w: bars_to_events(arp_variation(kit["arp"], w), 3, bar_steps), 3, pr["arp"])
+
+    previews = {"2_main": [], "3_lift": []}
+    n_files = 0
+    for part, (make, ch, prog) in parts.items():
+        pdir = os.path.join(folder, part)
+        os.makedirs(pdir, exist_ok=True)
+        for fname, which in VARIATIONS:
+            evs = polish(make(which), kit, rng)
+            if not evs:
+                continue
+            midiwriter.write_track(os.path.join(pdir, f"{fname}.mid"), evs, bpmc, tsc,
+                                   channel=ch, program=prog,
+                                   track_name=f"{kit['name']}-{part}-{which}")
+            n_files += 1
+            if fname in previews:
+                previews[fname].append({"events": evs, "channel": ch, "program": prog,
+                                        "name": part})
+    midiwriter.write_combined(os.path.join(folder, "full_main.mid"),
+                              previews["2_main"], bpmc, tsc)
+    midiwriter.write_combined(os.path.join(folder, "full_lift.mid"),
+                              previews["3_lift"], bpmc, tsc)
+    return folder, n_files
 
 
 def main():
     if os.path.isdir(DEST):
         shutil.rmtree(DEST)
-    print("KITS -- hand-composed, every note chosen\n")
+    print("KITS -- hand-composed; four section variations per part\n")
+    total = 0
     for i, fn in enumerate(KIT_FNS, 1):
         kit = fn()
         folder, n = build_kit(kit, i)
-        doc = fn.__doc__.strip().split("\n")[0]
-        print(f"  {os.path.basename(folder):<28} {n} parts   {doc}")
+        total += n
+        print(f"  {os.path.basename(folder):<28} {n} clips + 2 previews")
     with open(os.path.join(DEST, "README.txt"), "w") as fh:
-        fh.write(__doc__ + "\nKITS:\n" + "\n".join(
-            f"  {fn().get('name'):<12} {fn().get('key'):<5} {fn().get('bpm'):>3}bpm  {fn.__doc__.strip().splitlines()[0]}"
-            for fn in KIT_FNS))
-    print(f"\n-> {DEST}")
+        fh.write(__doc__ + """
+SECTIONS: every part folder holds four clips --
+  1_intro   stripped statement (root-motion bass, the call alone, held pads)
+  2_main    the song as written
+  3_lift    the chorus voice (crash entry, added hats/ride, octave doubles,
+            chords become rhythmic comp)
+  4_break   the floor drops (breakdown drums, drone bass w/ written
+            turnaround, answers-only lead, low held pads)
+Load a part's four clips down one MC-707 clip column; build sections by
+switching columns: e.g. 1-2-2-3 / 2-3-4-2 / ... full_main.mid and
+full_lift.mid are stacked previews of columns 2 and 3.
+""")
+    print(f"\n{total} clips -> {DEST}")
 
 
 if __name__ == "__main__":

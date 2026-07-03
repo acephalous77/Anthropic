@@ -37,7 +37,7 @@ def check(name, cond, detail=""):
 def test_no_dead_space_and_pads():
     import mido
     packs = ["output/loopkit", "output/codex", "output/holy_mountain/loops", "output/stemlib",
-             "output/transitions"]
+             "output/transitions", "output/kits"]
     # kits chords stems may open with offbeat stabs (by design); see kits.py
     # sophia stems are timeline-aligned (bass/arp enter late by design) -- bed anchors checked in sophia.py validation
     dead, offpad, n = [], [], 0
@@ -62,7 +62,8 @@ def test_no_dead_space_and_pads():
                             if msg.channel == 9 and not (36 <= msg.note <= 51):
                                 offpad.append(f)
                 # hocket voice B interlocks off the beat by design
-                if first is not None and first > (300 if f == "chords.mid" else 60) and "voice-B" not in f:
+                lim = 300 if (f == "chords.mid" or ("kits" in dirpath and "drums" not in dirpath)) else 60
+                if first is not None and first > lim and "voice-B" not in f:
                     dead.append((f, first))
     check(f"no dead space across {n} loop files", not dead, str(dead[:3]))
     check("all loop drums on pads 36-51", not offpad, str(offpad[:3]))
