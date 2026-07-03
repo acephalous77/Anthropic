@@ -7,19 +7,26 @@ binary (patches, events, parameters, appended audio). No public spec or
 authoring tool exists; fabricated files risk rejection or project
 corruption. See PROJECT_RECIPE.TXT for the safe template workflow.
 
-WHAT THIS BUILDS instead -- SD/ROLAND/GROOVEBOX/MIDI/<NN_KIT>/:
+HOW THE 707 ACTUALLY IMPORTS (verified): SMF import lands on the CURRENTLY
+SELECTED track. Mode "All Tracks" = merge the whole SMF to one clip; mode
+"Each Track" = fan the SMF's tracks out into consecutive CLIPS on that one
+track. So the file you import per track must be ONE PART whose tracks are
+its SECTIONS -- then "Each Track" gives that track its 6 section clips, and
+because every track fills clip slots 1-6 in the same order, scene columns
+1-6 line up as intro/main/lift/break/peak/end.
 
-  S1_INTRO.MID .. S6_END.MID
-      one MULTI-TRACK SMF per section column: drums/bass/lead/counter/
-      chords/arp as separate named tracks on their own channels. The 707's
-      SMF import (FW 1.30+) can spread an SMF's tracks across clips -- one
-      import lays out a whole scene column.
+WHAT THIS BUILDS -- SD/ROLAND/GROOVEBOX/MIDI/<NN_KIT>/:
+
+  IMPORT/T1_DRUMS.MID .. T6_ARP.MID
+      ONE per-part SMF; its 6 tracks are the 6 sections (S1_INTRO..S6_END).
+      Select that track on the 707, SMF-import this file with mode "Each
+      Track" -> the track's clip slots 1-6 become the section clips. Six
+      imports (one per part) lay out the whole kit.
   PARTS/T1_DRUMS_1.MID ...
-      every part clip named by TARGET TRACK + COLUMN for one-at-a-time
-      import; browser-friendly uppercase names.
+      the bulletproof fallback: one clip per file (no mode to get wrong),
+      named target-track + section. Import one at a time onto its track.
   LAYOUT.TXT
-      the track map (track / part / channel / suggested 707 tone) and the
-      column-to-section map for this kit.
+      the per-kit track map + the exact import procedure.
 
     python sd_export.py    ->  sd/  (copy its ROLAND folder onto your card)
 """
@@ -50,12 +57,16 @@ TRACKS = [
 SECTIONS = ["1_intro", "2_main", "3_lift", "4_break", "5_peak", "6_end"]
 
 
-def merged_section_smf(kit_dir, section):
-    """One format-1 SMF: every part's clip for this section as its own track."""
+SECTION_LABELS = ["S1_INTRO", "S2_MAIN", "S3_LIFT", "S4_BREAK", "S5_PEAK", "S6_END"]
+
+
+def per_part_smf(kit_dir, part):
+    """One format-1 SMF for a PART whose tracks are its 6 SECTIONS -- import
+    with 'Each Track' to fan the sections into that track's 6 clip slots."""
     out = mido.MidiFile(ticks_per_beat=480, type=1)
     meta_added = False
-    n_tracks = 0
-    for tno, part, ch, _tone in TRACKS:
+    n = 0
+    for section, label in zip(SECTIONS, SECTION_LABELS):
         src = os.path.join(kit_dir, part, f"{section}.mid")
         if not os.path.exists(src):
             continue
@@ -66,10 +77,10 @@ def merged_section_smf(kit_dir, section):
             out.tracks.append(meta)                       # tempo/meter track
             meta_added = True
         for tr in src_mid.tracks[1:]:
-            tr.name = f"T{tno}_{part.upper()}"
+            tr.name = label
             out.tracks.append(tr)
-            n_tracks += 1
-    return (out, n_tracks) if n_tracks else (None, 0)
+            n += 1
+    return (out, n) if n else (None, 0)
 
 
 def main():
@@ -87,14 +98,16 @@ def main():
         os.makedirs(parts_dir)
 
         kit = KITS[int(num) - 1]
-        for section in SECTIONS:
-            smf, n = merged_section_smf(kit_dir, section)
+        import_dir = os.path.join(dest, "IMPORT")
+        os.makedirs(import_dir)
+        for tno, part, ch, _tone in TRACKS:
+            if not (kit.get(part) or part == "drums"):
+                continue
+            smf, n = per_part_smf(kit_dir, part)
             if smf:
-                col = section.split("_")[0]
-                sname = section.split("_")[1].upper()
-                smf.save(os.path.join(dest, f"S{col}_{sname}.MID"))
+                smf.save(os.path.join(import_dir, f"T{tno}_{part.upper()}.MID"))
                 total += 1
-            for tno, part, ch, _t in TRACKS:
+            for section in SECTIONS:
                 src = os.path.join(kit_dir, part, f"{section}.mid")
                 if os.path.exists(src):
                     shutil.copyfile(src, os.path.join(
@@ -109,13 +122,16 @@ def main():
             for tno, part, ch, tone in TRACKS:
                 if kit.get(part) or part == "drums":
                     fh.write(f"  track {tno}  {part:<8} ch{ch:<3} {tone}\n")
-            fh.write("\nCLIP COLUMNS (scenes)\n"
+            fh.write("\nSCENE COLUMNS (clip slots 1-6, same order on every track)\n"
                      "  1 intro   2 main   3 lift   4 break   5 peak   6 end\n"
                      "  rides: 1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6\n\n"
-                     "IMPORT\n"
-                     "  S<n>_<name>.MID  = whole section column in ONE multi-track\n"
-                     "                     SMF import (choose per-track placement)\n"
-                     "  PARTS/T<t>_<part>_<col>.MID = single clip -> track t, column col\n")
+                     "IMPORT (6 imports = whole kit)\n"
+                     "  for each track T1..T6:\n"
+                     "    1. select that track on the 707\n"
+                     "    2. UTILITY > SMF IMPORT > IMPORT/T<n>_<part>.MID\n"
+                     "    3. mode = EACH TRACK  (fans the 6 sections into clip slots 1-6)\n"
+                     "  fallback: PARTS/T<n>_<part>_<col>.MID = one clip, import to\n"
+                     "            track n, clip slot <col>, any mode.\n")
         print(f"  {os.path.basename(dest)}")
 
     with open(os.path.join(HERE, "sd", "PROJECT_RECIPE.TXT"), "w") as fh:
@@ -124,36 +140,45 @@ def main():
           f"(copy the ROLAND folder to your SD card)")
 
 
-RECIPE = """MC-707 PROJECTS -- THE SAFE PATH (and why there are no .mpj files here)
+RECIPE = """MC-707: LAYING A KIT OUT ACROSS TRACKS (the verified procedure)
 
-The .mpj project format is an undocumented Roland binary (tones, events,
-parameters, appended audio). No public spec or authoring tool exists --
-the community's one attempt at documenting it is an empty repo. A file I
-fabricated would be rejected by the unit at best, or corrupt a project at
-worst. So the layout ships INSIDE multi-track MIDI files instead, plus
-this one-time recipe:
+WHY NO .mpj: the project format is undocumented Roland binary; no public
+spec or authoring tool exists (the community's format repo is empty). A
+fabricated .mpj can be rejected or corrupt a project. So the layout ships
+inside importable MIDI, and you assemble each kit on the box in ~2 minutes.
 
-ONE TIME -- MAKE THE TEMPLATE PROJECT (~5 min)
-  1. Create a new project. Name it TEMPLATE.
-  2. Lay out tracks 1-6 exactly as in any kit's LAYOUT.TXT:
-       T1 drum kit / T2 bass / T3 lead / T4 counter / T5 chords / T6 arp
-     (leave T7/T8 free for Sophia/live layers). Pick a default tone per
-     track -- per-kit tone tweaks are one knob later.
-  3. Save. On the SD card this becomes one .mpj in ROLAND/PROJECT.
+HOW SMF IMPORT WORKS ON THE 707 (this is the key fact):
+  - Import lands on the CURRENTLY SELECTED track (not spread across tracks).
+  - Mode "All Tracks" merges the whole SMF into ONE clip.
+  - Mode "Each Track" fans the SMF's tracks into consecutive CLIPS on that
+    track.
+  So to get one PART's six SECTIONS down a track's clip column, you import
+  that part's file (its tracks ARE the sections) with mode "Each Track".
 
-PER KIT (~3 min)
-  4. Copy TEMPLATE.mpj on the card (or use the unit's project copy),
-     rename to the kit (e.g. K01_NIGHTPULSE.mpj). Track layout done.
-  5. Open the project, set tempo from LAYOUT.TXT.
-  6. UTILITY > SMF IMPORT: pick the kit's S1..S6 files from
-     ROLAND/GROOVEBOX/MIDI/<KIT>/ -- each multi-track import lays one
-     whole section column across the tracks. (Or import PARTS/ files
-     one clip at a time; names say exactly where each goes.)
-  7. Save. That kit is now a permanent, correctly-laid-out project.
+ONE TIME -- THE TEMPLATE (~5 min, optional but recommended)
+  Make a project, name it TEMPLATE, set tracks 1-6 to drum-kit / bass /
+  lead / counter / chords / arp tones (T7-T8 free for live/Sophia). Save.
+  Copy + rename it per kit so tones are preset; then just do the imports.
 
-OFFER: drop your saved TEMPLATE.mpj into kitworks/ and I'll add a script
-that stamps out all 22 renamed project copies automatically -- cloning
-your own valid file is safe; inventing one is not.
+PER KIT -- SIX IMPORTS (~2 min)
+  1. Open the project; set project tempo from LAYOUT.TXT.
+  2. Select TRACK 1. UTILITY > SMF IMPORT >
+     ROLAND/GROOVEBOX/MIDI/<KIT>/IMPORT/T1_DRUMS.MID, mode EACH TRACK.
+     -> track 1 clip slots 1-6 are now intro/main/lift/break/peak/end.
+  3. Select TRACK 2, import IMPORT/T2_BASS.MID the same way. Repeat for
+     T3_LEAD, T4_COUNTER, T5_CHORDS, T6_ARP (skip any a kit doesn't have).
+  4. Save. Now every SCENE column plays a full section across all parts:
+     scene 1 = intro, 2 = main, 3 = lift, 4 = break, 5 = peak, 6 = end.
+     Perform by launching scenes: 1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6.
+
+  Not getting clean 6-clip fan-out on your firmware? Use PARTS/ instead:
+  each file is ONE clip -- import PARTS/T2_BASS_2.MID onto track 2 slot 2,
+  etc. More imports, zero ambiguity.
+
+TROUBLESHOOTING
+  - Drums silent? Track 1 must be a DRUM-KIT tone (notes 36-51 = the pads).
+  - Wrong pitch/octave? Confirm project tempo and that you imported to the
+    intended track before launching.
 """
 
 
