@@ -429,8 +429,326 @@ def kit_morningvow():
                 progs=dict(bass=32, lead=73, chords=0, arp=46))
 
 
+
+def kit_duskwire():
+    """In Rainbows territory: E minor, 100. The interlocking 8th-note arpeggio
+    IS the song (Em-C-G-D with common tones held between chords); the lead
+    floats long hymn tones above it; bass approaches each new root by step."""
+    A = {36: H(0, 102, 8, 94, 10, 88),
+         38: H(4, 92, 12, 94),
+         42: H(0, 58, 2, 50, 4, 56, 6, 50, 8, 58, 10, 50, 12, 56, 14, 52)}
+    B = {36: H(0, 102, 8, 94, 10, 86, 14, 78),
+         38: H(4, 92, 12, 92, 15, 64),
+         48: H(13, 82),
+         42: H(0, 58, 4, 56, 8, 58, 12, 56)}
+    drums = [A, A, A, B]
+    bass = [
+        [(0, 4, "E2", 96), (6, 2, "E2", 78), (8, 4, "E2", 90), (14, 2, "D2", 80)],
+        [(0, 4, "C2", 96), (6, 2, "C2", 78), (8, 4, "C2", 90), (14, 2, "B1", 80)],
+        [(0, 4, "G2", 96), (6, 2, "G2", 78), (8, 4, "G2", 90), (14, 2, "F#2", 80)],
+        [(0, 4, "D2", 96), (6, 2, "D2", 78), (8, 2, "A2", 84), (10, 2, "F#2", 82),
+         (12, 4, "D2", 90)],
+    ]
+    lead = [
+        [(0, 8, "B4", 88), (10, 4, "G4", 84)],
+        [(0, 8, "C5", 90), (12, 4, "B4", 84)],
+        [(0, 6, "B4", 86), (8, 8, "D5", 92)],
+        [(0, 4, "A4", 88), (4, 4, "F#4", 84), (8, 8, "E4", 90)],
+    ]
+    chords = [
+        [(0, 16, "E3", 48), (0, 16, "G3", 46), (0, 16, "B3", 44)],
+        [(0, 16, "E3", 48), (0, 16, "G3", 46), (0, 16, "C4", 44)],
+        [(0, 16, "D3", 48), (0, 16, "G3", 46), (0, 16, "B3", 44)],
+        [(0, 16, "D3", 48), (0, 16, "F#3", 46), (0, 16, "A3", 44)],
+    ]
+    def bar_arp(n1, n2, n3, n4):
+        seq = [n1, n2, n3, n4, n3, n2, n1, n3]
+        return [(i * 2, 2, seq[i], 72 + (10 if i in (0, 4) else 0)) for i in range(8)]
+    arp = [bar_arp("E4", "B4", "G4", "E5"), bar_arp("E4", "C5", "G4", "E5"),
+           bar_arp("D4", "B4", "G4", "D5"), bar_arp("D4", "A4", "F#4", "D5")]
+    return dict(name="Duskwire", key="Em", bpm=100, feel="laidback", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=arp,
+                progs=dict(bass=33, lead=89, chords=48, arp=27))
+
+
+def kit_autoglide():
+    """Krautrock motorik: C mixolydian, 120. The bass is a relentless 8th-note
+    C that finally admits the flat-7 (Bb) in bar 3 -- the one-chord jam that
+    breathes; terse repeated lead figure, organ held underneath."""
+    A = {36: H(0, 106, 4, 100, 8, 104, 12, 100),
+         38: H(4, 94, 12, 96),
+         42: H(0, 60, 2, 48, 4, 58, 6, 48, 8, 60, 10, 48, 12, 58, 14, 48)}
+    B = {36: H(0, 106, 4, 100, 8, 104, 12, 98),
+         38: H(4, 94, 12, 94, 14, 78),
+         42: H(0, 60, 4, 58, 8, 60, 12, 58), 46: H(14, 82)}
+    drums = [A, A, A, B]
+    def drive(root):
+        return [(i * 2, 2, root, 92 if i % 4 == 0 else 78) for i in range(8)]
+    bass = [drive("C2"), drive("C2"),
+            drive("Bb1"),
+            [(0, 2, "F2", 92), (2, 2, "F2", 78), (4, 2, "F2", 84), (6, 2, "F2", 78),
+             (8, 2, "G2", 92), (10, 2, "G2", 78), (12, 2, "G2", 86), (14, 2, "G2", 80)]]
+    lead = [
+        [(0, 2, "G4", 92), (4, 2, "E4", 88), (8, 2, "G4", 90), (12, 2, "A4", 86)],
+        [(0, 2, "G4", 90), (4, 2, "E4", 86), (8, 2, "G4", 88), (12, 2, "E4", 84)],
+        [(0, 2, "F4", 92), (4, 2, "D4", 88), (8, 2, "F4", 90), (12, 2, "G4", 86)],
+        [(0, 2, "A4", 90), (4, 2, "F4", 88), (8, 4, "G4", 92)],
+    ]
+    chords = [
+        [(0, 16, "G3", 52), (0, 16, "C4", 50), (0, 16, "E4", 48)],
+        [(0, 16, "G3", 50), (0, 16, "C4", 48), (0, 16, "E4", 46)],
+        [(0, 16, "F3", 52), (0, 16, "Bb3", 50), (0, 16, "D4", 48)],
+        [(0, 8, "F3", 52), (0, 8, "A3", 50), (0, 8, "C4", 48),
+         (8, 8, "G3", 52), (8, 8, "B3", 50), (8, 8, "D4", 48)],
+    ]
+    return dict(name="Autoglide", key="Cmix", bpm=120, feel="pushing", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=None,
+                progs=dict(bass=33, lead=80, chords=16, arp=None))
+
+
+def kit_veilfire():
+    """Dark synth-pop: B minor, 112, Bm-G-D-A. The 16th-note syncopated bass
+    with octave flicks is the engine; chord stabs live on the off-8ths; the
+    lead hangs on the 2nd in bar 4 so the loop resolves itself."""
+    A = {36: H(0, 108, 8, 100),
+         38: H(4, 100, 12, 102), 39: H(4, 70, 12, 72),
+         42: H(2, 54, 6, 54, 10, 54, 14, 54), 44: H(15, 40)}
+    B = {36: H(0, 108, 8, 100, 10, 84),
+         38: H(4, 100, 12, 100, 15, 58), 39: H(4, 70, 12, 72),
+         42: H(2, 54, 6, 54, 10, 54), 46: H(14, 82)}
+    drums = [A, A, A, B]
+    def dmbass(r, hi):
+        return [(0, 1, r, 100), (2, 1, r, 80), (3, 1, hi, 72), (4, 1, r, 92),
+                (6, 1, r, 80), (8, 1, r, 96), (10, 1, hi, 74), (11, 1, r, 80),
+                (12, 1, r, 90), (14, 1, r, 82)]
+    bass = [dmbass("B1", "B2"), dmbass("G1", "G2"), dmbass("D2", "D3"), dmbass("A1", "A2")]
+    lead = [
+        [(0, 2, "D5", 96), (2, 2, "C#5", 90), (4, 4, "B4", 92), (10, 2, "F#4", 86),
+         (12, 4, "B4", 90)],
+        [(0, 2, "B4", 92), (2, 2, "A4", 88), (4, 4, "G4", 90), (10, 2, "D5", 92),
+         (12, 4, "B4", 88)],
+        [(0, 2, "A4", 90), (2, 2, "F#4", 86), (4, 4, "D4", 88), (10, 2, "F#4", 84),
+         (12, 4, "A4", 90)],
+        [(0, 2, "C#5", 94), (2, 2, "E5", 98), (4, 4, "C#5", 92), (8, 8, "B4", 90)],
+    ]
+    def stabs(n1, n2, n3):
+        out = []
+        for s in (2, 6, 10, 14):
+            out += [(s, 1, n1, 68), (s, 1, n2, 64), (s, 1, n3, 60)]
+        return out
+    chords = [stabs("F#3", "B3", "D4"), stabs("G3", "B3", "D4"),
+              stabs("F#3", "A3", "D4"), stabs("E3", "A3", "C#4")]
+    return dict(name="Veilfire", key="Bm", bpm=112, feel="pushing", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=None,
+                progs=dict(bass=38, lead=81, chords=90, arp=None))
+
+
+def kit_palefen():
+    """The Cure territory: D minor, 96, Dm-Bb-F-C. Floor tom drives under
+    straight 16th hats; a watery two-octave arp; the lead speaks one falling
+    line, waits a bar, answers, and waits again."""
+    A = {36: H(0, 104, 8, 98),
+         38: H(4, 94, 12, 96),
+         41: H(0, 60, 8, 58),
+         42: H(0, 54, 1, 38, 2, 50, 3, 38, 4, 54, 5, 38, 6, 50, 7, 38,
+               8, 54, 9, 38, 10, 50, 11, 38, 12, 54, 13, 38, 14, 50, 15, 40)}
+    B = {36: H(0, 104, 8, 96),
+         38: H(4, 94, 12, 94),
+         41: H(0, 60, 8, 58, 12, 70, 14, 74), 43: H(13, 72, 15, 78),
+         42: H(0, 54, 4, 54, 8, 54, 12, 54)}
+    drums = [A, A, A, B]
+    def pedal(r, approach):
+        notes = [(i * 2, 2, r, 88 if i % 4 == 0 else 76) for i in range(7)]
+        return notes + [(14, 2, approach, 78)]
+    bass = [pedal("D2", "C2"), pedal("Bb1", "C2"), pedal("F2", "E2"), pedal("C2", "C2")]
+    lead = [
+        [(0, 4, "A4", 92), (4, 2, "G4", 88), (6, 2, "F4", 86), (8, 8, "E4", 90)],
+        [],
+        [(0, 4, "C5", 92), (4, 2, "A4", 88), (6, 2, "G4", 86), (8, 8, "A4", 90)],
+        [],
+    ]
+    chords = [
+        [(0, 16, "D3", 50), (0, 16, "F3", 48), (0, 16, "A3", 46)],
+        [(0, 16, "D3", 50), (0, 16, "F3", 48), (0, 16, "Bb3", 46)],
+        [(0, 16, "C3", 50), (0, 16, "F3", 48), (0, 16, "A3", 46)],
+        [(0, 16, "C3", 50), (0, 16, "E3", 48), (0, 16, "G3", 46)],
+    ]
+    def bar_arp(n1, n2, n3, n4):
+        seq = [n1, n2, n3, n4, n3, n2, n1, n3]
+        return [(i * 2, 2, seq[i], 62 + (8 if i == 0 else 0)) for i in range(8)]
+    arp = [bar_arp("D4", "F4", "A4", "D5"), bar_arp("D4", "F4", "Bb4", "D5"),
+           bar_arp("C4", "F4", "A4", "C5"), bar_arp("C4", "E4", "G4", "C5")]
+    return dict(name="Palefen", key="Dm", bpm=96, feel="laidback", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=arp,
+                progs=dict(bass=34, lead=89, chords=50, arp=27))
+
+
+def kit_redloam():
+    """Gothic blues stomp in 12/8: E minor, 54. Kick on 1 and 3, snare on 2
+    and 4, triplet ticks between; the lead is minor pentatonic with the flat
+    five leaned on hard; Em-Em-Am-B7, the oldest dark-blues turnaround."""
+    A = {36: H(0, 112, 12, 104),
+         38: H(6, 102, 18, 104),
+         44: H(0, 46, 2, 36, 4, 40, 6, 46, 8, 36, 10, 40, 12, 46, 14, 36,
+               16, 40, 18, 46, 20, 36, 22, 40),
+         41: H(22, 68)}
+    B = {36: H(0, 112, 12, 102),
+         38: H(6, 102, 18, 100),
+         44: H(0, 46, 6, 44, 12, 46),
+         41: H(18, 82, 20, 86), 45: H(21, 84, 22, 88, 23, 92)}
+    drums = [A, A, A, B]
+    bass = [
+        [(0, 6, "E1", 100), (6, 4, "G1", 84), (10, 2, "A1", 86), (12, 6, "E1", 96),
+         (18, 4, "G1", 86), (22, 2, "A1", 88)],
+        [(0, 6, "E1", 100), (6, 4, "G1", 84), (10, 2, "A1", 86), (12, 6, "E1", 94),
+         (18, 6, "B1", 88)],
+        [(0, 6, "A1", 98), (6, 6, "C2", 86), (12, 6, "A1", 94), (18, 6, "G1", 86)],
+        [(0, 6, "B1", 98), (6, 6, "A1", 86), (12, 6, "B1", 92), (18, 6, "D#2", 88)],
+    ]
+    lead = [
+        [(0, 4, "E4", 94), (4, 2, "G4", 90), (6, 6, "A4", 92), (12, 4, "Bb4", 98),
+         (16, 2, "A4", 88), (18, 6, "G4", 90)],
+        [(0, 10, "E4", 92)],
+        [(0, 4, "A4", 94), (4, 2, "C5", 96), (6, 6, "A4", 90), (12, 12, "G4", 88)],
+        [(0, 4, "F#4", 90), (4, 2, "A4", 88), (6, 6, "D#4", 92), (12, 12, "E4", 94)],
+    ]
+    chords = [
+        [(0, 12, "E3", 54), (0, 12, "G3", 52), (0, 12, "B3", 50),
+         (12, 12, "E3", 48), (12, 12, "G3", 46), (12, 12, "B3", 44)],
+        [(0, 12, "E3", 54), (0, 12, "G3", 52), (0, 12, "B3", 50),
+         (12, 12, "E3", 48), (12, 12, "G3", 46), (12, 12, "B3", 44)],
+        [(0, 12, "E3", 54), (0, 12, "A3", 52), (0, 12, "C4", 50),
+         (12, 12, "E3", 48), (12, 12, "A3", 46), (12, 12, "C4", 44)],
+        [(0, 12, "D#3", 54), (0, 12, "F#3", 52), (0, 12, "B3", 50),
+         (12, 12, "D#3", 48), (12, 12, "A3", 46), (12, 12, "B3", 44)],
+    ]
+    return dict(name="Redloam", key="Em", bpm=54, feel="ritual", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=None,
+                bar_steps=24, meter=(12, 8),
+                progs=dict(bass=32, lead=25, chords=16, arp=None))
+
+
+def kit_chromehall():
+    """Synthwave: G minor, 100, Gm-Eb-Bb-F. Octave 8th bass under a big
+    long-note saw hook; the chords pulse on the off-8ths like a sidechain."""
+    A = {36: H(0, 106, 8, 96, 10, 90),
+         38: H(4, 102, 12, 104),
+         42: H(2, 56, 6, 56, 10, 56, 14, 56), 46: H(14, 80)}
+    B = {36: H(0, 106, 8, 96),
+         38: H(4, 102, 12, 78, 13, 84, 14, 90, 15, 96),
+         42: H(2, 56, 6, 56, 10, 56)}
+    drums = [A, A, A, B]
+    def oct8(lo, hi):
+        return [(i * 2, 2, lo if i % 2 == 0 else hi, 96 if i % 4 == 0 else 70)
+                for i in range(8)]
+    bass = [oct8("G1", "G2"), oct8("Eb1", "Eb2"), oct8("Bb1", "Bb2"), oct8("F1", "F2")]
+    lead = [
+        [(0, 6, "G4", 98), (6, 2, "F4", 88), (8, 8, "Bb4", 96)],
+        [(0, 6, "Eb5", 100), (6, 2, "D5", 90), (8, 8, "Bb4", 92)],
+        [(0, 6, "D5", 98), (6, 2, "C5", 88), (8, 8, "Bb4", 94)],
+        [(0, 6, "A4", 96), (6, 2, "C5", 92), (8, 8, "G4", 90)],
+    ]
+    def pulse(n1, n2, n3):
+        out = []
+        for s in (2, 6, 10, 14):
+            out += [(s, 2, n1, 62), (s, 2, n2, 58), (s, 2, n3, 54)]
+        return out
+    chords = [pulse("G3", "Bb3", "D4"), pulse("G3", "Bb3", "Eb4"),
+              pulse("F3", "Bb3", "D4"), pulse("F3", "A3", "C4")]
+    return dict(name="Chromehall", key="Gm", bpm=100, feel="pushing", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=None,
+                progs=dict(bass=38, lead=81, chords=90, arp=None))
+
+
+def kit_thornfield():
+    """Dark stomp in E phrygian, 92: the F-natural against E is the whole
+    drama. Toms answer the kick; the lead states E-F, peaks on G in bar 3,
+    and lands low; the bass leans on the pedal and walks B back home."""
+    A = {36: H(0, 110, 8, 100),
+         41: H(3, 84, 11, 86), 45: H(6, 82, 14, 84),
+         37: H(4, 68, 12, 70),
+         44: H(0, 48, 2, 40, 4, 46, 6, 40, 8, 48, 10, 40, 12, 46, 14, 42)}
+    B = {36: H(0, 110, 8, 98),
+         41: H(3, 84, 12, 84), 45: H(6, 80, 13, 88), 48: H(10, 84, 14, 92, 15, 96),
+         37: H(4, 66),
+         44: H(0, 48, 4, 46, 8, 48)}
+    drums = [A, A, A, B]
+    bass = [
+        [(0, 4, "E2", 98), (6, 2, "E2", 80), (8, 4, "E2", 94), (14, 2, "E2", 78)],
+        [(0, 4, "F2", 96), (6, 2, "E2", 78), (8, 4, "F2", 92), (14, 2, "F2", 80)],
+        [(0, 4, "E2", 98), (6, 2, "E2", 80), (8, 4, "E2", 94), (14, 2, "E2", 78)],
+        [(0, 4, "D2", 96), (8, 2, "D2", 84), (10, 2, "C2", 82), (12, 4, "B1", 90)],
+    ]
+    lead = [
+        [(0, 2, "E5", 100), (2, 2, "F5", 96), (4, 4, "E5", 94), (10, 2, "D5", 88),
+         (12, 4, "B4", 90)],
+        [(0, 2, "F5", 98), (2, 2, "E5", 92), (4, 4, "C5", 94), (8, 8, "A4", 90)],
+        [(0, 2, "E5", 98), (2, 2, "F5", 94), (4, 4, "G5", 100), (10, 2, "F5", 90),
+         (12, 4, "E5", 92)],
+        [(0, 12, "E4", 92)],
+    ]
+    chords = [
+        [(0, 8, "E3", 54), (0, 8, "G3", 52), (0, 8, "B3", 50),
+         (8, 8, "E3", 48), (8, 8, "G3", 46), (8, 8, "B3", 44)],
+        [(0, 8, "F3", 54), (0, 8, "A3", 52), (0, 8, "C4", 50),
+         (8, 8, "F3", 48), (8, 8, "A3", 46), (8, 8, "C4", 44)],
+        [(0, 8, "E3", 54), (0, 8, "G3", 52), (0, 8, "B3", 50),
+         (8, 8, "E3", 48), (8, 8, "G3", 46), (8, 8, "B3", 44)],
+        [(0, 8, "D3", 54), (0, 8, "F3", 52), (0, 8, "A3", 50),
+         (8, 8, "D3", 48), (8, 8, "F3", 46), (8, 8, "A3", 44)],
+    ]
+    return dict(name="Thornfield", key="Ephr", bpm=92, feel="ritual", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=None,
+                progs=dict(bass=42, lead=48, chords=48, arp=None))
+
+
+def kit_brightwork():
+    """Dorian funk: A dorian, 116, the two-chord Am7-D9 vamp. Syncopated bass
+    with octave pops, ghost-note snare hand, ninth-chord stabs off the beat,
+    and a riff that saves the dorian F# for the last bar."""
+    A = {36: H(0, 108, 7, 90, 10, 94),
+         38: H(4, 102, 6, 32, 12, 104, 15, 30),
+         42: H(0, 60, 2, 46, 4, 58, 6, 46, 8, 60, 10, 46, 12, 58, 14, 48),
+         46: H(14, 80)}
+    B = {36: H(0, 108, 7, 90, 10, 92, 13, 84),
+         38: H(4, 102, 12, 96, 14, 84, 15, 90),
+         42: H(0, 60, 4, 58, 8, 60, 12, 58)}
+    drums = [A, A, A, B]
+    bass = [
+        [(0, 2, "A1", 100), (3, 1, "A1", 70), (4, 2, "A2", 84), (7, 2, "A1", 88),
+         (10, 1, "G1", 80), (11, 1, "A1", 84), (12, 2, "C2", 86), (14, 2, "E2", 88)],
+        [(0, 2, "D2", 98), (3, 1, "D2", 70), (4, 2, "D3", 82), (7, 2, "D2", 86),
+         (10, 2, "C2", 82), (12, 2, "B1", 84), (14, 2, "A1", 86)],
+        [(0, 2, "A1", 100), (3, 1, "A1", 70), (4, 2, "A2", 84), (7, 2, "A1", 88),
+         (10, 1, "G1", 80), (11, 1, "A1", 84), (12, 2, "C2", 86), (14, 2, "E2", 88)],
+        [(0, 2, "D2", 98), (4, 2, "F#2", 88), (6, 2, "A2", 90), (8, 2, "C3", 88),
+         (10, 2, "B2", 86), (12, 4, "E2", 90)],
+    ]
+    lead = [
+        [(0, 1, "E5", 96), (1, 1, "G5", 92), (2, 2, "E5", 94), (6, 2, "C5", 88),
+         (8, 2, "A4", 90), (12, 2, "B4", 86), (14, 2, "C5", 88)],
+        [(8, 2, "E5", 92), (10, 2, "D5", 88), (12, 4, "B4", 90)],
+        [(0, 1, "E5", 96), (1, 1, "G5", 92), (2, 2, "E5", 94), (6, 2, "C5", 88),
+         (8, 2, "A4", 90), (12, 2, "B4", 86), (14, 2, "C5", 88)],
+        [(0, 2, "A4", 90), (2, 2, "C5", 92), (4, 2, "D5", 94), (6, 2, "E5", 96),
+         (8, 6, "F#5", 98), (14, 2, "E5", 90)],
+    ]
+    def stabs(n1, n2, n3, extra=False):
+        out = []
+        for s in ((2, 10, 13) if extra else (2, 10)):
+            out += [(s, 1, n1, 70), (s, 1, n2, 66), (s, 1, n3, 62)]
+        return out
+    chords = [stabs("G3", "C4", "E4"), stabs("F#3", "C4", "E4", extra=True),
+              stabs("G3", "C4", "E4"), stabs("F#3", "C4", "E4", extra=True)]
+    return dict(name="Brightwork", key="Ador", bpm=116, feel="laidback", swing=False,
+                drums=drums, bass=bass, lead=lead, chords=chords, arp=None,
+                progs=dict(bass=36, lead=62, chords=4, arp=None))
+
+
 KIT_FNS = [kit_nightpulse, kit_glasskid, kit_hillrunner, kit_lowgold,
-           kit_seaglass, kit_ironveil, kit_holloway, kit_morningvow]
+           kit_seaglass, kit_ironveil, kit_holloway, kit_morningvow,
+           kit_duskwire, kit_autoglide, kit_veilfire, kit_palefen,
+           kit_redloam, kit_chromehall, kit_thornfield, kit_brightwork]
 
 
 # =============================================================================
@@ -497,6 +815,59 @@ DRUM_VARS = {
         brk=[{37: H(3, 58, 9, 60), 45: H(6, 74),
               44: H(0, 44, 2, 40, 4, 42, 6, 44, 8, 40, 10, 42)}] * 3 +
             [{37: H(3, 58), 45: H(6, 76), 48: H(8, 80, 10, 86)}]),
+    "Duskwire": dict(
+        intro=[42, 36],
+        lift_add={46: H(6, 80, 14, 82), 51: H(0, 66, 4, 64, 8, 66, 12, 64)},
+        brk=[{42: H(0, 50, 2, 42, 4, 48, 6, 42, 8, 50, 10, 42, 12, 48, 14, 44),
+              37: H(4, 50, 12, 50), 41: H(8, 78)}] * 3 +
+            [{42: H(0, 50, 4, 48, 8, 50), 45: H(8, 82, 11, 84), 48: H(14, 88)}]),
+    "Autoglide": dict(
+        intro=[36, 42],
+        lift_add={46: H(2, 80, 6, 80, 10, 80, 14, 80)},
+        brk=[{42: H(0, 44, 1, 34, 2, 42, 3, 34, 4, 44, 5, 34, 6, 42, 7, 34,
+                    8, 44, 9, 34, 10, 42, 11, 34, 12, 44, 13, 34, 14, 42, 15, 36),
+              37: H(0, 52, 4, 50, 8, 52, 12, 50)}] * 3 +
+            [{42: H(0, 44, 4, 42, 8, 44), 38: H(12, 68, 13, 74, 14, 80, 15, 86)}]),
+    "Veilfire": dict(
+        intro=[36, 42],
+        lift_add={46: H(6, 82, 14, 84),
+                  44: H(1, 36, 3, 36, 5, 36, 7, 36, 9, 36, 11, 36, 13, 36)},
+        brk=[{39: H(0, 72, 4, 84, 12, 86),
+              44: H(1, 34, 3, 34, 5, 34, 7, 34, 9, 34, 11, 34, 13, 34, 15, 34)}] * 3 +
+            [{39: H(0, 72, 4, 84, 12, 86, 14, 80), 40: H(15, 66)}]),
+    "Palefen": dict(
+        intro=[36, 42],
+        lift_add={46: H(6, 80, 14, 80)},
+        brk=[{41: H(0, 70, 2, 50, 4, 64, 6, 50, 8, 68, 10, 50, 12, 64, 14, 52),
+              37: H(4, 52, 12, 54)}] * 3 +
+            [{41: H(0, 70, 4, 64, 8, 68), 43: H(12, 74, 14, 78)}]),
+    "Redloam": dict(
+        intro=[36, 44],
+        lift_add={51: H(0, 68, 6, 66, 12, 68, 18, 66), 46: H(22, 78)},
+        brk=[{44: H(0, 46, 2, 36, 4, 40, 6, 46, 8, 36, 10, 40, 12, 46, 14, 36,
+                    16, 40, 18, 46, 20, 36, 22, 40), 37: H(6, 56, 18, 58)}] * 3 +
+            [{44: H(0, 46, 6, 44, 12, 46), 37: H(6, 56),
+              45: H(18, 80, 20, 84, 22, 88)}]),
+    "Chromehall": dict(
+        intro=[36, 42],
+        lift_add={46: H(2, 78, 6, 78, 10, 78, 14, 78)},
+        brk=[{39: H(0, 70, 4, 80, 12, 82),
+              42: H(0, 42, 1, 34, 2, 40, 3, 34, 4, 42, 5, 34, 6, 40, 7, 34,
+                    8, 42, 9, 34, 10, 40, 11, 34, 12, 42, 13, 34, 14, 40, 15, 36)}] * 3 +
+            [{39: H(0, 70, 4, 80, 12, 82), 38: H(12, 70, 13, 76, 14, 82, 15, 88)}]),
+    "Thornfield": dict(
+        intro=[36, 44],
+        lift_add={46: H(6, 82, 14, 84), 51: H(0, 68, 4, 66, 8, 68, 12, 66)},
+        brk=[{41: H(0, 84, 6, 80, 11, 84), 45: H(3, 80, 14, 82),
+              44: H(2, 42, 6, 42, 10, 42, 14, 42)}] * 3 +
+            [{41: H(0, 84), 45: H(6, 82), 48: H(10, 84, 12, 88, 14, 92)}]),
+    "Brightwork": dict(
+        intro=[36, 42],
+        lift_add={46: H(14, 84), 39: H(4, 72, 12, 74)},
+        brk=[{38: H(0, 40, 4, 96, 6, 30, 12, 98, 15, 28),
+              44: H(2, 44, 6, 44, 10, 44, 14, 44)}] * 3 +
+            [{38: H(0, 40, 4, 96, 12, 96, 13, 80, 14, 86, 15, 92),
+              44: H(2, 44, 6, 44)}]),
 }
 
 
@@ -556,7 +927,14 @@ def lead_variation(bars, which):
                 nb.append((s, d, nn, max(1, v - 24)))
             out.append(nb)
         return out
-    return [bars[1], [], bars[3], []]             # break: answers only, spacious
+    # break: answers only, spacious -- lead with whichever answer phrase
+    # starts earliest so the clip still launches on (or near) beat 1
+    a, b = bars[1], bars[3]
+    def first_onset(bar):
+        return min((s for (s, d, n, v) in bar), default=99)
+    if first_onset(b) < first_onset(a):
+        a, b = b, a
+    return [a, [], b, []]
 
 
 def chords_variation(bars, which, bar_steps):
@@ -570,7 +948,7 @@ def chords_variation(bars, which, bar_steps):
                         for (s, d, n, v) in bar if s == first])
         return out
     if which == "lift":                           # rhythmic comp -- the 'rhythm' clip
-        strikes = (0, 4, 8, 12) if bar_steps == 16 else (0, 3, 6, 9)
+        strikes = {16: (0, 4, 8, 12), 12: (0, 3, 6, 9), 24: (0, 6, 12, 18)}[bar_steps]
         out = []
         for bar in bars:
             first = min(s for (s, d, n, v) in bar)
