@@ -33,7 +33,9 @@ mode. So `sd/` holds one file per clip, named by destination:
 → MIDI FILE → [ENTER]. Fastest playable kit: the `*_2MAIN` files first.
 Channel bytes in the files are ignored internally; each kit folder's
 `LAYOUT.TXT` has the track map, and `sd/MC707_FACTS.TXT` the full verified
-findings.
+findings. The menu-free alternative: arm a clip on the 707 and
+`python usb_feed.py <clip.MID>` streams it over USB (clock + count-in) to
+be live-recorded — channel comes from the `T<n>_` filename.
 
 ## Adding a kit
 Copy any `kits/kNN_*.py`, renumber, rewrite the notes. Keep the covenant:
