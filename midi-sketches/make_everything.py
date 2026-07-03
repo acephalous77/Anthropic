@@ -22,6 +22,7 @@ ZIP = os.path.join(OUT, "midi-sketches-everything")
 
 # (zip folder name, output path, generator script or None)
 PACKS = [
+    ("00_KITS-hand-composed", "kits", "kits.py"),
     ("00_foundation-pieces/undertow", "undertow", "render.py"),
     ("00_foundation-pieces/static_orchard", "static_orchard", None),
     ("00_foundation-pieces/glass_repeater", "glass_repeater", None),
