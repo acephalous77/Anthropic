@@ -23,6 +23,17 @@ Rides: `1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6`. Previews: `full_main`,
 ## Workflow
     python build.py     # -> output/ (all kits + INDEX.csv)
     python tests.py     # invariants
+    python sd_export.py # -> sd/ (copy its ROLAND folder onto the card)
+
+## Onto the 707
+SMF import is strictly **one file → one clip** (Roland: "All tracks included
+in the SMF are overwritten onto one clip") — no batch import, no fan-out
+mode. So `sd/` holds one file per clip, named by destination:
+`T2_BASS_3LIFT.MID` → track 2, clip slot 3. Cursor onto that slot → [CLIP]
+→ MIDI FILE → [ENTER]. Fastest playable kit: the `*_2MAIN` files first.
+Channel bytes in the files are ignored internally; each kit folder's
+`LAYOUT.TXT` has the track map, and `sd/MC707_FACTS.TXT` the full verified
+findings.
 
 ## Adding a kit
 Copy any `kits/kNN_*.py`, renumber, rewrite the notes. Keep the covenant:
