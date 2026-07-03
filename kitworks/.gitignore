@@ -1,2 +1,4 @@
 sd/
 *.zip
+__pycache__/
+*.pyc
