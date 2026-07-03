@@ -1,0 +1,9 @@
+Brightwork  --  Ador  116 bpm  4/4  feel:laidback
+
+Dorian funk: A dorian, 116, the two-chord Am7-D9 vamp. Syncopated bass
+with octave pops, ghost-note snare hand, ninth-chord stabs off the beat,
+and a riff that saves the dorian F# for the last bar.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

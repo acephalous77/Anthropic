@@ -1,0 +1,9 @@
+Glasskid  --  Cm  120 bpm  4/4  feel:pushing
+
+Kid A territory: C minor, 120. The bass plays the kick's exact rhythm
+(that lock is the groove); the lead is a displaced four-note cell --
+C Eb D G -- that shifts one 16th late every other bar and comes back.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

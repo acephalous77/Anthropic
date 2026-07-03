@@ -1,0 +1,8 @@
+Chromehall  --  Gm  100 bpm  4/4  feel:pushing
+
+Synthwave: G minor, 100, Gm-Eb-Bb-F. Octave 8th bass under a big
+long-note saw hook; the chords pulse on the off-8ths like a sidechain.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

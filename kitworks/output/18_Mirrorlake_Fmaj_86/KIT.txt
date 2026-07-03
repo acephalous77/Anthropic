@@ -1,0 +1,10 @@
+Mirrorlake  --  Fmaj  86 bpm  4/4  feel:laidback  (swung)
+
+Mirrorlake -- Boards of Canada nostalgia: F major (lydian-leaning), 86,
+swung head-nod. The chords wobble Fmaj7 <-> G/F (the lydian lift over a
+fixed F floor); the lead is a childlike pentatonic figure that repeats like
+a half-remembered jingle; the counter hums one detuned-feeling long tone.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

@@ -1,0 +1,11 @@
+Winterlight  --  Cmaj  76 bpm  4/4  feel:laidback
+
+Winterlight -- post-rock: C major, 76. Tremolo 16th chords ARE the
+texture (written as the arp part); drums build from rim ticks to full;
+the bass moves whole-bar roots C - Am - F - G under a lead that climbs
+one degree per bar to its high E and steps home. Quiet-loud in the
+sections: intro is almost nothing, peak is everything.
+
+parts: drums, bass, lead, counter, chords, arp
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

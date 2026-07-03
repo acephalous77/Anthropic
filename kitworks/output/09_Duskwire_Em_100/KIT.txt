@@ -1,0 +1,9 @@
+Duskwire  --  Em  100 bpm  4/4  feel:laidback
+
+In Rainbows territory: E minor, 100. The interlocking 8th-note arpeggio
+IS the song (Em-C-G-D with common tones held between chords); the lead
+floats long hymn tones above it; bass approaches each new root by step.
+
+parts: drums, bass, lead, counter, chords, arp
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

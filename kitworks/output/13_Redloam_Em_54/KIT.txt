@@ -1,0 +1,9 @@
+Redloam  --  Em  54 bpm  12/8  feel:ritual
+
+Gothic blues stomp in 12/8: E minor, 54. Kick on 1 and 3, snare on 2
+and 4, triplet ticks between; the lead is minor pentatonic with the flat
+five leaned on hard; Em-Em-Am-B7, the oldest dark-blues turnaround.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6
