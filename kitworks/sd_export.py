@@ -65,6 +65,57 @@ def clip_steps(path):
     return last / (m.ticks_per_beat / 4)      # 16th-note steps
 
 
+def _bar_ticks(m):
+    num, den = 4, 4
+    for tr in m.tracks:
+        for msg in tr:
+            if msg.type == "time_signature":
+                num, den = msg.numerator, msg.denominator
+                break
+    return int(num * 4 / den * m.ticks_per_beat)
+
+
+def pad_clip(src, dst, target_bars):
+    """Copy src->dst forcing the clip to span EXACTLY target_bars whole bars.
+
+    The 707 takes an imported clip's length from the SMF, so a part whose
+    last note ends mid-bar would import short and loop out of phase with the
+    rest of its scene column. We clamp any groove-overhang note-off back to
+    the barline and stretch End-Of-Track to the exact loop length, so every
+    clip in a column is the same length and scenes stay locked.
+    """
+    m = mido.MidiFile(src)
+    target = _bar_ticks(m) * target_bars
+    for tr in m.tracks:
+        abs_t, out, open_count = 0, [], {}
+        for msg in tr:
+            abs_t += msg.time
+            at = min(abs_t, target)
+            if msg.type == "note_on" and msg.velocity > 0:
+                if abs_t >= target:
+                    continue                       # a note starting at/after the loop point
+                open_count[(msg.channel, msg.note)] = open_count.get((msg.channel, msg.note), 0) + 1
+                out.append((at, msg))
+            elif msg.type in ("note_off",) or (msg.type == "note_on" and msg.velocity == 0):
+                k = (msg.channel, msg.note)
+                if open_count.get(k, 0) > 0:       # keep offs for notes we actually opened
+                    open_count[k] -= 1
+                    out.append((at, msg))          # clamp its off to <= target
+            elif msg.type == "end_of_track":
+                continue                           # re-added below at exact length
+            else:
+                out.append((min(abs_t, target), msg))
+        out.sort(key=lambda p: (p[0], p[1].type != "note_off"))  # offs before ons at a tick
+        tr.clear()
+        last = 0
+        for at, msg in out:
+            msg.time = at - last
+            tr.append(msg)
+            last = at
+        tr.append(mido.MetaMessage("end_of_track", time=max(0, target - last)))
+    m.save(dst)
+
+
 def main():
     root = os.path.join(HERE, "sd")
     if os.path.isdir(root):
@@ -88,8 +139,7 @@ def main():
                 if not os.path.exists(src):
                     continue
                 dst = os.path.join(dest, f"T{tno}_{part.upper()}_{tag}.MID")
-                import shutil
-                shutil.copyfile(src, dst)
+                pad_clip(src, dst, target_bars=2 if tag == "6END" else 4)
                 total += 1
                 steps = clip_steps(dst)
                 if steps > MAX_STEPS:
