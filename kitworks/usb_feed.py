@@ -44,6 +44,35 @@ import mido
 
 CLOCKS_PER_QUARTER = 24
 CONTROL_CHANNEL = 15        # MIDI ch 16 (0-based) -- scene recall / control
+TAG_WHICH = {"1INTRO": "intro", "2MAIN": "main", "3LIFT": "lift",
+             "4BREAK": "break", "5PEAK": "peak", "6END": "end"}
+
+
+def _fx_timeline(path, channel, bars, qpb, tempo, loops, count_in, feel):
+    """CC motion (filter/reverb/expression) for the clip being streamed, so a
+    live-record pass captures it as 707 motion. Part+section come from the
+    T<n>_<PART>_<col><SECTION> filename; falls back to nothing if unparseable."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import fx
+    stem = os.path.basename(path).rsplit(".", 1)[0].split("_")
+    if len(stem) < 3:
+        return []
+    part, which = stem[1].lower(), TAG_WHICH.get(stem[2].upper())
+    if which is None or part not in fx.PART_VOICE:
+        return []
+    bar_steps = int(round(qpb * 4))
+    ccs = fx.clip_cc(part, which, channel, bars, bar_steps, feel)
+    spq = tempo / 1e6
+    spt = spq / 480.0                       # our files are PPQ 480
+    lead, loop_len = count_in * qpb * spq, bars * qpb * spq
+    out = []
+    for k in range(loops):
+        off = lead + k * loop_len
+        for cc in ccs:
+            out.append((off + cc.tick * spt,
+                        mido.Message("control_change", control=cc.controller,
+                                     value=cc.value, channel=cc.channel)))
+    return out
 
 
 def load_clip(path):
@@ -173,6 +202,13 @@ def main():
                     help="times to repeat the clip (default 4)")
     ap.add_argument("--count-in", type=int, default=1,
                     help="count-in bars of clock before notes (default 1)")
+    ap.add_argument("--fx", action="store_true",
+                    help="also stream this clip's filter/reverb/expression motion "
+                         "(part+section read from the filename) so the record pass "
+                         "captures it as 707 motion")
+    ap.add_argument("--feel", default="laidback",
+                    choices=["laidback", "pushing", "ritual"],
+                    help="feel tilt for --fx motion (default laidback)")
     ap.add_argument("--select", nargs=2, type=int, metavar=("TRACK", "CLIP"),
                     help="launch clip CLIP on track TRACK (both 1-based) and exit")
     ap.add_argument("--scene", type=int, metavar="N",
@@ -250,9 +286,15 @@ def main():
         sys.exit(f"{a.file}: no notes")
     bpm = round(6e7 / tempo, 1)
     ev, total = build_timeline(notes, tempo, qpb, bars, ch, a.loops, a.count_in)
+    fx_note = ""
+    if a.fx:
+        fxev = _fx_timeline(a.file, ch, bars, qpb, tempo, a.loops, a.count_in, a.feel)
+        ev += fxev
+        ev.sort(key=lambda p: p[0])
+        fx_note = f", +{len(fxev)} fx CC ({a.feel})" if fxev else " (no fx: name unparsed)"
     print(f"{os.path.basename(a.file)}: {bars} bar(s) @ {bpm} bpm, "
           f"{len(notes) // 2} notes -> channel {ch + 1}, "
-          f"{a.count_in}-bar count-in, x{a.loops} = {total:.1f}s")
+          f"{a.count_in}-bar count-in, x{a.loops} = {total:.1f}s{fx_note}")
     if a.dry_run:
         return
 

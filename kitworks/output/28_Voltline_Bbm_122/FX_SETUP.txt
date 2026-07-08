@@ -1,0 +1,27 @@
+Voltline  --  Bbm  122 bpm  feel:pushing
+FILTER / EFFECTS / COMPRESSION dial-in (starting points -- turn them)
+
+PER-TRACK  (cutoff/reso are CC74/71; sends are [SEL]+C3 delay / +C4 reverb)
+  drums    cut 127  reso  8  dly  6  rev  6  pan C     MFX: MFX Comp (bus glue) or none
+  bass     cut 106  reso 16  dly  0  rev  0  pan C     MFX: Saturator / MFX Compressor
+  lead     cut 120  reso 30  dly 52  rev 28  pan R8    MFX: Stereo/Tempo Delay (1/8 dot)
+  counter  cut 112  reso 24  dly 30  rev 36  pan L14   MFX: Chorus + short Delay
+  chords   cut 100  reso 20  dly 12  rev 52  pan R16   MFX: Chorus -> Reverb wash
+
+MASTER BUS  ([SHIFT]+[MULTI] -> Comp / EQ tabs)
+  Total Comp: ratio 4:1, attack 8ms, release 120ms, thr -14dB, +4 makeup (punch/glue)
+  Total EQ:   low +2 @80Hz, mid -2 @500Hz, high +3 @8kHz (scooped, forward)
+
+MOTION  (the arrangement's filter/reverb arc rides CC74 cutoff + CC91
+  reverb + CC11 expression; intro filtered, opens to peak, washes in the
+  break, fades on the end). Two ways onto the 707:
+   * live-record it -- usb_feed --fx streams the motion while you record
+     the clip (firmware 1.8 captures incoming CC as motion); or
+   * dial the section levels by hand on the FILTER knob per column.
+  Section cutoff targets (drums shown; each part scales from its base):
+    intro  cutoff x0.55  reverb x1.15  level 92
+    main   cutoff x1.00  reverb x1.00  level 110
+    lift   cutoff x1.15  reverb x1.10  level 120
+    break  cutoff x0.45  reverb x1.60  level 84
+    peak   cutoff x1.30  reverb x1.20  level 126
+    end    cutoff x0.80  reverb x1.35  level 100

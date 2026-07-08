@@ -10,6 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import kitlib
+import fx
 from kits import KITS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,8 @@ def main():
     print("KITWORKS -- hand-composed kits, six section columns per part\n")
     for i, kit in enumerate(KITS, 1):
         folder, n = kitlib.build_kit(kit, i, DEST)
+        with open(os.path.join(folder, "FX_SETUP.txt"), "w") as fh:
+            fh.write(fx.setup_card(kit))
         total += n
         parts = [p for p in ("drums", "bass", "lead", "counter", "chords", "arp") if kit.get(p)]
         m = kit.get("meter", (4, 4))

@@ -28,6 +28,7 @@ WHAT THIS BUILDS -- SD/ROLAND/GROOVEBOX/MIDI/<NN_KIT>/:
 """
 
 import os
+import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -144,6 +145,10 @@ def main():
                 steps = clip_steps(dst)
                 if steps > MAX_STEPS:
                     too_long.append((dst, steps))
+
+        fxcard = os.path.join(kit_dir, "FX_SETUP.txt")
+        if os.path.exists(fxcard):
+            shutil.copyfile(fxcard, os.path.join(dest, "FX_SETUP.TXT"))
 
         m = kit.get("meter", (4, 4))
         n_parts = sum(1 for _t, part, _x in TRACKS if kit.get(part) or part == "drums")

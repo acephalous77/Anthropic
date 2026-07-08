@@ -23,6 +23,7 @@ sys.path.insert(0, HERE)
 
 import kitlib as K            # noqa: E402
 import midiwriter            # noqa: E402
+import fx                     # noqa: E402
 from kits import KITS         # noqa: E402
 
 OUT = os.path.join(HERE, "songs")
@@ -75,7 +76,9 @@ def render_song(kit, index, arrangement):
             events += [e._replace(start=e.start + shift) for e in evs]
             offset_bars += _section_bars(which)
         if events:
-            tracks.append({"events": events, "channel": ch, "program": prog, "name": name})
+            cc = fx.song_cc(name, arrangement, ch, bar_steps, kit["feel"])
+            tracks.append({"events": events, "channel": ch, "program": prog,
+                           "name": name, "cc_events": cc})
     total_bars = sum(_section_bars(SEC_VAR[s]) for s in arrangement)
     return tracks, total_bars
 
