@@ -207,6 +207,22 @@ CHANNELS
   * 8 tracks total; any track can be TONE, DRUM, DRUM+COMP, or LOOPER
     (only one DRUM+COMP). Make track 1 a DRUM track for these kits.
 
+REMOTE CONTROL OVER MIDI (default map; the arrangement is addressable)
+  * Default channels: tracks 1-8 = MIDI ch 1-8, CONTROL channel = 16.
+  * Program Change 0-15 on a TRACK's channel -> select/launch clip 1-16
+    on that track. (So once clips are loaded, an external sequencer can
+    drive the whole 8x16 matrix without touching the panel.)
+  * Program Change 0-127 on ch 16 -> recall scene 1-128.
+  * Notes 60-75 on ch 16 -> trigger Scatter pads 1-16.
+  * CC per track channel: 1 mod, 7 vol, 10 pan, 11 expression, 64 hold,
+    71 reso, 74 cutoff, 91 reverb send, 93 chorus send; and the four
+    macro knobs -> 80 FILTER, 81 MOD, 82 FX, 83 SOUND (all reassignable).
+  * NO SysEx implementation -- ZEN-Core tone data travels only inside
+    project files, which is why an external .mpj writer isn't possible.
+  * Panel shortcut, no MIDI needed: [CLIP] + [STEP 1-16] launches a whole
+    clip ROW at once (v1.2+).
+  * SMF import itself was added in firmware v1.8 -- be on 1.80+ .
+
 THE ONLY PER-TRACK ALTERNATIVE: LIVE USB RECORDING (see usb_feed.py)
   Arm a track (enable its MIDI receive, or turn on MIDI Rx Auto Channel so
   input follows the selected track), cursor onto the target clip, set clip
