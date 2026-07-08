@@ -1,0 +1,13 @@
+Ashfall  --  Cdor  76 bpm  4/4  feel:laidback
+
+Ashfall -- halftime groove: C dorian, 76, laidback.
+
+Big space and a fat backbeat: the snare lands once, hard, on beat 3, the
+kick keeps 1 with a lazy pickup, and everything breathes at half speed. The
+bass moves the whole time (root-fifth-third across i-IV-bVII-bIII,
+Cm-F-Bb-Eb, the dorian A natural in the F). Lead is spacious and singable;
+the counter fills one gap a bar. Meant to carry a voice or a slow solo.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6
