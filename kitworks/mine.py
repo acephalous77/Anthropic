@@ -43,13 +43,13 @@ def _dist(fa, fb):
     return d / sum(WEIGHTS.values())
 
 
-def build_pool(pool_size):
+def build_pool(pool_size, seed_base=20000):
     archetypes = list(generator.ARCHETYPES)
     pool = []
     i = 0
     while len(pool) < pool_size:
         arch = archetypes[i % len(archetypes)]
-        seed = 20000 + i
+        seed = seed_base + i
         try:
             gen = generator.generate(seed=seed, archetype=arch)
         except RuntimeError:
@@ -102,13 +102,14 @@ def _stems(gen):
 def main(argv):
     pool_size = int(argv[0]) if len(argv) > 0 else 66
     pick = int(argv[1]) if len(argv) > 1 else 24
+    seed_base = int(argv[2]) if len(argv) > 2 else 20000
     if os.path.isdir(OUT):
         import shutil
         shutil.rmtree(OUT)
     os.makedirs(OUT)
 
-    print(f"generating pool of {pool_size}...")
-    pool = build_pool(pool_size)
+    print(f"generating pool of {pool_size} (seed base {seed_base})...")
+    pool = build_pool(pool_size, seed_base)
     print(f"selecting {pick} most mutually-distant...")
     chosen = farthest_point(pool, pick)
 

@@ -1,27 +1,37 @@
 #!/usr/bin/env python3
-"""usb_feed -- stream a clip over USB MIDI so the MC-707 records it live.
+"""usb_feed -- drive the MC-707 over USB MIDI: record clips in, or sequence
+the matrix out.
 
-The one verified per-track alternative to menu imports (see
-sd/MC707_FACTS.TXT): arm a clip on the 707 and RECORD the part as this
-script streams it in. Same one-clip granularity, zero file-browser diving.
+Four modes (all verified against sd/MC707_FACTS.TXT's MIDI map -- default
+channels track n = ch n, control channel = 16):
+
+  STREAM (default)  arm a clip on the 707 and RECORD a part as this streams
+                    it in -- the per-track alternative to menu import.
+      python usb_feed.py sd/.../T2_BASS_2MAIN.MID       # channel from the name
+
+  SELECT            fire a Program Change to launch a clip on a track
+                    (PC clip-1 on the track's channel).
+      python usb_feed.py --select 2 3                   # track 2, clip 3
+
+  SCENE             recall a scene (PC scene-1 on ch 16).
+      python usb_feed.py --scene 4
+
+  ARRANGE           BE the clock and sequence scenes -- song mode from the
+                    field-guide rides. Sends Start + clock at --bpm, fires
+                    each scene at the bar, loops --repeat times, then Stop.
+      python usb_feed.py --arrange 1,2,2,3 --bpm 114 --bars 4 --repeat 2
 
 707 SETUP (once)
   * connect USB (or DIN MIDI IN); [SHIFT]+[KNOB ASSIGN] -> SET -> MIDI:
-      Sync Mode : AUTO or MIDI   (follow our Start + clock)
-      Rx Auto Ch: ON             (input follows the selected track)
-        -- or leave it OFF and match channels: default map is
-           track n = channel n, which is what our filenames encode.
-  * cursor onto the target clip, set its length with [MEASURE]
-  * press [REC], then [START/STOP] -- the 707 waits for our clock.
+      Sync Mode : AUTO or MIDI   (follow our Start + clock -- needed for
+                                  STREAM and ARRANGE)
+      Rx Auto Ch: ON             (STREAM: input follows the selected track;
+                                  or leave OFF and match channels by name)
+  * STREAM: cursor onto the target clip, set length with [MEASURE], press
+    [REC] then [START/STOP] -- the 707 waits for our clock.
+  * SELECT/SCENE/ARRANGE: just have the clips/scenes loaded; we launch them.
 
-THEN, on the computer (needs: pip install mido python-rtmidi)
-  python usb_feed.py --list                          # find the 707's port
-  python usb_feed.py sd/.../T2_BASS_2MAIN.MID        # channel 2, from the name
-  python usb_feed.py FILE.MID --port MC-707 --channel 3 --loops 4
-
-We send MIDI Start, one count-in bar of clock, then the notes at the
-file's own tempo -- looped --loops times so you can punch REC on any
-pass -- then All-Notes-Off and Stop.
+Needs: pip install mido python-rtmidi   (python usb_feed.py --list for ports)
 """
 
 import argparse
@@ -33,6 +43,7 @@ import time
 import mido
 
 CLOCKS_PER_QUARTER = 24
+CONTROL_CHANNEL = 15        # MIDI ch 16 (0-based) -- scene recall / control
 
 
 def load_clip(path):
@@ -87,6 +98,45 @@ def channel_from_name(path):
     return int(m.group(1)) - 1 if m else None
 
 
+def clip_pc(track, clip):
+    """Launch clip N on a track: PC clip-1 on that track's channel (1-based)."""
+    return mido.Message("program_change", program=clip - 1, channel=track - 1)
+
+
+def scene_pc(scene):
+    """Recall scene N: PC scene-1 on the control channel (16)."""
+    return mido.Message("program_change", program=scene - 1, channel=CONTROL_CHANNEL)
+
+
+def build_arrange(scenes, bpm, bars, repeat):
+    """Clock-driven scene sequence: Start, clock at bpm, one scene PC per
+    `bars`-long slot, looped `repeat` times, then Stop. Assumes 4/4 slots."""
+    spq = 60.0 / bpm                                    # seconds per quarter
+    hold = bars * 4 * spq                               # seconds per scene slot
+    seq = scenes * repeat
+    total = len(seq) * hold
+    ev = [(0.0, mido.Message("songpos", pos=0)), (0.0, mido.Message("start"))]
+    n_clocks = int(total / (spq / CLOCKS_PER_QUARTER)) + 1
+    ev += [(i * spq / CLOCKS_PER_QUARTER, mido.Message("clock"))
+           for i in range(n_clocks)]
+    for k, sc in enumerate(seq):
+        ev.append((k * hold, scene_pc(sc)))
+    ev.append((total + 0.05, mido.Message("stop")))
+    ev.sort(key=lambda p: p[0])
+    return ev, total
+
+
+def stream(port_name, ev):
+    """Send a timed (seconds, message) list in real time."""
+    with mido.open_output(port_name) as out:
+        t0 = time.monotonic()
+        for t, msg in ev:
+            wait = t0 + t - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)
+            out.send(msg)
+
+
 def pick_port(want):
     names = mido.get_output_names()
     if not names:
@@ -98,6 +148,17 @@ def pick_port(want):
         return hits[0]
     hits = [n for n in names if "707" in n or "MC-" in n]
     return hits[0] if hits else names[0]
+
+
+def _pick_or_die(want):
+    try:
+        return pick_port(want)
+    except Exception as e:
+        sys.exit(f"could not open a MIDI backend ({e}); run: pip install python-rtmidi")
+
+
+def _send_or_die(want, ev):
+    stream(_pick_or_die(want), ev)
 
 
 def main():
@@ -112,6 +173,18 @@ def main():
                     help="times to repeat the clip (default 4)")
     ap.add_argument("--count-in", type=int, default=1,
                     help="count-in bars of clock before notes (default 1)")
+    ap.add_argument("--select", nargs=2, type=int, metavar=("TRACK", "CLIP"),
+                    help="launch clip CLIP on track TRACK (both 1-based) and exit")
+    ap.add_argument("--scene", type=int, metavar="N",
+                    help="recall scene N (1-based) and exit")
+    ap.add_argument("--arrange", metavar="SCENES",
+                    help="comma-separated scene numbers to sequence as clock master")
+    ap.add_argument("--bpm", type=float, default=120,
+                    help="tempo for --arrange (default 120)")
+    ap.add_argument("--bars", type=int, default=4,
+                    help="bars to hold each scene in --arrange (default 4)")
+    ap.add_argument("--repeat", type=int, default=1,
+                    help="times to cycle the --arrange sequence (default 1)")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the plan; send nothing")
     a = ap.parse_args()
@@ -124,8 +197,47 @@ def main():
             sys.exit(f"could not open a MIDI backend ({e}); "
                      "run: pip install python-rtmidi")
         return
+
+    # --- one-shot SELECT / SCENE -------------------------------------------
+    if a.select or a.scene is not None:
+        if a.select:
+            track, clip = a.select
+            if not (1 <= track <= 8 and 1 <= clip <= 16):
+                sys.exit("--select TRACK 1-8 CLIP 1-16")
+            msg, what = clip_pc(track, clip), f"launch track {track} clip {clip}"
+        else:
+            if not 1 <= a.scene <= 128:
+                sys.exit("--scene must be 1-128")
+            msg, what = scene_pc(a.scene), f"recall scene {a.scene}"
+        print(what + (f"  ({msg})" if a.dry_run else ""))
+        if a.dry_run:
+            return
+        _send_or_die(a.port, [(0.0, msg)])
+        print("sent")
+        return
+
+    # --- ARRANGE (scene sequencer, clock master) ---------------------------
+    if a.arrange:
+        try:
+            scenes = [int(s) for s in a.arrange.split(",") if s.strip()]
+        except ValueError:
+            sys.exit("--arrange wants comma-separated scene numbers, e.g. 1,2,2,3")
+        if not scenes or any(not 1 <= s <= 128 for s in scenes):
+            sys.exit("--arrange scenes must be 1-128")
+        ev, total = build_arrange(scenes, a.bpm, a.bars, a.repeat)
+        ride = "-".join(map(str, scenes))
+        print(f"arrange {ride} x{a.repeat} @ {a.bpm} bpm, {a.bars} bars each "
+              f"= {total:.1f}s ({len(scenes) * a.repeat} scene changes)")
+        if a.dry_run:
+            return
+        port = _pick_or_die(a.port)
+        print(f"sequencing to {port!r} -- set the 707 to slave (Sync AUTO/MIDI) now")
+        stream(port, ev)
+        print("done -- sent Stop")
+        return
+
     if not a.file:
-        ap.error("give a clip file, or --list")
+        ap.error("give a clip file, or --list / --select / --scene / --arrange")
 
     ch = (a.channel - 1) if a.channel else channel_from_name(a.file)
     if ch is None:
@@ -144,19 +256,9 @@ def main():
     if a.dry_run:
         return
 
-    try:
-        port = pick_port(a.port)
-    except Exception as e:
-        sys.exit(f"could not open a MIDI backend ({e}); "
-                 "run: pip install python-rtmidi")
+    port = _pick_or_die(a.port)
     print(f"streaming to {port!r} -- arm the clip ([REC] then [START/STOP]) now")
-    with mido.open_output(port) as out:
-        t0 = time.monotonic()
-        for t, msg in ev:
-            wait = t0 + t - time.monotonic()
-            if wait > 0:
-                time.sleep(wait)
-            out.send(msg)
+    stream(port, ev)
     print("done -- hit [REC] off on the 707 and check the clip")
 
 
