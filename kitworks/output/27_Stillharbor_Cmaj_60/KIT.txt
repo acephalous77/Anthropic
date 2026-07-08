@@ -1,0 +1,13 @@
+Stillharbor  --  Cmaj  60 bpm  4/4  feel:laidback
+
+Stillharbor -- quiet ambient bed: C major, 60, laidback.
+
+The still, major-key outlier -- a bed for spoken word more than a groove.
+Drums are almost nothing (soft kick, sidestick, a whisper of hat), the
+chords are held pads on I-vi-IV-V (C-Am-F-G), a warm string counter holds
+a low pedal, and the vibraphone lead flows in unhurried arcs with plenty
+of air between phrases. The snare only ever shows up in the lift.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

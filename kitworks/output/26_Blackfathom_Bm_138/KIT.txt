@@ -1,0 +1,13 @@
+Blackfathom  --  Bm  138 bpm  4/4  feel:pushing
+
+Blackfathom -- fast punchy solo bed: B minor, 138, pushing.
+
+A clean, hard four-voice frame to groove and solo over: kick + clap
+backbeat, one closed hat, a tight punchy bass that hammers root then
+fifth, and anthemic changes i-VI-III-VII (Bm-G-D-A). The lead is
+DELIBERATELY skeletal -- a three-stab motif per bar -- leaving the top
+open for a singer or your own soloing. Counter answers once a bar.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

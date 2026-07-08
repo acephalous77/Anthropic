@@ -1,0 +1,12 @@
+Tidewheel  --  Ddor  126 bpm  4/4  feel:pushing
+
+Tidewheel -- up-tempo hat-driven groove: D dorian, 126, pushing.
+
+An indie-electronic mover: syncopated kick and a driving 16th hat, a bass
+that never sits still (root-fifth-third across i-bIII-IV-bVII, Dm-F-G-C
+with the dorian B natural in the G), and a compact lead hook that climbs
+to its high G and steps home. Counter jabs once a bar in the hook's gap.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6
