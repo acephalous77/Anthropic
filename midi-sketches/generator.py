@@ -20,6 +20,7 @@ import random
 import palette
 import humanize as hz
 import rhythm
+import drumvary
 from analysis import shannon_entropy, melodic_intervals, zipf_slope
 from arrange import render_piece, section_span, STEP_TICKS
 from midiwriter import cc_ramp, CC_EXPRESSION, CC_REVERB_SEND, CC_BRIGHTNESS, PPQ
@@ -1624,8 +1625,11 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=
     fn = ARCHETYPES[archetype_name]
     params = inspect.signature(fn).parameters
     extra = {}
-    if phases is not None and "phases" in params:
-        extra["phases"] = phases
+    if "phases" in params:
+        # randomize section count when the caller doesn't pin it, so two seeds
+        # of one archetype don't share an identical macro-form (diagnosed #4)
+        extra["phases"] = phases if phases is not None else \
+            random.Random(seed * 17 + 3).choice([2, 3, 4])
     if mode is not None and "mode" in params:
         extra["mode"] = mode
 
@@ -1633,6 +1637,9 @@ def generate(seed=None, archetype=None, root=None, scale=None, bpm=None, phases=
     for attempt in range(max_attempts):
         rng = random.Random(seed * 1000 + attempt)
         spec = fn(rng, root=root, scale=scale, bpm=bpm, **extra)
+        # give each clip its own drum signature (fixes drum convergence -- see
+        # drumvary.py); seeded off the same seed so the clip stays reproducible
+        drumvary.vary(random.Random(seed * 131 + attempt), spec["sections"])
         result = render_piece(spec["sections"], spec["drum_notes"])
         produced = spec["produce"](result, bass_channel=0, melody_channel=1)
         result = {**result, **{k: v for k, v in produced.items() if k in ("drums", "bass", "melody")}}
