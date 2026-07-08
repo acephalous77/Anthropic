@@ -1,0 +1,12 @@
+Ironglass  --  C#m  131 bpm  4/4  feel:pushing
+
+Ironglass -- taut cinematic driver: C# minor, 131, pushing.
+
+Hard and clean: a tight low bass hammers root then fifth under anthemic
+changes i-VI-III-VII (C#m-A-E-B), the kick drives with a syncopated pickup,
+and the lead is DELIBERATELY a three-stab motif -- leaving the top wide open
+for a singer or a solo. Fills the missing C# minor.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6
