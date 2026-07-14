@@ -1,0 +1,9 @@
+Veilfire  --  Bm  112 bpm  4/4  feel:pushing
+
+Dark synth-pop: B minor, 112, Bm-G-D-A. The 16th-note syncopated bass
+with octave flicks is the engine; chord stabs live on the off-8ths; the
+lead hangs on the 2nd in bar 4 so the loop resolves itself.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

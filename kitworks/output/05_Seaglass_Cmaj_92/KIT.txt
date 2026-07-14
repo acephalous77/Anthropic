@@ -1,0 +1,9 @@
+Seaglass  --  Cmaj  92 bpm  4/4  feel:laidback
+
+Dream-pop doo-wop: C major, 92, I-vi-IV-V. The oldest progression
+there is, because it works. Stepwise sing-song lead that lands on
+thirds; root-5-6-5 bass; music-box arp.
+
+parts: drums, bass, lead, counter, chords, arp
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

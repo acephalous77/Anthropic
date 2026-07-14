@@ -1,0 +1,10 @@
+Nightpulse  --  Fm  68 bpm  4/4  feel:ritual
+
+Fever Ray territory: a dark half-time throb in F minor, 68 bpm.
+The bass is an 8th-note pulse that dips to Eb and climbs home through Db;
+the lead is an icy descending hook that states itself, then answers one
+step higher and lands long on the root.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

@@ -1,0 +1,9 @@
+Autoglide  --  Cmix  120 bpm  4/4  feel:pushing
+
+Krautrock motorik: C mixolydian, 120. The bass is a relentless 8th-note
+C that finally admits the flat-7 (Bb) in bar 3 -- the one-chord jam that
+breathes; terse repeated lead figure, organ held underneath.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

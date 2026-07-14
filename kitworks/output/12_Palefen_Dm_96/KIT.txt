@@ -1,0 +1,9 @@
+Palefen  --  Dm  96 bpm  4/4  feel:laidback
+
+The Cure territory: D minor, 96, Dm-Bb-F-C. Floor tom drives under
+straight 16th hats; a watery two-octave arp; the lead speaks one falling
+line, waits a bar, answers, and waits again.
+
+parts: drums, bass, lead, counter, chords, arp
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

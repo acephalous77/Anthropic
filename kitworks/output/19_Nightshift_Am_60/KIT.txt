@@ -1,0 +1,10 @@
+Nightshift  --  Am  60 bpm  4/4  feel:laidback  (swung)
+
+Nightshift -- Badalamenti noir: A minor, 60, swung slow. Brushed halftime
+with the snare dragging; a walking-ish bass that climbs A-B-C-E; tremolo-
+feeling lead that leans on the b9-ish tension then resolves; the counter is
+a baritone answer, one dark phrase per pair of bars. Am - Dm - Am - E7.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

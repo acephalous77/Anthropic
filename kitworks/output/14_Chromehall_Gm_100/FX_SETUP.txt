@@ -1,0 +1,57 @@
+Chromehall  --  Gm  100 bpm  feel:pushing   (lane: synthwave)
+======================================================================
+TEMPO: the 707 has ONE tempo per project -- set it to 100 before playing (clips do NOT carry tempo).
+
+TONES  (load one per track; TRK/CLP set to CLP lets each kit keep its
+  own sound on a shared track -- map these to your factory/pack patches)
+  drums    Kit: LinnDrum/gated (big snare)
+  bass     Synth Bass: octave analog
+  lead     Lead: bright supersaw
+  counter  Synth: PWM line
+  chords   Pad: JP-8 poly
+
+FIXED KNOBS  (same on every track; [SHIFT]+[KNOB ASSIGN] to bind)
+  FILTER  -> Cutoff                       CC80 (or direct CC74)    start 90
+  MOD     -> Coarse Tune                  CC81 (bind internally)   start 64
+  FX      -> MFX depth / send (per part)  CC82                     start 40
+  SOUND   -> Release                      CC83 (or direct CC72)    start 64
+  (Coarse Tune has no direct CC -- bind MOD to the tone's Coarse Tune;
+   the 4th knob's target is per-track, shown below.)
+
+PER-TRACK INSERT MFX / SENDS / EQ / 4th-knob   (feel: pushing)
+  drums
+     MFX : Overdrive (Drive 24, Tone 66, Lvl 100) -- glue+edge
+     send: delay   8   reverb  10     FX-knob -> MFX depth
+     EQ  : HPF35; +2@70 +2.5@4k +1.5@11k (bright/punchy)
+  bass
+     MFX : Overdrive (Drive 40, Tone 55, Lvl 100) -- acid bite
+     send: delay   0   reverb   4     FX-knob -> MFX depth (drive)
+     EQ  : HPF28; +2@100 -2@350 roll>6k
+  lead
+     MFX : Stereo Delay (1/8dot, Fbk 30, HFdamp 7k, Lvl 40)
+     send: delay  20   reverb  14     FX-knob -> Delay send
+     EQ  : HPF120; +2.5@3k +1.5@10k (presence)
+  counter
+     MFX : Phaser (Rate 1/8, Depth 60, Reso 40) -- movement
+     send: delay  16   reverb  12     FX-knob -> Delay send
+     EQ  : HPF160; -1.5@3k +1@8k (yield to lead)
+  chords
+     MFX : JUNO Chorus (Dep 3, Rate .6Hz) + light OD (Drive 18)
+     send: delay  10   reverb  22     FX-knob -> Reverb send
+     EQ  : HPF180; -1.5@400 +2@10k air
+
+MASTER BUS  ([SHIFT]+[MULTI] -> Comp / EQ / MFX tabs)
+  Total Comp: 3.5:1, atk 12ms, rel 120ms/Auto, thr -13dB, +3.5 makeup (~3-4dB GR, punch)
+  Total EQ:   low +1.5@60Hz . mid -1.5@400Hz . high +2@10kHz
+  Total MFX: light Saturator/Overdrive (Drive 12-15) or Thru
+
+MOTION  (arrangement filter/reverb arc on CC74 cutoff + CC91 reverb +
+  CC11 expression: intro filtered, opens to peak, washes in the break,
+  fades on the end). Live-record it with  usb_feed --fx --feel pushing,
+  or ride the FILTER knob per column. Section cutoff/reverb targets:
+    intro  cutoff x0.55  reverb x1.15  level 92
+    main   cutoff x1.00  reverb x1.00  level 110
+    lift   cutoff x1.15  reverb x1.10  level 120
+    break  cutoff x0.45  reverb x1.60  level 84
+    peak   cutoff x1.30  reverb x1.20  level 126
+    end    cutoff x0.80  reverb x1.35  level 100

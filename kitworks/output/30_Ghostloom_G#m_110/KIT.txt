@@ -1,0 +1,12 @@
+Ghostloom  --  G#m  110 bpm  4/4  feel:laidback
+
+Ghostloom -- brooding art-pop: G# minor, 110, laidback.
+
+Wide and dark, carried by a real moving bass (root-fifth-third striding
+under i-VI-III-VII, G#m-E-B-F#) rather than a drone. The lead broods across
+a shaped hook that lifts to its high F# and settles home; the counter
+answers once a bar. Fills the collection's missing G# minor / Ab minor.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

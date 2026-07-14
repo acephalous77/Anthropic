@@ -1,0 +1,6 @@
+sd/
+*.zip
+__pycache__/
+*.pyc
+mine_output/
+songs/

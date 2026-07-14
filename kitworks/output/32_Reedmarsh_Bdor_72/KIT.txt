@@ -1,0 +1,12 @@
+Reedmarsh  --  Bdor  72 bpm  4/4  feel:laidback
+
+Reedmarsh -- slow spoken-word bed: B dorian, 72, laidback.
+
+A spacious bed with a real tune in it. Sidestick and soft hats, a bass that
+holds its root then steps to the fifth under i-IV-bVII-bIII (Bm-E-A-D, the
+dorian major-IV lifting on E), and a flute lead that descends in unhurried
+arcs, leaving air for a voice. Fills a B-dorian and a slow-groove gap.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

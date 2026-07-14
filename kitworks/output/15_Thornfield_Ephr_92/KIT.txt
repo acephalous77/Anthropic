@@ -1,0 +1,9 @@
+Thornfield  --  Ephr  92 bpm  4/4  feel:ritual
+
+Dark stomp in E phrygian, 92: the F-natural against E is the whole
+drama. Toms answer the kick; the lead states E-F, peaks on G in bar 3,
+and lands low; the bass leans on the pedal and walks B back home.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

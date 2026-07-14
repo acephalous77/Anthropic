@@ -1,0 +1,9 @@
+Morningvow  --  Gmaj  72 bpm  6/8  feel:laidback
+
+A 6/8 ballad in G major, 72: I-vi-IV-V under a soaring lead that
+peaks on the high G in bar 2 and settles on the leading tone so the
+loop pulls itself back to the top. Twelve steps per bar.
+
+parts: drums, bass, lead, counter, chords, arp
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

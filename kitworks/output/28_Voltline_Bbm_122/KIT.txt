@@ -1,0 +1,13 @@
+Voltline  --  Bbm  122 bpm  4/4  feel:pushing
+
+Voltline -- four-on-the-floor house: Bb minor, 122, pushing.
+
+A club frame: kick on every beat, clap on 2 and 4, open hat riding the
+offbeats, and a pumping offbeat bass that hits after each kick (i-VI-III-VII,
+Bbm-Gb-Db-Ab). Over that, a real hook (not the candidate's two-note pulse)
+that climbs to its high Ab. The break drops the kick house-style but keeps a
+beat-1 tick. Chords are offbeat stabs.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

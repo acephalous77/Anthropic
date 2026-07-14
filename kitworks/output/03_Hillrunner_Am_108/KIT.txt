@@ -1,0 +1,9 @@
+Hillrunner  --  Am  108 bpm  4/4  feel:pushing
+
+Kate Bush territory: A minor gallop at 108 over i-VI-VII-v (Am F G Em).
+The lead leaps a fifth and walks back down -- the yearning shape -- and
+the balearic arp keeps the sky moving.
+
+parts: drums, bass, lead, counter, chords, arp
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

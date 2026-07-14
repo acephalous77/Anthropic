@@ -1,0 +1,12 @@
+Tarblack  --  Cphr  82 bpm  4/4  feel:laidback
+
+Tarblack -- dark dubby downtempo: C phrygian, 82, laidback.
+
+The b2 is the whole mood: the Db chord (bII) leaning on the Cm is pure
+Phrygian menace, and the lead keeps brushing Ab and Db against the root. A
+big rim/snare lands on beat 3, dub-style, over a moving low bass through
+i-bII-bVI-bIII (Cm-Db-Ab-Eb). Fills the collection's C phrygian gap.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

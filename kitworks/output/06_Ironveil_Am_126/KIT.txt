@@ -1,0 +1,12 @@
+Ironveil  --  Am  126 bpm  4/4  feel:pushing
+
+Ironveil -- dark techno / EBM: A minor, 126.
+
+Octave 16th bass pump (the engine) under a stab riff that now DEVELOPS
+across the loop instead of repeating: the A-C-B-E cell answers up to G in
+bar 2, peaks on A in bar 3, and lands home. Chords carry the third (real
+Am) and cadence Am->G under the bar-4 bass walk.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

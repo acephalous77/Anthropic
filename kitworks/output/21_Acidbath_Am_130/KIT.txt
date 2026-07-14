@@ -1,0 +1,11 @@
+Acidbath  --  Am  130 bpm  4/4  feel:pushing
+
+Acidbath -- acid techno: A minor, 130. Four-floor with off-8th open hats;
+the acid line is the lead -- one octave-jumping 16th figure with accents
+that migrate one step later each bar (the squelch pattern movement); the
+bass drops to a sub A only on the second half of each bar so the acid line
+owns the front. One chord (Am), because acid needs no changes.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

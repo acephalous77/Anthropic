@@ -1,0 +1,12 @@
+Saltcode  --  F#m  132 bpm  4/4  feel:laidback  (swung)
+
+Saltcode -- UK garage / 2-step: F# minor, 132, shuffled hard.
+
+The kick avoids beat 3 (that absence IS 2-step); snare stays on 2 and 4 with
+a ghost hand; the bass is a subby dub-garage figure that leaves the first
+half-bar to the drums; the lead is a skippy vocal-cut-style riff; chords are
+one filtered stab per half-bar. Counter answers with a high 'vocal chop'.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

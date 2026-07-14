@@ -1,0 +1,12 @@
+Fellwater  --  Gm  114 bpm  4/4  feel:laidback
+
+Fellwater -- indie full-band groove: G minor, 114, laidback.
+
+A mid-tempo song you can build whole: the changes walk i-III-VI-VII
+(Gm-Bb-Eb-F), the bass strides root-to-fifth against the backbeat, the
+lead climbs a shaped hook to its high G and settles home, and the counter
+answers once per bar in the lead's breath. Chords are half-bar stabs.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6

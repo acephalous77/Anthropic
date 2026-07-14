@@ -1,0 +1,11 @@
+Stonecircle  --  Ddor  78 bpm  4/4  feel:ritual
+
+Stonecircle -- Dead Can Dance / neofolk: D dorian, 78. A frame-drum
+pattern (low tom = doum, rim = tek) carries everything; the bass is a
+two-note earth figure; the lead is a modal incantation that rises to the
+dorian 6th (B natural) and circles down; counter drones the fifth.
+Dm - Dm - C - Dm, old-world plain.
+
+parts: drums, bass, lead, counter, chords
+columns: 1_intro  2_main  3_lift  4_break  5_peak  6_end
+suggested rides:  1-2-2-3 | 2-3-4-2 | 1-2-3-5-4-2-5-6
