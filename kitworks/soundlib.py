@@ -53,7 +53,7 @@ PACKS = {
 # --- role vocabulary ---------------------------------------------------------
 # Every tone declares ONE primary role so `by_role` can offer real choices.
 ROLES = ["bass", "lead", "pad", "atmos", "keys", "bell", "pluck", "arp",
-         "vox", "brass", "poly", "drums"]
+         "vox", "brass", "poly", "drums", "fx"]
 
 # --- factory favorites (verbatim from Roland's MC-707 Sound List) ------------
 # A small, curated shortlist per role -- the reliable go-to factory tones, so a
@@ -88,6 +88,37 @@ _FACTORY = [
     ("CR-78 Kit",       "drums",  ["vintage", "soft", "preset"]),
     ("Analog Kit",      "drums",  ["analog", "dry"]),
     ("Orchestra Kit",   "drums",  ["acoustic", "cinematic"]),
+]
+
+# --- factory tones VERIFIED IN USE (pulled from the 25 saved .mpj projects on
+# the card -- these are the exact factory tones Adnan reaches for per aesthetic,
+# so they carry real weight as suggestions/assignments). Names verbatim on-box.
+_FACTORY_USED = [
+    ("JD-800 Piano",    "keys",  ["piano", "jd800", "bright"]),
+    ("Note Piano MC",   "keys",  ["piano", "soft"]),
+    ("Synth Keys",      "keys",  ["synth", "warm"]),
+    ("Reflective Keys", "keys",  ["soft", "reflective", "ambient"]),
+    ("Juno P13 Str",    "pad",   ["juno", "strings", "warm"]),
+    ("Soft Pad 2",      "pad",   ["soft", "warm", "simple"]),
+    ("Stack Chord 2D",  "poly",  ["stacked", "chord", "wide"]),
+    ("JUNO Stab 3",     "pluck", ["juno", "stab", "bright"]),
+    ("Droplet",         "pluck", ["glassy", "bell", "short"]),
+    ("AX Sync Lead",    "lead",  ["sync", "sharp", "solo"]),
+    ("Unison Lead",     "lead",  ["unison", "fat", "solo"]),
+    ("Trap Synth",      "bass",  ["trap", "sub", "modern"]),
+    ("Vocal",           "vox",   ["vocal", "sustained"]),
+    ("XV Spectre Vox G", "vox",  ["choir", "vintage", "xv"]),
+    ("Trap Kit",        "drums", ["trap", "modern", "punchy"]),
+    ("Over08 Kit",      "drums", ["overdrive", "gritty"]),
+    # FX / one-shot tones used on aux tracks for risers, texture, punctuation
+    ("Applause w",      "fx",    ["crowd", "swell", "texture"]),
+    ("Step Slicer 5",   "fx",    ["gated", "rhythmic"]),
+    ("Seq Sqr 1 Atk",   "fx",    ["sequence", "square"]),
+    ("High Q",          "fx",    ["zap", "hit"]),
+    ("Elec Slap",       "fx",    ["slap", "percussive"]),
+    ("Scratch Push",    "fx",    ["scratch", "dj"]),
+    ("Scratch Pull",    "fx",    ["scratch", "dj"]),
+    ("Swish&Turn",      "fx",    ["sweep", "transition"]),
 ]
 
 # --- Analog Dreams (50) ------------------------------------------------------
@@ -212,6 +243,7 @@ def _add(pack, table):
 
 
 _add("factory", _FACTORY)
+_add("factory", _FACTORY_USED)
 _add("analog_dreams", _ANALOG_DREAMS)
 _add("cinematica", _CINEMATICA)
 # lofi_throwback / future_pop: names are read from the box -- paste (name, role,

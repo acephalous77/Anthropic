@@ -4,289 +4,199 @@
 Kit score files (kits/*.py) hold the NOTES; this file holds which TONE each
 part plays and how it is shaped. Kept separate so the scores stay pure.
 
-Every slot below is scaffolded to None with 2-3 SUGGESTIONS (mood-matched from
-soundlib.py) in the trailing comment -- fill a slot with an EXACT tone name from
-soundlib (on-box spelling) to lock it in. Leave None to keep the generic hint.
-sd_export.py prints whatever is set into the kit LAYOUT.TXT.
+SEEDED from the 25 saved projects on the card: each kit takes the palette of
+the project aesthetic it was written toward (FEVER/RADIO/PORTIS/KNIFE/FOLK/
+KOSMIC/TECHNO/DRONE). These are Adnan's own proven tone choices, not guesses --
+change any slot to any exact name in soundlib. sd_export.py prints them to
+each kit LAYOUT.TXT. The two .sdz packs (LoFi Throwback, Future Pop) still need
+their names read off the box; none of the projects used them.
 
-FX per kit: 'cc' shapes the tones from the computer (documented CCs only:
-cutoff 74, resonance 71, attack 73, release 72, reverb 91, chorus 92); 'master'
-sets the master-bus reverb/delay as (type_name, level 0-127). All optional.
-
-Names for the two .sdz packs (LoFi Throwback, Future Pop) aren't in the files --
-read them off the box, add rows to soundlib._add(...), then use them here.
+FX: 'master' sets master-bus reverb/delay as (type, level 0-127). 'cc' shapes
+per-part tones (cutoff74/res71/atk73/rel72/rev91/cho92) -- left open to dial by ear.
 """
 
 SOUNDS = {
-    'Nightpulse': dict(
-        # Fm  68bpm  feel:ritual
-        drums   = None,   # DRUM kit -- try: TR-808 Kit
-        bass    = None,   # bass -- try: Dark Sub  |  NK Deep Bass  |  Cin Action Bass
-        lead    = None,   # lead -- try: Detuned EP 1  |  SR Deep  |  Cin Airy Keys
-        counter = None,   # 2nd voice -- try: Detuned EP 1  |  SR Deep  |  Cin 2 Voice
-        chords  = None,   # pad/keys -- try: Cin Gravity  |  Cin Oblivion  |  JP-8 Haunting
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Nightpulse': dict(   # FEVER palette · Fm 68bpm · ritual
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Cin Ghost Pluck'   ,  # cinematica · haunting/delay
+        counter = 'Cin Saint Voice'   ,  # cinematica · choir/sacred
+        chords  = 'NK 106 Poly'       ,  # analog_dreams · juno/chorus/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 78)}),
     ),
-    'Glasskid': dict(
-        # Cm  120bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Glasskid': dict(   # RADIO palette · Cm 120bpm · pushing
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Vocal'             ,  # factory · vocal/sustained
+        chords  = 'NK Landscape'      ,  # analog_dreams · evolving/wide
+        fx      = dict(cc={}, master={'reverb': ('Warm Hall', 60), 'delay': ('Delay', 40)}),
     ),
-    'Hillrunner': dict(
-        # Am  108bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        arp     = None,   # arp/pluck -- try: Cin Crystal  |  Dreambell  |  NK Phazed Slices
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Hillrunner': dict(   # RADIO palette · Am 108bpm · pushing
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Vocal'             ,  # factory · vocal/sustained
+        chords  = 'NK Landscape'      ,  # analog_dreams · evolving/wide
+        arp     = 'Cin Meta Pluck'    ,  # cinematica · rhythmic/modern
+        fx      = dict(cc={}, master={'reverb': ('Warm Hall', 60), 'delay': ('Delay', 40)}),
     ),
-    'Lowgold': dict(
-        # Ddor  84bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Inerstellar  |  Cin Milky Way  |  Cin Oort Cloud
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Lowgold': dict(   # PORTIS palette · Ddor 84bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'Trap Synth'        ,  # factory · trap/sub/modern
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Cin Saint Voice'   ,  # cinematica · choir/sacred
+        chords  = 'Juno P13 Str'      ,  # factory · juno/strings/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 66), 'delay': ('Delay', 46)}),
     ),
-    'Seaglass': dict(
-        # Cmaj  92bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Dream On  |  Cin Fantasia  |  SR Dreamer
-        arp     = None,   # arp/pluck -- try: Cin Crystal  |  Dreambell  |  NK Phazed Slices
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Seaglass': dict(   # PORTIS palette · Cmaj 92bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'Trap Synth'        ,  # factory · trap/sub/modern
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Cin Saint Voice'   ,  # cinematica · choir/sacred
+        chords  = 'Juno P13 Str'      ,  # factory · juno/strings/warm
+        arp     = 'Cin Ghost Pluck'   ,  # cinematica · haunting/delay
+        fx      = dict(cc={}, master={'reverb': ('Hall', 66), 'delay': ('Delay', 46)}),
     ),
-    'Ironveil': dict(
-        # Am  126bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Dark Sub  |  Cin Action Bass  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Anubis  |  Cin Apocalyptic  |  Cin Gravity
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Ironveil': dict(   # TECHNO palette · Am 126bpm · pushing
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Cin Ghost Pluck'   ,  # cinematica · haunting/delay
+        counter = 'NK Whisper Tones'  ,  # analog_dreams · breathy/soft
+        chords  = 'NK Poly Uni'       ,  # analog_dreams · analog/unison/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 44), 'delay': ('Delay', 40)}),
     ),
-    'Holloway': dict(
-        # F#m  76bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Holloway': dict(   # PORTIS palette · F#m 76bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'Trap Synth'        ,  # factory · trap/sub/modern
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Cin Saint Voice'   ,  # cinematica · choir/sacred
+        chords  = 'Juno P13 Str'      ,  # factory · juno/strings/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 66), 'delay': ('Delay', 46)}),
     ),
-    'Morningvow': dict(
-        # Gmaj  72bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        arp     = None,   # arp/pluck -- try: Cin Crystal  |  Dreambell  |  NK Phazed Slices
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Morningvow': dict(   # FOLK palette · Gmaj 72bpm · laidback
+        drums   = 'Orchestra Kit'     ,  # factory · acoustic/cinematic
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'NK Lead Classic'   ,  # analog_dreams · classic/analog/solo
+        counter = 'Cin Voices'        ,  # cinematica · choir/wide
+        chords  = 'NK 106 Poly'       ,  # analog_dreams · juno/chorus/warm
+        arp     = 'Droplet'           ,  # factory · glassy/bell/short
+        fx      = dict(cc={}, master={'reverb': ('Warm Hall', 72)}),
     ),
-    'Duskwire': dict(
-        # Em  100bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Cin Saint Voice  |  Cin 2 Voice  |  Cin Voices
-        chords  = None,   # pad/keys -- try: Cin Sanctuary  |  Cin Desert Angel  |  Detuned EP 1
-        arp     = None,   # arp/pluck -- try: Cin Crystal  |  Dreambell  |  NK Phazed Slices
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Duskwire': dict(   # RADIO palette · Em 100bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Vocal'             ,  # factory · vocal/sustained
+        chords  = 'NK Landscape'      ,  # analog_dreams · evolving/wide
+        arp     = 'Cin Meta Pluck'    ,  # cinematica · rhythmic/modern
+        fx      = dict(cc={}, master={'reverb': ('Warm Hall', 60), 'delay': ('Delay', 40)}),
     ),
-    'Autoglide': dict(
-        # Cmix  120bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Autoglide': dict(   # KOSMIC palette · Cmix 120bpm · pushing
+        drums   = 'TR-909 Kit'        ,  # factory · house/techno/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'SR Night City'     ,  # analog_dreams · neon/80s/moody
+        counter = 'NK Uni String'     ,  # analog_dreams · analog/strings/unison
+        chords  = 'NK Cyber'          ,  # analog_dreams · digital/cold
+        fx      = dict(cc={}, master={'reverb': ('Hall', 58), 'delay': ('Delay', 52)}),
     ),
-    'Veilfire': dict(
-        # Bm  112bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Dark Sub  |  Cin Action Bass  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Anubis  |  Cin Apocalyptic  |  Cin Gravity
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Veilfire': dict(   # KNIFE palette · Bm 112bpm · pushing
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Acid Bass'      ,  # analog_dreams · acid/303/resonant
+        lead    = 'NK Lead India'     ,  # analog_dreams · exotic/solo
+        counter = 'Soft Pad 2'        ,  # factory · soft/warm/simple
+        chords  = 'NK Cyber'          ,  # analog_dreams · digital/cold
+        fx      = dict(cc={}, master={'reverb': ('Hall', 50)}),
     ),
-    'Palefen': dict(
-        # Dm  96bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        arp     = None,   # arp/pluck -- try: Cin Crystal  |  Dreambell  |  NK Phazed Slices
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Palefen': dict(   # KNIFE palette · Dm 96bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Acid Bass'      ,  # analog_dreams · acid/303/resonant
+        lead    = 'NK Lead India'     ,  # analog_dreams · exotic/solo
+        counter = 'Soft Pad 2'        ,  # factory · soft/warm/simple
+        chords  = 'NK Cyber'          ,  # analog_dreams · digital/cold
+        arp     = 'Cin Strobe Light'  ,  # cinematica · rhythmic/bright
+        fx      = dict(cc={}, master={'reverb': ('Hall', 50)}),
     ),
-    'Redloam': dict(
-        # Em  54bpm  feel:ritual
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Dark Sub  |  Cin Action Bass  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Anubis  |  Cin Apocalyptic  |  Cin Gravity
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Redloam': dict(   # DRONE palette · Em 54bpm · ritual
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Synth Keys'        ,  # factory · synth/warm
+        counter = 'Cin Voices'        ,  # cinematica · choir/wide
+        chords  = 'NK VCO Pad'        ,  # analog_dreams · analog/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 84)}),
     ),
-    'Chromehall': dict(
-        # Gm  100bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Chromehall': dict(   # KOSMIC palette · Gm 100bpm · pushing
+        drums   = 'TR-909 Kit'        ,  # factory · house/techno/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'SR Night City'     ,  # analog_dreams · neon/80s/moody
+        counter = 'NK Uni String'     ,  # analog_dreams · analog/strings/unison
+        chords  = 'NK Cyber'          ,  # analog_dreams · digital/cold
+        fx      = dict(cc={}, master={'reverb': ('Hall', 58), 'delay': ('Delay', 52)}),
     ),
-    'Thornfield': dict(
-        # Ephr  92bpm  feel:ritual
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Dark Sub  |  Cin Action Bass  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Anubis  |  Cin Apocalyptic  |  Cin Gravity
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Thornfield': dict(   # DRONE palette · Ephr 92bpm · ritual
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Synth Keys'        ,  # factory · synth/warm
+        counter = 'Cin Voices'        ,  # cinematica · choir/wide
+        chords  = 'NK VCO Pad'        ,  # analog_dreams · analog/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 84)}),
     ),
-    'Brightwork': dict(
-        # Ador  116bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Brightwork': dict(   # KOSMIC palette · Ador 116bpm · laidback
+        drums   = 'TR-909 Kit'        ,  # factory · house/techno/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'SR Night City'     ,  # analog_dreams · neon/80s/moody
+        counter = 'NK Uni String'     ,  # analog_dreams · analog/strings/unison
+        chords  = 'NK Cyber'          ,  # analog_dreams · digital/cold
+        fx      = dict(cc={}, master={'reverb': ('Hall', 58), 'delay': ('Delay', 52)}),
     ),
-    'Saltcode': dict(
-        # F#m  132bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: TR-808 Kit
-        bass    = None,   # bass -- try: NK Deep Bass  |  Dark Sub  |  Cin Action Bass
-        lead    = None,   # lead -- try: SR Deep  |  Air Lead  |  Cin Airy Keys
-        counter = None,   # 2nd voice -- try: SR Deep  |  Air Lead  |  Cin 2 Voice
-        chords  = None,   # pad/keys -- try: Cin Gravity  |  Cin Oblivion  |  Cin Oort Cloud
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Saltcode': dict(   # TECHNO palette · F#m 132bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Cin Ghost Pluck'   ,  # cinematica · haunting/delay
+        counter = 'NK Whisper Tones'  ,  # analog_dreams · breathy/soft
+        chords  = 'NK Poly Uni'       ,  # analog_dreams · analog/unison/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 44), 'delay': ('Delay', 40)}),
     ),
-    'Mirrorlake': dict(
-        # Fmaj  86bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Mirrorlake': dict(   # KOSMIC palette · Fmaj 86bpm · laidback
+        drums   = 'TR-909 Kit'        ,  # factory · house/techno/punchy
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'SR Night City'     ,  # analog_dreams · neon/80s/moody
+        counter = 'NK Uni String'     ,  # analog_dreams · analog/strings/unison
+        chords  = 'NK Cyber'          ,  # analog_dreams · digital/cold
+        fx      = dict(cc={}, master={'reverb': ('Hall', 58), 'delay': ('Delay', 52)}),
     ),
-    'Nightshift': dict(
-        # Am  60bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Dark Sub  |  Cin Action Bass  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Anubis  |  Cin Apocalyptic  |  Cin Gravity
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Nightshift': dict(   # PORTIS palette · Am 60bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'Trap Synth'        ,  # factory · trap/sub/modern
+        lead    = 'Note Piano MC'     ,  # factory · piano/soft
+        counter = 'Cin Saint Voice'   ,  # cinematica · choir/sacred
+        chords  = 'Juno P13 Str'      ,  # factory · juno/strings/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 66), 'delay': ('Delay', 46)}),
     ),
-    'Stonecircle': dict(
-        # Ddor  78bpm  feel:ritual
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Oort Cloud  |  Detuned EP 1  |  NK 106 Poly
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Stonecircle': dict(   # FOLK palette · Ddor 78bpm · ritual
+        drums   = 'Orchestra Kit'     ,  # factory · acoustic/cinematic
+        bass    = 'NK Uni Bass'       ,  # analog_dreams · unison/fat/analog
+        lead    = 'NK Lead Classic'   ,  # analog_dreams · classic/analog/solo
+        counter = 'Cin Voices'        ,  # cinematica · choir/wide
+        chords  = 'NK 106 Poly'       ,  # analog_dreams · juno/chorus/warm
+        fx      = dict(cc={}, master={'reverb': ('Warm Hall', 72)}),
     ),
-    'Acidbath': dict(
-        # Am  130bpm  feel:pushing
-        drums   = None,   # DRUM kit -- try: TR-808 Kit
-        bass    = None,   # bass -- try: NK Deep Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: SR Deep  |  Air Lead  |  Cin Airy Keys
-        counter = None,   # 2nd voice -- try: SR Deep  |  Air Lead  |  Cin 2 Voice
-        chords  = None,   # pad/keys -- try: Cin Gravity  |  Cin Oblivion  |  Cin Oort Cloud
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Acidbath': dict(   # TECHNO palette · Am 130bpm · pushing
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Cin Ghost Pluck'   ,  # cinematica · haunting/delay
+        counter = 'NK Whisper Tones'  ,  # analog_dreams · breathy/soft
+        chords  = 'NK Poly Uni'       ,  # analog_dreams · analog/unison/warm
+        fx      = dict(cc={}, master={'reverb': ('Hall', 44), 'delay': ('Delay', 40)}),
     ),
-    'Winterlight': dict(
-        # Cmaj  76bpm  feel:laidback
-        drums   = None,   # DRUM kit -- try: Analog Kit
-        bass    = None,   # bass -- try: Cin Action Bass  |  Dark Sub  |  NK Acid Bass
-        lead    = None,   # lead -- try: Air Lead  |  Cin Airy Keys  |  NK Funky Monkey
-        counter = None,   # 2nd voice -- try: Air Lead  |  Cin 2 Voice  |  NK Beauity vox
-        chords  = None,   # pad/keys -- try: Cin Airy Keys  |  Detuned EP 1  |  NK 106 Poly
-        arp     = None,   # arp/pluck -- try: Cin Crystal  |  Dreambell  |  NK Phazed Slices
-        fx      = dict(
-            cc     = {},                 # e.g. {"bass":{"cutoff":55,"reverb":30}}
-            master = None,               # e.g. {"reverb":("Hall",70),"delay":("Delay",40)}
-        ),
+    'Winterlight': dict(   # DRONE palette · Cmaj 76bpm · laidback
+        drums   = 'Trap Kit'          ,  # factory · trap/modern/punchy
+        bass    = 'NK Deep Bass'      ,  # analog_dreams · deep/round/sub
+        lead    = 'Synth Keys'        ,  # factory · synth/warm
+        counter = 'Cin Voices'        ,  # cinematica · choir/wide
+        chords  = 'NK VCO Pad'        ,  # analog_dreams · analog/warm
+        arp     = 'JUNO Stab 3'       ,  # factory · juno/stab/bright
+        fx      = dict(cc={}, master={'reverb': ('Hall', 84)}),
     ),
 }
 
