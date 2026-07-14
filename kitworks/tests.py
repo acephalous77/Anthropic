@@ -50,6 +50,39 @@ check("every kit declares drums/bass/lead/counter/chords",
       all(all(k.get(p) for p in ("drums", "bass", "lead", "counter", "chords")) for k in KITS))
 check("every kit has a section spec", all("sections" in k for k in KITS))
 
+# --- sound library / assignment invariants -------------------------------
+import soundlib  # noqa: E402
+import kitsounds  # noqa: E402
+
+kit_names = {k["name"] for k in KITS}
+bad_kit = [n for n in kitsounds.SOUNDS if n not in kit_names]
+check("kitsounds keys all name a real kit", not bad_kit, str(bad_kit))
+
+# every assigned tone (non-None, non-fx slot) must resolve in the standing library
+_PARTS = ("drums", "bass", "lead", "counter", "chords", "arp")
+unknown = []
+for kname, spec in kitsounds.SOUNDS.items():
+    for part in _PARTS:
+        tone = spec.get(part)
+        if tone and not soundlib.known(tone):
+            unknown.append((kname, part, tone))
+check("every assigned tone exists in soundlib", not unknown, str(unknown[:3]))
+
+# assigned FX use only documented CCs and sane values
+_CCOK = {"cutoff", "resonance", "attack", "release", "reverb", "chorus"}
+bad_cc = []
+for kname, spec in kitsounds.SOUNDS.items():
+    cc = (spec.get("fx") or {}).get("cc") or {}
+    for part, params in cc.items():
+        for k, v in params.items():
+            if k not in _CCOK or not (0 <= v <= 127):
+                bad_cc.append((kname, part, k, v))
+check("assigned FX use documented CCs, values 0-127", not bad_cc, str(bad_cc[:3]))
+
+# soundlib itself is internally consistent (roles valid, no dup names)
+check("soundlib tones all carry a known role",
+      all(e["role"] in soundlib.ROLES or e["role"] == "seq" for e in soundlib.TONES.values()))
+
 if fails:
     print(f"\n{len(fails)} FAILED")
     sys.exit(1)

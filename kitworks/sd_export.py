@@ -34,7 +34,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mido
 
 import kitlib  # noqa: F401  (path setup for midi-sketches imports)
+import soundlib
 from kits import KITS
+from kitsounds import for_kit
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "output")
@@ -63,6 +65,30 @@ def clip_steps(path):
             t += msg.time
         last = max(last, t)
     return last / (m.ticks_per_beat / 4)      # 16th-note steps
+
+
+def _write_fx(fh, fx):
+    """Append the SOUND FX block to a LAYOUT.TXT (no-op if the kit set no fx)."""
+    if not fx:
+        return
+    cc, master = (fx.get("cc") or {}), fx.get("master")
+    if not cc and not master:
+        return
+    fh.write("\nSOUND FX (dial from the computer / on the track's [SHIFT]+[SOUND])\n")
+    _CCNAME = {"cutoff": "CC74", "resonance": "CC71", "attack": "CC73",
+               "release": "CC72", "reverb": "CC91", "chorus": "CC92"}
+    for part, params in cc.items():
+        pretty = ", ".join(f"{k} {v} ({_CCNAME.get(k, '?')})" for k, v in params.items())
+        fh.write(f"  {part:<8} {pretty}\n")
+    if master:
+        rev, dly = master.get("reverb"), master.get("delay")
+        bits = []
+        if rev:
+            bits.append(f"reverb {rev[0]} @ {rev[1]}")
+        if dly:
+            bits.append(f"delay {dly[0]} @ {dly[1]}")
+        if bits:
+            fh.write("  master   " + " · ".join(bits) + "\n")
 
 
 def main():
@@ -101,9 +127,19 @@ def main():
             fh.write(f"{kit['name']}  {kit['key']}  {kit['bpm']} bpm  {m[0]}/{m[1]}"
                      f"{'  SWUNG' if kit.get('swing') else ''}\n"
                      f"set project tempo to {kit['bpm']}\n\n{kit['note']}\n\nTRACK MAP\n")
+            snd = for_kit(kit["name"])
             for tno, part, tone in TRACKS:
                 if kit.get(part) or part == "drums":
-                    fh.write(f"  track {tno}  {part:<8} {tone}\n")
+                    chosen = snd.get(part)
+                    if chosen and soundlib.known(chosen):
+                        e = soundlib.TONES[chosen]
+                        label = f"LOAD '{chosen}'  ({e['pack']}; {'/'.join(e['tags'])})"
+                    elif chosen:                       # a name not (yet) in soundlib
+                        label = f"LOAD '{chosen}'"
+                    else:
+                        label = tone                    # unset -> the generic hint
+                    fh.write(f"  track {tno}  {part:<8} {label}\n")
+            _write_fx(fh, snd.get("fx"))
             fh.write(
                 "\nIMPORT (one file = one clip; there is NO batch import)\n"
                 "  cursor onto the target clip slot -> [CLIP] -> MIDI FILE ->\n"
