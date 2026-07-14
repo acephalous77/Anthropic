@@ -1,24 +1,54 @@
-Redloam  --  Em  54 bpm  feel:ritual
-FILTER / EFFECTS / COMPRESSION dial-in (starting points -- turn them)
+Redloam  --  Em  54 bpm  feel:ritual   (lane: goth_blues)
+======================================================================
+TEMPO: the 707 has ONE tempo per project -- set it to 54 before playing (clips do NOT carry tempo).
 
-PER-TRACK  (cutoff/reso are CC74/71; sends are [SEL]+C3 delay / +C4 reverb)
-  drums    cut 112  reso  8  dly  6  rev 32  pan C     MFX: MFX Comp (bus glue) or none
-  bass     cut  88  reso 16  dly  0  rev 24  pan C     MFX: Saturator / MFX Compressor
-  lead     cut 102  reso 30  dly 52  rev 54  pan R8    MFX: Stereo/Tempo Delay (1/8 dot)
-  counter  cut  94  reso 24  dly 30  rev 62  pan L14   MFX: Chorus + short Delay
-  chords   cut  82  reso 20  dly 12  rev 78  pan R16   MFX: Chorus -> Reverb wash
+TONES  (load one per track; TRK/CLP set to CLP lets each kit keep its
+  own sound on a shared track -- map these to your factory/pack patches)
+  drums    Kit: big room 12/8 stomp
+  bass     Bass: baritone/round
+  lead     Guitar: slide/dist lead
+  counter  Organ: dark organ
+  chords   Organ: church organ
 
-MASTER BUS  ([SHIFT]+[MULTI] -> Comp / EQ tabs)
-  Total Comp: ratio 2:1, attack 40ms, release 250ms, thr -10dB, +2 makeup (slow, transparent)
-  Total EQ:   low +2 @70Hz, mid -1 @400Hz, high +1 @6kHz (warm, soft top)
+FIXED KNOBS  (same on every track; [SHIFT]+[KNOB ASSIGN] to bind)
+  FILTER  -> Cutoff                       CC80 (or direct CC74)    start 90
+  MOD     -> Coarse Tune                  CC81 (bind internally)   start 64
+  FX      -> MFX depth / send (per part)  CC82                     start 40
+  SOUND   -> Release                      CC83 (or direct CC72)    start 64
+  (Coarse Tune has no direct CC -- bind MOD to the tone's Coarse Tune;
+   the 4th knob's target is per-track, shown below.)
 
-MOTION  (the arrangement's filter/reverb arc rides CC74 cutoff + CC91
-  reverb + CC11 expression; intro filtered, opens to peak, washes in the
-  break, fades on the end). Two ways onto the 707:
-   * live-record it -- usb_feed --fx streams the motion while you record
-     the clip (firmware 1.8 captures incoming CC as motion); or
-   * dial the section levels by hand on the FILTER knob per column.
-  Section cutoff targets (drums shown; each part scales from its base):
+PER-TRACK INSERT MFX / SENDS / EQ / 4th-knob   (feel: ritual)
+  drums
+     MFX : Distortion (Drive 42, Tone 40, Lvl 96) -- cavern grit
+     send: delay  22   reverb  74     FX-knob -> MFX depth
+     EQ  : HPF40; +3@55 -2@500 -1.5>8k (dark/deep)
+  bass
+     MFX : Tone Fattener / Distortion (Drive 56, Tone 34) -- snarl
+     send: delay   8   reverb  28     FX-knob -> MFX depth (drive)
+     EQ  : HPF25; +3@60 -2.5@400 dark>4k
+  lead
+     MFX : Reverse Delay (Fbk 55, HFdamp 4k, Lvl 58) -- cavern
+     send: delay  40   reverb  84     FX-knob -> Delay send
+     EQ  : HPF130; +1@1.5k roll>6k (dark)
+  counter
+     MFX : Ring Mod (low) / slow Phaser -- metallic
+     send: delay  34   reverb  78     FX-knob -> Delay send
+     EQ  : HPF180; -1.5@2-3k roll>7k
+  chords
+     MFX : JD Multi / Stereo Chorus deep -> big reverb
+     send: delay  24   reverb  96     FX-knob -> Reverb send
+     EQ  : HPF220; -2@500 -1.5>8k (dark)
+
+MASTER BUS  ([SHIFT]+[MULTI] -> Comp / EQ / MFX tabs)
+  Total Comp: 4:1, atk 30ms, rel 400ms, thr -14dB, +3 makeup (slow weight, 4-6dB GR)
+  Total EQ:   low +3@50Hz . mid -2@500Hz . high -1.5@8kHz (darken)
+  Total MFX: Reverb/Isolator/Lo-Fi, subtle (~15-20% wet)
+
+MOTION  (arrangement filter/reverb arc on CC74 cutoff + CC91 reverb +
+  CC11 expression: intro filtered, opens to peak, washes in the break,
+  fades on the end). Live-record it with  usb_feed --fx --feel ritual,
+  or ride the FILTER knob per column. Section cutoff/reverb targets:
     intro  cutoff x0.55  reverb x1.15  level 92
     main   cutoff x1.00  reverb x1.00  level 110
     lift   cutoff x1.15  reverb x1.10  level 120

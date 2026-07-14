@@ -184,6 +184,33 @@ def main():
 
 FACTS = """MC-707 IMPORT & CHANNEL FACTS (deep-research verified, firmware <= 1.82)
 
+TEMPO  (this is why every clip felt like 184)
+  * ONE global tempo per project. Import does NOT read the SMF's tempo and
+    does NOT change the project tempo -- the clip just plays at whatever the
+    project tempo is. Every clip file here carries its correct tempo, but the
+    707 ignores it. 184 was your project's stored tempo (factory default is
+    120; 184 is not a Roland default).
+  * FIX: set the project tempo (TEMPO button) to the kit's bpm before you
+    play. Kits at different tempos that must share a set need SEPARATE
+    PROJECTS -- there is no per-clip tempo.
+
+TONES  (this is why the kits sounded the same)
+  * A clip plays through its TRACK's tone; program/channel bytes are ignored.
+    But the 707 can hold a DIFFERENT tone per clip: set the track's tone
+    scope to CLP (the TRK/CLP indicator, top-right of the tone edit screen),
+    then each clip keeps its own sound. So one project can carry every kit
+    sounding like itself. Each kit's FX_SETUP.TXT lists a tone per track.
+
+SOUND PACKS / SAMPLES / PROJECTS  (folder homes; casing community-reported)
+  * ZEN-Core packs: download in Roland Cloud Manager, copy the .svz/.sdz to
+    the card's SOUND folder, load in-unit via [SOUND] browser. .sdz packs are
+    license-locked to your account.
+  * Samples: .wav into the SAMPLE folder, import in-unit, assign to a looper
+    or drum-kit partials.
+  * Projects: drop a factory/purchased .mpj into the PROJECTS folder and it
+    appears in the load list. The .mpj format is undocumented and unwritable
+    by tools -- existing ones can be placed/renamed, not authored.
+
 SMF IMPORT
   * One SMF -> one clip. Roland (Ver.1.30 update PDF), verbatim:
     "All tracks included in the SMF are overwritten onto one clip."

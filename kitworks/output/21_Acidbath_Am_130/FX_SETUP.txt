@@ -1,24 +1,54 @@
-Acidbath  --  Am  130 bpm  feel:pushing
-FILTER / EFFECTS / COMPRESSION dial-in (starting points -- turn them)
+Acidbath  --  Am  130 bpm  feel:pushing   (lane: acid_rave)
+======================================================================
+TEMPO: the 707 has ONE tempo per project -- set it to 130 before playing (clips do NOT carry tempo).
 
-PER-TRACK  (cutoff/reso are CC74/71; sends are [SEL]+C3 delay / +C4 reverb)
-  drums    cut 127  reso  8  dly  6  rev  6  pan C     MFX: MFX Comp (bus glue) or none
-  bass     cut 106  reso 16  dly  0  rev  0  pan C     MFX: Saturator / MFX Compressor
-  lead     cut 120  reso 30  dly 52  rev 28  pan R8    MFX: Stereo/Tempo Delay (1/8 dot)
-  counter  cut 112  reso 24  dly 30  rev 36  pan L14   MFX: Chorus + short Delay
-  chords   cut 100  reso 20  dly 12  rev 52  pan R16   MFX: Chorus -> Reverb wash
+TONES  (load one per track; TRK/CLP set to CLP lets each kit keep its
+  own sound on a shared track -- map these to your factory/pack patches)
+  drums    Kit: 909+claps (bright)
+  bass     Synth Bass: TB-303 acid
+  lead     Lead: resonant square
+  counter  Synth: zap
+  chords   Synth: rave organ stab
 
-MASTER BUS  ([SHIFT]+[MULTI] -> Comp / EQ tabs)
-  Total Comp: ratio 4:1, attack 8ms, release 120ms, thr -14dB, +4 makeup (punch/glue)
-  Total EQ:   low +2 @80Hz, mid -2 @500Hz, high +3 @8kHz (scooped, forward)
+FIXED KNOBS  (same on every track; [SHIFT]+[KNOB ASSIGN] to bind)
+  FILTER  -> Cutoff                       CC80 (or direct CC74)    start 90
+  MOD     -> Coarse Tune                  CC81 (bind internally)   start 64
+  FX      -> MFX depth / send (per part)  CC82                     start 40
+  SOUND   -> Release                      CC83 (or direct CC72)    start 64
+  (Coarse Tune has no direct CC -- bind MOD to the tone's Coarse Tune;
+   the 4th knob's target is per-track, shown below.)
 
-MOTION  (the arrangement's filter/reverb arc rides CC74 cutoff + CC91
-  reverb + CC11 expression; intro filtered, opens to peak, washes in the
-  break, fades on the end). Two ways onto the 707:
-   * live-record it -- usb_feed --fx streams the motion while you record
-     the clip (firmware 1.8 captures incoming CC as motion); or
-   * dial the section levels by hand on the FILTER knob per column.
-  Section cutoff targets (drums shown; each part scales from its base):
+PER-TRACK INSERT MFX / SENDS / EQ / 4th-knob   (feel: pushing)
+  drums
+     MFX : Overdrive (Drive 24, Tone 66, Lvl 100) -- glue+edge
+     send: delay   8   reverb  10     FX-knob -> MFX depth
+     EQ  : HPF35; +2@70 +2.5@4k +1.5@11k (bright/punchy)
+  bass
+     MFX : Overdrive (Drive 40, Tone 55, Lvl 100) -- acid bite
+     send: delay   0   reverb   4     FX-knob -> MFX depth (drive)
+     EQ  : HPF28; +2@100 -2@350 roll>6k
+  lead
+     MFX : Stereo Delay (1/8dot, Fbk 30, HFdamp 7k, Lvl 40)
+     send: delay  20   reverb  14     FX-knob -> Delay send
+     EQ  : HPF120; +2.5@3k +1.5@10k (presence)
+  counter
+     MFX : Phaser (Rate 1/8, Depth 60, Reso 40) -- movement
+     send: delay  16   reverb  12     FX-knob -> Delay send
+     EQ  : HPF160; -1.5@3k +1@8k (yield to lead)
+  chords
+     MFX : JUNO Chorus (Dep 3, Rate .6Hz) + light OD (Drive 18)
+     send: delay  10   reverb  22     FX-knob -> Reverb send
+     EQ  : HPF180; -1.5@400 +2@10k air
+
+MASTER BUS  ([SHIFT]+[MULTI] -> Comp / EQ / MFX tabs)
+  Total Comp: 3.5:1, atk 12ms, rel 120ms/Auto, thr -13dB, +3.5 makeup (~3-4dB GR, punch)
+  Total EQ:   low +1.5@60Hz . mid -1.5@400Hz . high +2@10kHz
+  Total MFX: light Saturator/Overdrive (Drive 12-15) or Thru
+
+MOTION  (arrangement filter/reverb arc on CC74 cutoff + CC91 reverb +
+  CC11 expression: intro filtered, opens to peak, washes in the break,
+  fades on the end). Live-record it with  usb_feed --fx --feel pushing,
+  or ride the FILTER knob per column. Section cutoff/reverb targets:
     intro  cutoff x0.55  reverb x1.15  level 92
     main   cutoff x1.00  reverb x1.00  level 110
     lift   cutoff x1.15  reverb x1.10  level 120
