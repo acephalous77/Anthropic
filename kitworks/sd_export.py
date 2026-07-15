@@ -76,17 +76,38 @@ def clip_steps(path):
 # and need no shift.
 DRUM_SHIFT = 12
 
+# The MC-707 flattens every SMF track into ONE clip, so it wants a Type-0
+# single-track file with NOTES ONLY. kitworks' build writes Type-1 / 2-track and
+# -- fatally -- bakes a program_change (from the kit's `progs` dict) into each
+# clip. On the box a Program Change on the Control Channel is a SCENE LAUNCH, so
+# playing an imported clip could jump a live project to an empty scene: silence +
+# scrambled state. So on export we rebuild each clip as Type-0, single-track,
+# keeping only name/tempo/time-sig meta + notes; dropped messages roll their delta
+# into the next kept event so timing never shifts. Drums also shift +12 (pads).
+_KEEP_META = {"track_name", "set_tempo", "time_signature"}
+
 
 def _copy_clip(src, dst, is_drum):
-    if not is_drum:
-        shutil.copyfile(src, dst)
-        return
     m = mido.MidiFile(src)
-    for tr in m.tracks:
-        for msg in tr:
-            if msg.type in ("note_on", "note_off"):
-                msg.note = min(127, msg.note + DRUM_SHIFT)
-    m.save(dst)
+    out = mido.MidiTrack()
+    carry, seen = 0, set()
+    for msg in mido.merge_tracks(m.tracks):
+        if msg.type in ("note_on", "note_off"):
+            nm = msg.copy(time=msg.time + carry)
+            carry = 0
+            if is_drum:
+                nm.note = min(127, nm.note + DRUM_SHIFT)
+            out.append(nm)
+        elif msg.is_meta and msg.type in _KEEP_META and msg.type not in seen:
+            seen.add(msg.type)
+            out.append(msg.copy(time=msg.time + carry))
+            carry = 0
+        else:
+            carry += msg.time          # drop PC/CC/dup-meta/EOT, preserve its time
+    out.append(mido.MetaMessage("end_of_track", time=carry))
+    mf = mido.MidiFile(type=0, ticks_per_beat=m.ticks_per_beat)
+    mf.tracks.append(out)
+    mf.save(dst)
 
 
 def _write_fx(fh, fx):
