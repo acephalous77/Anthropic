@@ -28,6 +28,7 @@ WHAT THIS BUILDS -- SD/ROLAND/GROOVEBOX/MIDI/<NN_KIT>/:
 """
 
 import os
+import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -65,6 +66,27 @@ def clip_steps(path):
             t += msg.time
         last = max(last, t)
     return last / (m.ticks_per_beat / 4)      # 16th-note steps
+
+
+# kitworks authors drum patterns on pads 36-51 (pad 1 = note 36). But an MC-707
+# DRUM track lays its 16 pads chromatically from C2 = MIDI note 48 (pads 1-16 =
+# 48-63), NOT the GM map -- verified against Roland's hardware. So a kick on 36
+# lands BELOW the pad range and plays nothing. Shift every drum note +12 on the
+# way to the card so pad N -> pad N (36->48 ... 51->63). Melodic parts are pitches
+# and need no shift.
+DRUM_SHIFT = 12
+
+
+def _copy_clip(src, dst, is_drum):
+    if not is_drum:
+        shutil.copyfile(src, dst)
+        return
+    m = mido.MidiFile(src)
+    for tr in m.tracks:
+        for msg in tr:
+            if msg.type in ("note_on", "note_off"):
+                msg.note = min(127, msg.note + DRUM_SHIFT)
+    m.save(dst)
 
 
 def _write_fx(fh, fx):
@@ -114,8 +136,7 @@ def main():
                 if not os.path.exists(src):
                     continue
                 dst = os.path.join(dest, f"T{tno}_{part.upper()}_{tag}.MID")
-                import shutil
-                shutil.copyfile(src, dst)
+                _copy_clip(src, dst, part == "drums")
                 total += 1
                 steps = clip_steps(dst)
                 if steps > MAX_STEPS:
